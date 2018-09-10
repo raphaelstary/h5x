@@ -1,37 +1,34 @@
 if (window.Windows)
     console.log(`I'm running on Windows 😎`);
 
-let atlas = new Image();
-let atlasInfo;
-
-Promise.all([
-
-    new Promise(resolve => window.onload = resolve),
-
-    fetch('../asset-gen/atlas_1080_0.json')
-        .then(response => response.json())
-        .then(json => atlasInfo = json),
-
-    fetch('../asset-gen/atlas_1080_0.png')
-        .then(response => {
-            if (response.ok)
-                return response.blob();
-
-            throw new Error('could not load atlas');
-        })
-        .then(blob => {
-            atlas.src = URL.createObjectURL(blob);
-        })
-
-])
-    .catch(error => console.log(error))
-    .then(value => {
-
-        gl.clearColor(1.0, 0.0, 1.0, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        gl.drawArrays(gl.POINTS, 0, 1);
-    });
+// let atlas = new Image();
+// let atlasInfo;
+//
+// Promise.all([
+//
+//     new Promise(resolve => window.onload = resolve),
+//
+//     fetch('../asset-gen/atlas_1080_0.json')
+//         .then(response => response.json())
+//         .then(json => atlasInfo = json),
+//
+//     fetch('../asset-gen/atlas_1080_0.png')
+//         .then(response => {
+//             if (response.ok)
+//                 return response.blob();
+//
+//             throw new Error('could not load atlas');
+//         })
+//         .then(blob => {
+//             atlas.src = URL.createObjectURL(blob);
+//         })
+//
+// ])
+//     .catch(error => console.log(error))
+//     .then(() => {
+//
+//
+//     });
 
 const canvas = document.getElementById('screen');
 const gl = canvas.getContext('webgl');
@@ -45,7 +42,7 @@ void main() {
 
 const fragmentShaderSrc = `
 void main() {
-    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+    gl_FragColor = vec4(0.0, 1.0, 1.0, 1.0);
 }
 `;
 
@@ -61,4 +58,10 @@ const program = gl.createProgram();
 gl.attachShader(program, vertexShader);
 gl.attachShader(program, fragmentShader);
 gl.linkProgram(program);
+
 gl.useProgram(program);
+
+gl.clearColor(1.0, 0.0, 1.0, 1.0);
+gl.clear(gl.COLOR_BUFFER_BIT);
+
+gl.drawArrays(gl.POINTS, 0, 1);
