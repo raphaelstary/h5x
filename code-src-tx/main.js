@@ -67,11 +67,12 @@ gl.useProgram(program);
 gl.clearColor(1.0, 0.0, 1.0, 1.0);
 gl.clear(gl.COLOR_BUFFER_BIT);
 
-[[0, 0.5], [0.5, -0.5], [-0.5, -0.5]].forEach(value => {
+const buffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([0, 0.5, 0.5, -0.5, -0.5, -0.5]), gl.STATIC_DRAW);
 
-    let positionLocation = gl.getAttribLocation(program, 'position');
-    gl.vertexAttrib2f(positionLocation, value[0], value[1]);
+let positionLocation = gl.getAttribLocation(program, 'position');
+gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(positionLocation);
 
-    gl.drawArrays(gl.POINTS, 0, 1);
-});
-
+gl.drawArrays(gl.POINTS, 0, 3);
