@@ -39,7 +39,6 @@ attribute vec2 position;
 
 void main() {
     gl_Position = vec4(position, 0.0, 1.0);
-    gl_PointSize = 50.0;
 }
 `;
 
@@ -75,4 +74,4 @@ let positionLocation = gl.getAttribLocation(program, 'position');
 gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(positionLocation);
 
-gl.drawArrays(gl.POINTS, 0, 3);
+gl.drawArrays(gl.TRIANGLES, 0, 3);
