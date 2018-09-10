@@ -34,8 +34,11 @@ const canvas = document.getElementById('screen');
 const gl = canvas.getContext('webgl');
 
 const vertexShaderSrc = `
+
+attribute vec2 position;
+
 void main() {
-    gl_Position = vec4(0.0, 0.0, 0.0, 1.0);
+    gl_Position = vec4(position, 0.0, 1.0);
     gl_PointSize = 50.0;
 }
 `;
@@ -64,4 +67,11 @@ gl.useProgram(program);
 gl.clearColor(1.0, 0.0, 1.0, 1.0);
 gl.clear(gl.COLOR_BUFFER_BIT);
 
-gl.drawArrays(gl.POINTS, 0, 1);
+[[0, 0.5], [0.5, -0.5], [-0.5, -0.5]].forEach(value => {
+
+    let positionLocation = gl.getAttribLocation(program, 'position');
+    gl.vertexAttrib2f(positionLocation, value[0], value[1]);
+
+    gl.drawArrays(gl.POINTS, 0, 1);
+});
+
