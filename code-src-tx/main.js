@@ -1,35 +1,6 @@
 if (window.Windows)
     console.log(`I'm running on Windows 😎`);
 
-// let atlas = new Image();
-// let atlasInfo;
-//
-// Promise.all([
-//
-//     new Promise(resolve => window.onload = resolve),
-//
-//     fetch('../asset-gen/atlas_1080_0.json')
-//         .then(response => response.json())
-//         .then(json => atlasInfo = json),
-//
-//     fetch('../asset-gen/atlas_1080_0.png')
-//         .then(response => {
-//             if (response.ok)
-//                 return response.blob();
-//
-//             throw new Error('could not load atlas');
-//         })
-//         .then(blob => {
-//             atlas.src = URL.createObjectURL(blob);
-//         })
-//
-// ])
-//     .catch(error => console.log(error))
-//     .then(() => {
-//
-//
-//     });
-
 fetch('../asset/ace-of-spades.png')
     .then(response => {
         if (response.ok)
@@ -64,16 +35,21 @@ fetch('../asset/ace-of-spades.png')
 
 const canvas = document.getElementById('screen');
 const gl = canvas.getContext('webgl');
+
+console.log('max texture size: ' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
+console.log('max vertex attribs: ' + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
+
 gl.enable(gl.DEPTH_TEST);
 
 const vertexShaderSrc = `
 
 attribute vec2 position;
+attribute vec2 quadVertex;
 attribute vec2 texCoord;
 varying vec2 fragTexCoord;
 
 void main() {
-    gl_Position = vec4(position, 0.0, 1.0);
+    gl_Position = vec4(quadVertex + position, 0.0, 1.0);
     fragTexCoord = texCoord;
 }
 `;
@@ -131,12 +107,12 @@ const quad = [
     0.5, -0.5,
     0.5, 0.5
 ];
-const buffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+const quadBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quad), gl.STATIC_DRAW);
-const positionLocation = gl.getAttribLocation(program, 'position');
-gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(positionLocation);
+const quadVertexLocation = gl.getAttribLocation(program, 'quadVertex');
+gl.vertexAttribPointer(quadVertexLocation, 2, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(quadVertexLocation);
 
 const textureCoords = [
     0.0, 0.0,
@@ -152,3 +128,6 @@ gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(texCoordLocation);
 
 const samplerLocation = gl.getUniformLocation(program, 'sampler');
+
+const positionLocation = gl.getAttribLocation(program, 'position');
+gl.vertexAttrib2f(positionLocation, 0.2, 0.1);
