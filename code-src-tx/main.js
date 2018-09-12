@@ -48,6 +48,7 @@ attribute vec4 quad;
 uniform mat4 projection;
 
 attribute float rotation;
+attribute float scaleFactor;
 
 varying vec2 fragTexCoord;
 
@@ -70,6 +71,15 @@ void main() {
         0, 0, 0, 1.0
     );
 
+    float sx = scaleFactor;
+    float sy = scaleFactor;
+    mat4 scale = mat4(
+        sx, 0, 0, 0,
+        0, sy, 0, 0,
+        0, 0, 1.0, 0,
+        0, 0, 0, 1.0
+    );
+
     vec4 tmpPosition = translate * vec4(position.xy, 1.0, 1.0);
 
     translate[3][0] = -position.x;
@@ -80,7 +90,7 @@ void main() {
     translate[3][0] = position.x;
     translate[3][1] = position.y;
 
-    gl_Position = projection * translate * tmpPosition;
+    gl_Position = projection * translate * scale * tmpPosition;
 
     fragTexCoord = quad.zw;
 }
@@ -153,6 +163,9 @@ gl.vertexAttrib4f(positionLocation, 1280 / 2, 720 / 2, 175, 225);
 
 const rotationLocation = gl.getAttribLocation(program, 'rotation');
 gl.vertexAttrib1f(rotationLocation, Math.PI * 0.25);
+
+const scaleFactorLocation = gl.getAttribLocation(program, 'scaleFactor');
+gl.vertexAttrib1f(scaleFactorLocation, 1.0);
 
 const width = 1280;
 const height = 720;
