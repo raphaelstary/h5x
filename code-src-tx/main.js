@@ -44,10 +44,13 @@ const vertexShaderSrc = `
 
 attribute vec4 position;
 attribute vec4 quad;
+
+uniform mat4 projection;
+
 varying vec2 fragTexCoord;
 
 void main() {
-    gl_Position = vec4(position.xy + position.zw * quad.xy, 0.0, 1.0);
+    gl_Position = projection * vec4(position.xy + position.zw * quad.xy, 1.0, 1.0);
     fragTexCoord = quad.zw;
 }
 `;
@@ -99,7 +102,6 @@ gl.clearDepth(1.0);
 
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-// offset x sign, offset y sign, tex coord x, tex coord y
 const quad = [
     -1.0, -1.0, 0.0, 0.0,
     -1.0, 1.0, 0.0, 1.0,
@@ -116,4 +118,24 @@ gl.enableVertexAttribArray(quadLocation);
 const samplerLocation = gl.getUniformLocation(program, 'sampler');
 
 const positionLocation = gl.getAttribLocation(program, 'position');
-gl.vertexAttrib4f(positionLocation, -0.5, 0.0, 0.2, 0.4); // x, y, w/2, h/2
+gl.vertexAttrib4f(positionLocation, 1280/2, 720/2, 175, 225);
+
+const width = 1280;
+const height = 720;
+const zNear = 0.1;
+const zFar = 100.0;
+
+const a = 2 / width;
+const b = 2 / height;
+const c = -2 / (zFar - zNear);
+
+const tz = -(zFar + zNear) / (zFar - zNear);
+
+const projectionMatrix = [
+    a, 0, 0, 0,
+    0, b, 0, 0,
+    0, 0, -c, 0,
+    -1, -1, tz, 1
+];
+const projectionLocation = gl.getUniformLocation(program, 'projection');
+gl.uniformMatrix4fv(projectionLocation, false, new Float32Array(projectionMatrix));
