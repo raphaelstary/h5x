@@ -29,7 +29,6 @@ fetch('../asset/ace-of-spades.png')
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
-
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     });
 
@@ -43,14 +42,13 @@ gl.enable(gl.DEPTH_TEST);
 
 const vertexShaderSrc = `
 
-attribute vec2 position;
-attribute vec2 quadVertex;
-attribute vec2 texCoord;
+attribute vec4 position;
+attribute vec4 quad;
 varying vec2 fragTexCoord;
 
 void main() {
-    gl_Position = vec4(quadVertex + position, 0.0, 1.0);
-    fragTexCoord = texCoord;
+    gl_Position = vec4(position.xy + position.zw * quad.xy, 0.0, 1.0);
+    fragTexCoord = quad.zw;
 }
 `;
 
@@ -101,33 +99,21 @@ gl.clearDepth(1.0);
 
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+// offset x sign, offset y sign, tex coord x, tex coord y
 const quad = [
-    -0.5, -0.5,
-    -0.5, 0.5,
-    0.5, -0.5,
-    0.5, 0.5
+    -1.0, -1.0, 0.0, 0.0,
+    -1.0, 1.0, 0.0, 1.0,
+    1.0, -1.0, 1.0, 0.0,
+    1.0, 1.0, 1.0, 1.0
 ];
 const quadBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(quad), gl.STATIC_DRAW);
-const quadVertexLocation = gl.getAttribLocation(program, 'quadVertex');
-gl.vertexAttribPointer(quadVertexLocation, 2, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(quadVertexLocation);
-
-const textureCoords = [
-    0.0, 0.0,
-    0.0, 1.0,
-    1.0, 0.0,
-    1.0, 1.0
-];
-const texCoordBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
-const texCoordLocation = gl.getAttribLocation(program, 'texCoord');
-gl.vertexAttribPointer(texCoordLocation, 2, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(texCoordLocation);
+const quadLocation = gl.getAttribLocation(program, 'quad');
+gl.vertexAttribPointer(quadLocation, 4, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(quadLocation);
 
 const samplerLocation = gl.getUniformLocation(program, 'sampler');
 
 const positionLocation = gl.getAttribLocation(program, 'position');
-gl.vertexAttrib2f(positionLocation, 0.2, 0.1);
+gl.vertexAttrib4f(positionLocation, -0.5, 0.0, 0.2, 0.4); // x, y, w/2, h/2
