@@ -47,10 +47,41 @@ attribute vec4 quad;
 
 uniform mat4 projection;
 
+attribute float rotation;
+
 varying vec2 fragTexCoord;
 
 void main() {
-    gl_Position = projection * vec4(position.xy + position.zw * quad.xy, 1.0, 1.0);
+    float tx = position.z * quad.x;
+    float ty = position.w * quad.y;
+    mat4 translate = mat4(
+        1.0, 0, 0, 0,
+        0, 1.0, 0, 0,
+        0, 0, 1.0, 0,
+        tx, ty, 0, 1.0
+    );
+
+    float c = cos(rotation);
+    float s = sin(rotation);
+    mat4 rotate = mat4(
+        c, s, 0, 0,
+        -s, c, 0, 0,
+        0, 0, 1.0, 0,
+        0, 0, 0, 1.0
+    );
+
+    vec4 tmpPosition = translate * vec4(position.xy, 1.0, 1.0);
+
+    translate[3][0] = -position.x;
+    translate[3][1] = -position.y;
+
+    tmpPosition = rotate * translate * tmpPosition;
+
+    translate[3][0] = position.x;
+    translate[3][1] = position.y;
+
+    gl_Position = projection * translate * tmpPosition;
+
     fragTexCoord = quad.zw;
 }
 `;
@@ -118,12 +149,15 @@ gl.enableVertexAttribArray(quadLocation);
 const samplerLocation = gl.getUniformLocation(program, 'sampler');
 
 const positionLocation = gl.getAttribLocation(program, 'position');
-gl.vertexAttrib4f(positionLocation, 1280/2, 720/2, 175, 225);
+gl.vertexAttrib4f(positionLocation, 1280 / 2, 720 / 2, 175, 225);
+
+const rotationLocation = gl.getAttribLocation(program, 'rotation');
+gl.vertexAttrib1f(rotationLocation, Math.PI * 0.25);
 
 const width = 1280;
 const height = 720;
-const zNear = 0.1;
-const zFar = 100.0;
+const zNear = -0.1;
+const zFar = -100.0;
 
 const a = 2 / width;
 const b = 2 / height;
@@ -134,7 +168,7 @@ const tz = -(zFar + zNear) / (zFar - zNear);
 const projectionMatrix = [
     a, 0, 0, 0,
     0, b, 0, 0,
-    0, 0, -c, 0,
+    0, 0, c, 0,
     -1, -1, tz, 1
 ];
 const projectionLocation = gl.getUniformLocation(program, 'projection');
