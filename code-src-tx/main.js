@@ -77,20 +77,22 @@ Promise.all([
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.uniform1i(samplerLocation, 0);
+        gl.uniform1i(texSamplerLocation, 0);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
         ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, 4);
     });
 
 const canvas = document.getElementById('screen');
-const gl = canvas.getContext('webgl');
+const gl = canvas.getContext('webgl', {alpha: false});
 const ext = gl.getExtension('ANGLE_instanced_arrays');
 
 console.log('max texture size: ' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
 console.log('max vertex attribs: ' + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
 
 gl.enable(gl.DEPTH_TEST);
+gl.enable(gl.BLEND);
+gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
 const vertexShaderSrc = `
 
@@ -101,7 +103,7 @@ attribute vec4 quad;
 
 uniform mat4 projection;
 
-varying vec2 fragTexCoord;
+varying vec2 texCoord;
 
 void main() {
     float tx = spriteInfo.x * quad.x;
@@ -143,7 +145,7 @@ void main() {
 
     gl_Position = projection * translate * scale * tmpPosition;
 
-    fragTexCoord = vec2(subImage.x + subImage.z * quad.z, subImage.y + subImage.w * quad.w);
+    texCoord = vec2(subImage.x + subImage.z * quad.z, subImage.y + subImage.w * quad.w);
 }
 `;
 
@@ -151,11 +153,14 @@ const fragmentShaderSrc = `
 
 precision highp float;
 
-uniform sampler2D sampler;
-varying vec2 fragTexCoord;
+uniform sampler2D texture;
+varying vec2 texCoord;
 
 void main() {
-    gl_FragColor = texture2D(sampler, fragTexCoord);
+    vec4 pixel = texture2D(texture, texCoord);
+    if (pixel.a < 0.1)
+        discard;
+    gl_FragColor = pixel;
 }
 `;
 
@@ -189,7 +194,7 @@ if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
 
 gl.useProgram(program);
 
-gl.clearColor(1.0, 0.0, 1.0, 1.0);
+gl.clearColor(1.0, 1.0, 1.0, 1.0);
 gl.clearDepth(1.0);
 
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -208,7 +213,7 @@ gl.vertexAttribPointer(quadLocation, 4, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(quadLocation);
 ext.vertexAttribDivisorANGLE(quadLocation, 0);
 
-const samplerLocation = gl.getUniformLocation(program, 'sampler');
+const texSamplerLocation = gl.getUniformLocation(program, 'texture');
 
 const spritePositions = [
     640.0, 360.0, 1.0,
