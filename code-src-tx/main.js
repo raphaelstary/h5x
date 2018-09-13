@@ -1,21 +1,73 @@
 if (window.Windows)
     console.log(`I'm running on Windows 😎`);
 
-fetch('../asset/ace-of-spades.png')
-    .then(response => {
-        if (response.ok)
-            return response.blob();
+Promise.all([
 
-        throw  new Error('could not fetch image');
-    })
-    .then(blob => {
-        return new Promise(resolve => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.src = URL.createObjectURL(blob);
-        });
-    })
-    .then(img => {
+    new Promise(resolve => window.onload = resolve),
+
+    fetch('../asset-gen/atlas_4320_0.json')
+        .then(response => {
+            if (response.ok)
+                return response.json();
+
+            throw  new Error('could not fetch json');
+        }),
+
+    fetch('../asset-gen/atlas_4320_0.png')
+        .then(response => {
+            if (response.ok)
+                return response.blob();
+
+            throw  new Error('could not fetch image');
+        })
+        .then(blob => {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = URL.createObjectURL(blob);
+            });
+        })
+])
+    .catch(error => console.log(error))
+    .then(values => {
+        const json = values[1];
+        const img = values[2];
+
+        const aceOfSpades = json.frames['card-SA'].frame;
+        const aceOfHearts = json.frames['card-HA'].frame;
+        const aceOfClubs = json.frames['card-CA'].frame;
+        const aceOfDiamonds = json.frames['card-DA'].frame;
+
+        const w = json.meta.size.w;
+        const h = json.meta.size.h;
+
+        const subImages = [
+            aceOfSpades.x / w, aceOfSpades.y / h, aceOfSpades.w / w, aceOfSpades.h / h,
+            aceOfHearts.x / w, aceOfHearts.y / h, aceOfHearts.w / w, aceOfHearts.h / h,
+            aceOfClubs.x / w, aceOfClubs.y / h, aceOfClubs.w / w, aceOfClubs.h / h,
+            aceOfDiamonds.x / w, aceOfDiamonds.y / h, aceOfDiamonds.w / w, aceOfDiamonds.h / h
+        ];
+        const subImageBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, subImageBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(subImages), gl.STATIC_DRAW);
+        const subImageLocation = gl.getAttribLocation(program, 'subImage');
+        gl.vertexAttribPointer(subImageLocation, 4, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(subImageLocation);
+        ext.vertexAttribDivisorANGLE(subImageLocation, 1);
+
+        const spriteInfo = [
+            aceOfSpades.w / 2, aceOfSpades.h / 2, 0.0, 1.0,
+            aceOfHearts.w / 2, aceOfHearts.h / 2, 1.0, 1.0,
+            aceOfClubs.w / 2, aceOfClubs.h / 2, -Math.PI * 0.25, 1.0,
+            aceOfDiamonds.w / 2, aceOfDiamonds.h / 2, 0.0, 1.0
+        ];
+        const infoBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, infoBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spriteInfo), gl.STATIC_DRAW);
+        const infoLocation = gl.getAttribLocation(program, 'spriteInfo');
+        gl.vertexAttribPointer(infoLocation, 4, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(infoLocation);
+        ext.vertexAttribDivisorANGLE(infoLocation, 1);
 
         const texture = gl.createTexture();
         gl.activeTexture(gl.TEXTURE0);
@@ -26,7 +78,6 @@ fetch('../asset/ace-of-spades.png')
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         gl.uniform1i(samplerLocation, 0);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
         ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, 4);
@@ -45,6 +96,7 @@ const vertexShaderSrc = `
 
 attribute vec3 position;
 attribute vec4 spriteInfo;
+attribute vec4 subImage;
 attribute vec4 quad;
 
 uniform mat4 projection;
@@ -91,7 +143,7 @@ void main() {
 
     gl_Position = projection * translate * scale * tmpPosition;
 
-    fragTexCoord = quad.zw;
+    fragTexCoord = vec2(subImage.x + subImage.z * quad.z, subImage.y + subImage.w * quad.w);
 }
 `;
 
@@ -143,10 +195,10 @@ gl.clearDepth(1.0);
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 const quad = [
-    -1.0, -1.0, 0.0, 0.0,
-    -1.0, 1.0, 0.0, 1.0,
-    1.0, -1.0, 1.0, 0.0,
-    1.0, 1.0, 1.0, 1.0
+    -1.0, -1.0, 0.0, 1.0,
+    -1.0, 1.0, 0.0, 0.0,
+    1.0, -1.0, 1.0, 1.0,
+    1.0, 1.0, 1.0, 0.0
 ];
 const quadBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
@@ -164,12 +216,7 @@ const spritePositions = [
     640.0, 360.0, 99.0,
     640.0, 360.0, 2.0
 ];
-const spriteInfo = [
-    175.0, 225.0, 1.0, 0.2,
-    175.0, 225.0, 0.0, 1.0,
-    175.0, 225.0, -Math.PI * 0.25, 1.5,
-    175.0, 225.0, 0.0, 0.8
-];
+
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spritePositions), gl.STATIC_DRAW);
@@ -177,14 +224,6 @@ const positionLocation = gl.getAttribLocation(program, 'position');
 gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(positionLocation);
 ext.vertexAttribDivisorANGLE(positionLocation, 1);
-
-const infoBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, infoBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spriteInfo), gl.STATIC_DRAW);
-const infoLocation = gl.getAttribLocation(program, 'spriteInfo');
-gl.vertexAttribPointer(infoLocation, 4, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(infoLocation);
-ext.vertexAttribDivisorANGLE(infoLocation, 1);
 
 const width = 1280;
 const height = 720;
