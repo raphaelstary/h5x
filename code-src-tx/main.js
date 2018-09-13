@@ -98,12 +98,14 @@ const vertexShaderSrc = `
 
 attribute vec3 position;
 attribute vec4 spriteInfo;
+attribute vec4 color;
 attribute vec4 subImage;
 attribute vec4 quad;
 
 uniform mat4 projection;
 
 varying vec2 texCoord;
+varying vec4 texColor;
 
 void main() {
     float tx = spriteInfo.x * quad.x;
@@ -146,6 +148,7 @@ void main() {
     gl_Position = projection * translate * scale * tmpPosition;
 
     texCoord = vec2(subImage.x + subImage.z * quad.z, subImage.y + subImage.w * quad.w);
+    texColor = color;
 }
 `;
 
@@ -153,14 +156,15 @@ const fragmentShaderSrc = `
 
 precision highp float;
 
-uniform sampler2D texture;
+uniform sampler2D tex;
 varying vec2 texCoord;
+varying vec4 texColor;
 
 void main() {
-    vec4 pixel = texture2D(texture, texCoord);
-    if (pixel.a < 0.1)
+    vec4 pixel = texture2D(tex, texCoord);
+    if (pixel.a < 1.0)
         discard;
-    gl_FragColor = pixel;
+    gl_FragColor = mix(pixel, texColor, texColor.a);
 }
 `;
 
@@ -213,15 +217,14 @@ gl.vertexAttribPointer(quadLocation, 4, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(quadLocation);
 ext.vertexAttribDivisorANGLE(quadLocation, 0);
 
-const texSamplerLocation = gl.getUniformLocation(program, 'texture');
+const texSamplerLocation = gl.getUniformLocation(program, 'tex');
 
 const spritePositions = [
-    640.0, 360.0, 1.0,
-    640.0, 360.0, 3.0,
-    640.0, 360.0, 99.0,
-    640.0, 360.0, 2.0
+    700.0, 360.0, 1.0,
+    680.0, 360.0, 3.0,
+    640.0, 360.0, 4.0,
+    600.0, 360.0, 5.0
 ];
-
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spritePositions), gl.STATIC_DRAW);
@@ -229,6 +232,20 @@ const positionLocation = gl.getAttribLocation(program, 'position');
 gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(positionLocation);
 ext.vertexAttribDivisorANGLE(positionLocation, 1);
+
+const colors = [
+    0.0, 0.0, 0.0, 0.0,
+    0.0, 0.0, 0.0, 0.4,
+    0.0, 0.0, 0.0, 0.6,
+    0.0, 0.0, 0.0, 0.8
+];
+const colorBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+const colorLocation = gl.getAttribLocation(program, 'color');
+gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(colorLocation);
+ext.vertexAttribDivisorANGLE(colorLocation, 1);
 
 const width = 1280;
 const height = 720;
