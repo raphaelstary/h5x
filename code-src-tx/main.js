@@ -5,7 +5,7 @@ Promise.all([
 
     new Promise(resolve => window.onload = resolve),
 
-    fetch('../asset-gen/atlas_4320_0.json')
+    fetch('../asset-gen/atlas_720_0.json')
         .then(response => {
             if (response.ok)
                 return response.json();
@@ -13,7 +13,7 @@ Promise.all([
             throw  new Error('could not fetch json');
         }),
 
-    fetch('../asset-gen/atlas_4320_0.png')
+    fetch('../asset-gen/atlas_720_0.png')
         .then(response => {
             if (response.ok)
                 return response.blob();
@@ -56,18 +56,32 @@ Promise.all([
         ext.vertexAttribDivisorANGLE(subImageLocation, 1);
 
         const spriteInfo = [
-            aceOfSpades.w / 2, aceOfSpades.h / 2, 0.0, 1.0,
-            aceOfHearts.w / 2, aceOfHearts.h / 2, 1.0, 1.0,
-            aceOfClubs.w / 2, aceOfClubs.h / 2, -Math.PI * 0.25, 1.0,
-            aceOfDiamonds.w / 2, aceOfDiamonds.h / 2, 0.0, 1.0
+            aceOfSpades.w / 2, aceOfSpades.h / 2,
+            aceOfHearts.w / 2, aceOfHearts.h / 2,
+            aceOfClubs.w / 2, aceOfClubs.h / 2,
+            aceOfDiamonds.w / 2, aceOfDiamonds.h / 2
         ];
         const infoBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, infoBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spriteInfo), gl.STATIC_DRAW);
         const infoLocation = gl.getAttribLocation(program, 'spriteInfo');
-        gl.vertexAttribPointer(infoLocation, 4, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(infoLocation, 2, gl.FLOAT, false, 0, 0);
         gl.enableVertexAttribArray(infoLocation);
         ext.vertexAttribDivisorANGLE(infoLocation, 1);
+
+        const spriteProps = [
+            0.0, 1.0,
+            1.0, 1.0,
+            -Math.PI * 0.25, 1.0,
+            0.0, 1.0
+        ];
+        const propsBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, propsBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(spriteProps), gl.STATIC_DRAW);
+        const propsLocation = gl.getAttribLocation(program, 'spriteProp');
+        gl.vertexAttribPointer(propsLocation, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(propsLocation);
+        ext.vertexAttribDivisorANGLE(propsLocation, 1);
 
         const texture = gl.createTexture();
         gl.activeTexture(gl.TEXTURE0);
@@ -80,7 +94,17 @@ Promise.all([
         gl.uniform1i(texSamplerLocation, 0);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
-        ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, 4);
+        function renderLoop() {
+            requestAnimationFrame(renderLoop);
+
+            gl.clearColor(1.0, 0.0, 1.0, 1.0);
+            gl.clearDepth(1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+            ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, 4);
+        }
+
+        renderLoop();
     });
 
 const canvas = document.getElementById('screen');
@@ -97,7 +121,8 @@ gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 const vertexShaderSrc = `
 
 attribute vec3 position;
-attribute vec4 spriteInfo;
+attribute vec2 spriteProp;
+attribute vec2 spriteInfo;
 attribute vec4 color;
 attribute vec4 subImage;
 attribute vec4 quad;
@@ -117,8 +142,8 @@ void main() {
         tx, ty, 0, 1.0
     );
 
-    float c = cos(spriteInfo.z);
-    float s = sin(spriteInfo.z);
+    float c = cos(spriteProp.x);
+    float s = sin(spriteProp.x);
     mat4 rotate = mat4(
         c, s, 0, 0,
         -s, c, 0, 0,
@@ -126,8 +151,8 @@ void main() {
         0, 0, 0, 1.0
     );
 
-    float sx = spriteInfo.w;
-    float sy = spriteInfo.w;
+    float sx = spriteProp.y;
+    float sy = spriteProp.y;
     mat4 scale = mat4(
         sx, 0, 0, 0,
         0, sy, 0, 0,
@@ -197,11 +222,6 @@ if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
 }
 
 gl.useProgram(program);
-
-gl.clearColor(1.0, 1.0, 1.0, 1.0);
-gl.clearDepth(1.0);
-
-gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 const quad = [
     -1.0, -1.0, 0.0, 1.0,
