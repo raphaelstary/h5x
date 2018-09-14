@@ -94,14 +94,56 @@ Promise.all([
         gl.uniform1i(texSamplerLocation, 0);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
+        // simplest fps meter 1/3
+        // let previousTime = Date.now();
+        // let ms = 0;
+        // let msMin = Infinity;
+        // let msMax = 0;
+        // let fps = 0;
+        // let fpsMin = Infinity;
+        // let fpsMax = 0;
+        // let frames = 0;
+
         function renderLoop() {
             requestAnimationFrame(renderLoop);
+
+            // simplest fps meter 2/3
+            // const startTime = Date.now();
 
             gl.clearColor(1.0, 0.0, 1.0, 1.0);
             gl.clearDepth(1.0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
             ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, 4);
+
+            // simplest fps meter 3/3
+            // {
+            //     const time = Date.now();
+            //
+            //     ms = time - startTime;
+            //     msMin = Math.min(msMin, ms);
+            //     msMax = Math.max(msMax, ms);
+            //
+            //     frames++;
+            //
+            //     if (time > previousTime + 1000) {
+            //
+            //         fps = Math.round(frames * 1000 / (time - previousTime));
+            //         fpsMin = Math.min(fpsMin, fps);
+            //         fpsMax = Math.max(fpsMax, fps);
+            //
+            //         previousTime = time;
+            //         frames = 0;
+            //
+            //         console.log(Date.now());
+            //         console.log('fps: ' + fps);
+            //         console.log('min fps: ' + fpsMin);
+            //         console.log('max fps: ' + fpsMax);
+            //         console.log('ms: ' + ms);
+            //         console.log('min ms: ' + msMin);
+            //         console.log('max ms: ' + msMax);
+            //     }
+            // }
         }
 
         renderLoop();
