@@ -52,11 +52,12 @@ Promise.all([
         console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
         console.log(`texture atlas bitmap size: ${(img.width * img.height * 4 / 1024 / 1024).toFixed(2)} mb`);
 
-        let positions = new Float32Array(positionData, 0, 10 * POS_ELEMENTS);
-        let colors = new Float32Array(colorData, 0, 10 * COLOR_ELEMENTS);
-        let xforms = new Float32Array(xformsData, 0, 10 * XFORMS_ELEMENTS);
-        let dimensions = new Float32Array(dimensionsData, 0, 10 * DIM_ELEMENTS);
-        let subImages = new Float32Array(subImageData, 0, 10 * SUB_IMG_ELEMENTS);
+        const INIT_ELEMENTS = 10;
+        let positions = new Float32Array(positionData, 0, INIT_ELEMENTS * POS_ELEMENTS);
+        let colors = new Float32Array(colorData, 0, INIT_ELEMENTS * COLOR_ELEMENTS);
+        let xforms = new Float32Array(xformsData, 0, INIT_ELEMENTS * XFORMS_ELEMENTS);
+        let dimensions = new Float32Array(dimensionsData, 0, INIT_ELEMENTS * DIM_ELEMENTS);
+        let subImages = new Float32Array(subImageData, 0, INIT_ELEMENTS * SUB_IMG_ELEMENTS);
 
         const TOTAL_SUB_BUFFER_SIZE = positions.byteLength + colors.byteLength + xforms.byteLength + dimensions.byteLength + subImages.byteLength;
         console.log(`initial gpu sub buffer tick update size: ${(TOTAL_SUB_BUFFER_SIZE / 1024).toFixed(2)} kb`);
@@ -121,6 +122,38 @@ Promise.all([
             colors[id * COLOR_ELEMENTS + 3] = a;
         }
 
+        function setRed(id, r) {
+            colors[id * COLOR_ELEMENTS] = r;
+        }
+
+        function getRed(id) {
+            return colors[id * COLOR_ELEMENTS];
+        }
+
+        function setGreen(id, g) {
+            colors[id * COLOR_ELEMENTS + 1] = g;
+        }
+
+        function getGreen(id) {
+            return colors[id * COLOR_ELEMENTS + 1];
+        }
+
+        function setBlue(id, b) {
+            colors[id * COLOR_ELEMENTS + 2] = b;
+        }
+
+        function getBlue(id) {
+            return colors[id * COLOR_ELEMENTS + 2];
+        }
+
+        function setAlpha(id, a) {
+            colors[id * COLOR_ELEMENTS + 3] = a;
+        }
+
+        function getAlpha(id) {
+            return colors[id * COLOR_ELEMENTS + 3];
+        }
+
         function setRotation(id, rotation) {
             xforms[id * XFORMS_ELEMENTS] = rotation;
         }
@@ -131,6 +164,10 @@ Promise.all([
 
         function setScale(id, scale) {
             xforms[id * XFORMS_ELEMENTS + 1] = scale;
+        }
+
+        function getScale(id) {
+            return xforms[id * XFORMS_ELEMENTS + 1];
         }
 
         function setSubImage(id, imgId) {
@@ -155,17 +192,17 @@ Promise.all([
 
         createEntity(id, SubImage.CARD_SA, WIDTH / 2, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_S2, WIDTH / 2 + 50, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_S2, WIDTH / 2 + 200, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_S3, WIDTH / 2 - 50, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_S3, WIDTH / 2 - 200, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_SK, WIDTH / 2 + 150, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SK, WIDTH / 2 + 400, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_SJ, WIDTH / 2 - 150, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SJ, WIDTH / 2 - 400, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_SQ, WIDTH / 2 + 200, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SQ, WIDTH / 2 + 600, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_S4, WIDTH / 2 - 200, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_S4, WIDTH / 2 - 600, HEIGHT / 2);
         id++;
 
         // simplest fps meter 1/3
@@ -178,11 +215,37 @@ Promise.all([
         // let fpsMax = 0;
         // let frames = 0;
 
+        let subImageId = 0;
+
         function renderLoop() {
             requestAnimationFrame(renderLoop);
 
             // simplest fps meter 2/3
             // const startTime = Date.now();
+
+            {
+                const one_x = getX(0);
+                setX(0, one_x < WIDTH ? one_x + 1 : 0);
+
+                const two_y = getY(1);
+                setY(1, two_y < HEIGHT ? two_y + 1 : 0);
+
+                const three_scale = getScale(2);
+                setScale(2, three_scale < 2 ? three_scale + 0.01 : 1);
+
+                const four_rotation = getRotation(3);
+                setRotation(3, four_rotation > Math.PI * 2 ? 0.01 : four_rotation + 0.01);
+
+                const five_alpha = getAlpha(4);
+                setAlpha(4, five_alpha < 1 ? five_alpha + 0.01 : 0.0);
+
+                setSubImage(5, ++subImageId);
+                if (subImageId > 85)
+                    subImageId = 0;
+
+                const seven_z = getZ(6);
+                setZ(6, seven_z < 2 ? seven_z + 0.01 : 0.1);
+            }
 
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
