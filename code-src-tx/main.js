@@ -31,6 +31,8 @@ Promise.all([
             throw new Error('could not fetch texture-atlas');
         })
         .then(blob => {
+            console.log(`texture atlas file size: ${(blob.size / 1024 / 1024).toFixed(2)} mb`);
+
             return new Promise(resolve => {
                 const img = new Image();
                 img.onload = () => resolve(img);
@@ -40,29 +42,131 @@ Promise.all([
 ])
     .catch(error => console.log(error))
     .then(values => {
-        const dimensions = new Uint32Array(values[1]);
-        const subImages = new Float32Array(values[2]);
+        const baseDimensions = new Uint32Array(values[1]);
+        const baseSubImages = new Float32Array(values[2]);
         const img = values[3];
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array([1280 / 2, 720 / 2, 1]));
+        const BASE_DIM_BUFFER_SIZE = baseDimensions.byteLength;
+        const BASE_SUB_IMG_BUFFER_SIZE = baseSubImages.byteLength;
+        const TOTAL_BASE_BUFFER_SIZE = BASE_DIM_BUFFER_SIZE + BASE_SUB_IMG_BUFFER_SIZE;
+        console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
+        console.log(`texture atlas bitmap size: ${(img.width * img.height * 4 / 1024 / 1024).toFixed(2)} mb`);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array([0, 1, 1, 0.4]));
+        let positions = new Float32Array(positionData, 0, 10 * POS_ELEMENTS);
+        let colors = new Float32Array(colorData, 0, 10 * COLOR_ELEMENTS);
+        let xforms = new Float32Array(xformsData, 0, 10 * XFORMS_ELEMENTS);
+        let dimensions = new Float32Array(dimensionsData, 0, 10 * DIM_ELEMENTS);
+        let subImages = new Float32Array(subImageData, 0, 10 * SUB_IMG_ELEMENTS);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, transformsBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array([1, 5]));
+        const TOTAL_SUB_BUFFER_SIZE = positions.byteLength + colors.byteLength + xforms.byteLength + dimensions.byteLength + subImages.byteLength;
+        console.log(`initial gpu sub buffer tick update size: ${(TOTAL_SUB_BUFFER_SIZE / 1024).toFixed(2)} kb`);
 
-        const dimIdx = SubImage.CARD_C2 * 2;
-        gl.bindBuffer(gl.ARRAY_BUFFER, dimensionsBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array([dimensions[dimIdx], dimensions[dimIdx + 1]]));
-
-        const subImgIdx = SubImage.CARD_C2 * 4;
-        gl.bindBuffer(gl.ARRAY_BUFFER, subImageBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Float32Array(
-            [subImages[subImgIdx], subImages[subImgIdx + 1], subImages[subImgIdx + 2], subImages[subImgIdx + 3]]));
 
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+
+        let id = 0;
+
+        function createEntity(id, imgId, x, y) {
+            positions[id * POS_ELEMENTS] = x;
+            positions[id * POS_ELEMENTS + 1] = y;
+            positions[id * POS_ELEMENTS + 2] = 1.0;
+
+            colors[id * COLOR_ELEMENTS] = 1.0;
+            colors[id * COLOR_ELEMENTS + 1] = 1.0;
+            colors[id * COLOR_ELEMENTS + 2] = 1.0;
+            colors[id * COLOR_ELEMENTS + 3] = 0.0;
+
+            xforms[id * XFORMS_ELEMENTS] = 0.0;
+            xforms[id * XFORMS_ELEMENTS + 1] = 1.0;
+
+            const dimIdx = imgId * DIM_ELEMENTS;
+            dimensions[id * DIM_ELEMENTS] = baseDimensions[dimIdx];
+            dimensions[id * DIM_ELEMENTS + 1] = baseDimensions[dimIdx + 1];
+
+            const subImgIdx = imgId * SUB_IMG_ELEMENTS;
+            subImages[id * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
+            subImages[id * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
+            subImages[id * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
+            subImages[id * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
+        }
+
+        function setX(id, x) {
+            positions[id * POS_ELEMENTS] = x;
+        }
+
+        function getX(id) {
+            return positions[id * POS_ELEMENTS];
+        }
+
+        function setY(id, y) {
+            positions[id * POS_ELEMENTS + 1] = y;
+        }
+
+        function getY(id) {
+            return positions[id * POS_ELEMENTS + 1];
+        }
+
+        function setZ(id, z) {
+            positions[id * POS_ELEMENTS + 2] = z;
+        }
+
+        function getZ(id) {
+            return positions[id * POS_ELEMENTS + 2];
+        }
+
+        function setColor(id, r, g, b, a) {
+            colors[id * COLOR_ELEMENTS] = r;
+            colors[id * COLOR_ELEMENTS + 1] = g;
+            colors[id * COLOR_ELEMENTS + 2] = b;
+            colors[id * COLOR_ELEMENTS + 3] = a;
+        }
+
+        function setRotation(id, rotation) {
+            xforms[id * XFORMS_ELEMENTS] = rotation;
+        }
+
+        function getRotation(id) {
+            return xforms[id * XFORMS_ELEMENTS];
+        }
+
+        function setScale(id, scale) {
+            xforms[id * XFORMS_ELEMENTS + 1] = scale;
+        }
+
+        function setSubImage(id, imgId) {
+            const dimIdx = imgId * DIM_ELEMENTS;
+            dimensions[id * DIM_ELEMENTS] = baseDimensions[dimIdx];
+            dimensions[id * DIM_ELEMENTS + 1] = baseDimensions[dimIdx + 1];
+
+            const subImgIdx = imgId * SUB_IMG_ELEMENTS;
+            subImages[id * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
+            subImages[id * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
+            subImages[id * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
+            subImages[id * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
+        }
+
+        function getWidth(id) {
+            return dimensions[id * DIM_ELEMENTS] * 2;
+        }
+
+        function getHeight(id) {
+            return dimensions[id * DIM_ELEMENTS + 1] * 2;
+        }
+
+        createEntity(id, SubImage.CARD_SA, WIDTH / 2, HEIGHT / 2);
+        id++;
+        createEntity(id, SubImage.CARD_S2, WIDTH / 2 + 50, HEIGHT / 2);
+        id++;
+        createEntity(id, SubImage.CARD_S3, WIDTH / 2 - 50, HEIGHT / 2);
+        id++;
+        createEntity(id, SubImage.CARD_SK, WIDTH / 2 + 150, HEIGHT / 2);
+        id++;
+        createEntity(id, SubImage.CARD_SJ, WIDTH / 2 - 150, HEIGHT / 2);
+        id++;
+        createEntity(id, SubImage.CARD_SQ, WIDTH / 2 + 200, HEIGHT / 2);
+        id++;
+        createEntity(id, SubImage.CARD_S4, WIDTH / 2 - 200, HEIGHT / 2);
+        id++;
 
         // simplest fps meter 1/3
         // let previousTime = Date.now();
@@ -80,11 +184,26 @@ Promise.all([
             // simplest fps meter 2/3
             // const startTime = Date.now();
 
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, colors);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, xformsBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, xforms);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, dimensionsBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, dimensions);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, subImageBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, subImages);
+
             gl.clearColor(1.0, 0.0, 1.0, 1.0);
             gl.clearDepth(1.0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-            ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, 4);
+            ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, id);
 
             // simplest fps meter 3/3
             // {
@@ -238,14 +357,14 @@ if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
 gl.useProgram(program);
 
 
-const width = 1280;
-const height = 720;
-const zNear = -0.1;
-const zFar = -100.0;
-const a = 2 / width;
-const b = 2 / height;
-const c = -2 / (zFar - zNear);
-const tz = -(zFar + zNear) / (zFar - zNear);
+const WIDTH = 1280;
+const HEIGHT = 720;
+const Z_NEAR = -0.1;
+const Z_FAR = -100.0;
+const a = 2 / WIDTH;
+const b = 2 / HEIGHT;
+const c = -2 / (Z_FAR - Z_NEAR);
+const tz = -(Z_FAR + Z_NEAR) / (Z_FAR - Z_NEAR);
 
 const projectionLocation = gl.getUniformLocation(program, 'projection');
 gl.uniformMatrix4fv(projectionLocation, false, new Float32Array([
@@ -271,50 +390,69 @@ gl.enableVertexAttribArray(quadLocation);
 ext.vertexAttribDivisorANGLE(quadLocation, 0);
 
 
+const POS_ELEMENTS = 3;
+const POS_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * POS_ELEMENTS * MAX_ELEMENTS;
+const positionData = new ArrayBuffer(POS_BUFFER_SIZE);
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * MAX_ELEMENTS, gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, POS_BUFFER_SIZE, gl.DYNAMIC_DRAW);
 
 const positionLocation = gl.getAttribLocation(program, 'position');
-gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(positionLocation, POS_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(positionLocation);
 ext.vertexAttribDivisorANGLE(positionLocation, 1);
 
+const COLOR_ELEMENTS = 4;
+const COLOR_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * COLOR_ELEMENTS * MAX_ELEMENTS;
+const colorData = new ArrayBuffer(COLOR_BUFFER_SIZE);
 const colorBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * MAX_ELEMENTS, gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, COLOR_BUFFER_SIZE, gl.DYNAMIC_DRAW);
 
 const colorLocation = gl.getAttribLocation(program, 'color');
-gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(colorLocation, COLOR_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(colorLocation);
 ext.vertexAttribDivisorANGLE(colorLocation, 1);
 
-const transformsBuffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, transformsBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * MAX_ELEMENTS, gl.STATIC_DRAW);
+const XFORMS_ELEMENTS = 2;
+const XFORMS_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * XFORMS_ELEMENTS * MAX_ELEMENTS;
+const xformsData = new ArrayBuffer(XFORMS_BUFFER_SIZE);
+const xformsBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, xformsBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, XFORMS_BUFFER_SIZE, gl.DYNAMIC_DRAW);
 
-const transformsLocation = gl.getAttribLocation(program, 'xforms');
-gl.vertexAttribPointer(transformsLocation, 2, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(transformsLocation);
-ext.vertexAttribDivisorANGLE(transformsLocation, 1);
+const xformsLocation = gl.getAttribLocation(program, 'xforms');
+gl.vertexAttribPointer(xformsLocation, XFORMS_ELEMENTS, gl.FLOAT, false, 0, 0);
+gl.enableVertexAttribArray(xformsLocation);
+ext.vertexAttribDivisorANGLE(xformsLocation, 1);
 
+const DIM_ELEMENTS = 2;
+const DIM_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * DIM_ELEMENTS * MAX_ELEMENTS;
+const dimensionsData = new ArrayBuffer(DIM_BUFFER_SIZE);
 const dimensionsBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, dimensionsBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * MAX_ELEMENTS, gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, DIM_BUFFER_SIZE, gl.STATIC_DRAW);
 
 const dimensionsLocation = gl.getAttribLocation(program, 'dimensions');
-gl.vertexAttribPointer(dimensionsLocation, 2, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(dimensionsLocation, DIM_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(dimensionsLocation);
 ext.vertexAttribDivisorANGLE(dimensionsLocation, 1);
 
+const SUB_IMG_ELEMENTS = 4;
+const SUB_IMG_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * SUB_IMG_ELEMENTS * MAX_ELEMENTS;
+const subImageData = new ArrayBuffer(SUB_IMG_BUFFER_SIZE);
 const subImageBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, subImageBuffer);
-gl.bufferData(gl.ARRAY_BUFFER, Float32Array.BYTES_PER_ELEMENT * MAX_ELEMENTS, gl.STATIC_DRAW);
+gl.bufferData(gl.ARRAY_BUFFER, SUB_IMG_BUFFER_SIZE, gl.STATIC_DRAW);
 
 const subImageLocation = gl.getAttribLocation(program, 'subImage');
-gl.vertexAttribPointer(subImageLocation, 4, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(subImageLocation, SUB_IMG_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(subImageLocation);
 ext.vertexAttribDivisorANGLE(subImageLocation, 1);
+
+const TOTAL_BUFFER_SIZE = POS_BUFFER_SIZE + COLOR_BUFFER_SIZE + XFORMS_BUFFER_SIZE + DIM_BUFFER_SIZE +
+    SUB_IMG_BUFFER_SIZE;
+console.log(`total alloc buffer size: ${(TOTAL_BUFFER_SIZE / 1024).toFixed(2)} kb`);
 
 const texture = gl.createTexture();
 gl.activeTexture(gl.TEXTURE0);
