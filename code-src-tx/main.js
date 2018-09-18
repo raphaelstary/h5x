@@ -1,4 +1,5 @@
 import * as SubImage from '../code-gen/SubImage.js';
+import spriteDimensions from '../code-gen/SpriteDimensions.js';
 
 if (window.Windows)
     console.log(`I'm running on Windows 😎`);
@@ -6,14 +7,6 @@ if (window.Windows)
 Promise.all([
 
     new Promise(resolve => window.onload = resolve),
-
-    fetch('../asset-gen/sprite-dimensions_720.h5')
-        .then(response => {
-            if (response.ok)
-                return response.arrayBuffer();
-
-            throw new Error('could not fetch sprite-dimensions');
-        }),
 
     fetch('../asset-gen/sub-images_720.h5')
         .then(response => {
@@ -42,11 +35,10 @@ Promise.all([
 ])
     .catch(error => console.log(error))
     .then(values => {
-        const baseDimensions = new Uint32Array(values[1]);
-        const baseSubImages = new Float32Array(values[2]);
-        const img = values[3];
+        const baseSubImages = new Float32Array(values[1]);
+        const img = values[2];
 
-        const BASE_DIM_BUFFER_SIZE = baseDimensions.byteLength;
+        const BASE_DIM_BUFFER_SIZE = spriteDimensions.byteLength;
         const BASE_SUB_IMG_BUFFER_SIZE = baseSubImages.byteLength;
         const TOTAL_BASE_BUFFER_SIZE = BASE_DIM_BUFFER_SIZE + BASE_SUB_IMG_BUFFER_SIZE;
         console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
@@ -78,11 +70,13 @@ Promise.all([
             colors[id * COLOR_ELEMENTS + 3] = 0.0;
 
             xforms[id * XFORMS_ELEMENTS] = 0.0;
-            xforms[id * XFORMS_ELEMENTS + 1] = 1.0;
+            xforms[id * XFORMS_ELEMENTS + 1] = 0.0;
+            xforms[id * XFORMS_ELEMENTS + 2] = 0.0;
+            xforms[id * XFORMS_ELEMENTS + 3] = 1.0;
 
             const dimIdx = imgId * DIM_ELEMENTS;
-            dimensions[id * DIM_ELEMENTS] = baseDimensions[dimIdx];
-            dimensions[id * DIM_ELEMENTS + 1] = baseDimensions[dimIdx + 1];
+            dimensions[id * DIM_ELEMENTS] = spriteDimensions[dimIdx];
+            dimensions[id * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
 
             const subImgIdx = imgId * SUB_IMG_ELEMENTS;
             subImages[id * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
@@ -154,26 +148,42 @@ Promise.all([
             return colors[id * COLOR_ELEMENTS + 3];
         }
 
-        function setRotation(id, rotation) {
+        function setRotationX(id, rotation) {
             xforms[id * XFORMS_ELEMENTS] = rotation;
         }
 
-        function getRotation(id) {
+        function getRotationX(id) {
             return xforms[id * XFORMS_ELEMENTS];
         }
 
+        function setRotationY(id, rotation) {
+            xforms[id * XFORMS_ELEMENTS + 1] = rotation;
+        }
+
+        function getRotationY(id) {
+            return xforms[id * XFORMS_ELEMENTS + 1];
+        }
+
+        function setRotationZ(id, rotation) {
+            xforms[id * XFORMS_ELEMENTS + 2] = rotation;
+        }
+
+        function getRotationZ(id) {
+            return xforms[id * XFORMS_ELEMENTS + 2];
+        }
+
         function setScale(id, scale) {
-            xforms[id * XFORMS_ELEMENTS + 1] = scale;
+            xforms[id * XFORMS_ELEMENTS + 3] = scale;
         }
 
         function getScale(id) {
-            return xforms[id * XFORMS_ELEMENTS + 1];
+            return xforms[id * XFORMS_ELEMENTS + 3];
         }
 
         function setSubImage(id, imgId) {
             const dimIdx = imgId * DIM_ELEMENTS;
-            dimensions[id * DIM_ELEMENTS] = baseDimensions[dimIdx];
-            dimensions[id * DIM_ELEMENTS + 1] = baseDimensions[dimIdx + 1];
+            dimensions[id * DIM_ELEMENTS] = spriteDimensions[dimIdx];
+            dimensions[id * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
 
             const subImgIdx = imgId * SUB_IMG_ELEMENTS;
             subImages[id * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
@@ -192,17 +202,17 @@ Promise.all([
 
         createEntity(id, SubImage.CARD_SA, WIDTH / 2, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_S2, WIDTH / 2 + 200, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_S2, WIDTH / 2 + 1, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_S3, WIDTH / 2 - 200, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_S3, WIDTH / 2 - 1, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_SK, WIDTH / 2 + 400, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SK, WIDTH / 2 + 2, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_SJ, WIDTH / 2 - 400, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SJ, WIDTH / 2 - 2, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_SQ, WIDTH / 2 + 600, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SQ, WIDTH / 2 + 3, HEIGHT / 2);
         id++;
-        createEntity(id, SubImage.CARD_S4, WIDTH / 2 - 600, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_S4, WIDTH / 2 - 3, HEIGHT / 2);
         id++;
 
         // simplest fps meter 1/3
@@ -225,16 +235,16 @@ Promise.all([
 
             {
                 const one_x = getX(0);
-                setX(0, one_x < WIDTH ? one_x + 1 : 0);
+                setX(0, one_x < WIDTH ? one_x + 0.01 : 0);
 
                 const two_y = getY(1);
-                setY(1, two_y < HEIGHT ? two_y + 1 : 0);
+                setY(1, two_y < HEIGHT ? two_y + 0.01 : 0);
 
                 const three_scale = getScale(2);
                 setScale(2, three_scale < 2 ? three_scale + 0.01 : 1);
 
-                const four_rotation = getRotation(3);
-                setRotation(3, four_rotation > Math.PI * 2 ? 0.01 : four_rotation + 0.01);
+                const four_rotation = getRotationX(3);
+                setRotationX(3, four_rotation > Math.PI * 2 ? 0.02 : four_rotation + 0.1);
 
                 const five_alpha = getAlpha(4);
                 setAlpha(4, five_alpha < 1 ? five_alpha + 0.01 : 0.0);
@@ -243,8 +253,8 @@ Promise.all([
                 if (subImageId > 85)
                     subImageId = 0;
 
-                const seven_z = getZ(6);
-                setZ(6, seven_z < 2 ? seven_z + 0.01 : 0.1);
+                // const seven_z = getZ(6);
+                // setZ(6, seven_z < 2 ? seven_z + 0.01 : 0.1);
             }
 
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -317,7 +327,7 @@ const MAX_ELEMENTS = 100;
 const vertexShaderSrc = `
 
 attribute vec3 position;
-attribute vec2 xforms;
+attribute vec4 xforms;
 attribute vec2 dimensions;
 attribute vec4 color;
 attribute vec4 subImage;
@@ -338,20 +348,37 @@ void main() {
         tx, ty, 0, 1.0
     );
 
-    float c = cos(xforms.x);
-    float s = sin(xforms.x);
-    mat4 rotate = mat4(
-        c, s, 0, 0,
-        -s, c, 0, 0,
+    float cx = cos(xforms.x);
+    float sx = sin(xforms.x);
+    mat4 rotateX = mat4(
+        1.0, 0, 0, 0,
+        0, cx, sx, 0,
+        0, -sx, cx, 0,
+        0, 0, 0, 1.0
+    );
+
+    float cy = cos(xforms.y);
+    float sy = sin(xforms.y);
+    mat4 rotateY = mat4(
+        cy, 0, -sy, 0,
+        0, 1.0, 0, 0,
+        sy, 0, cy, 0,
+        0, 0, 0, 1.0
+    );
+
+    float cz = cos(xforms.z);
+    float sz = sin(xforms.z);
+    mat4 rotateZ = mat4(
+        cz, sz, 0, 0,
+        -sz, cz, 0, 0,
         0, 0, 1.0, 0,
         0, 0, 0, 1.0
     );
 
-    float sx = xforms.y;
-    float sy = xforms.y;
+    float s = xforms.w;
     mat4 scale = mat4(
-        sx, 0, 0, 0,
-        0, sy, 0, 0,
+        s, 0, 0, 0,
+        0, s, 0, 0,
         0, 0, 1.0, 0,
         0, 0, 0, 1.0
     );
@@ -360,11 +387,13 @@ void main() {
 
     translate[3][0] = -position.x;
     translate[3][1] = -position.y;
+    translate[3][2] = -position.z;
 
-    tmpPosition = rotate * translate * tmpPosition;
+    tmpPosition = rotateX * rotateY * rotateZ * translate * tmpPosition;
 
     translate[3][0] = position.x;
     translate[3][1] = position.y;
+    translate[3][2] = position.z;
 
     gl_Position = projection * translate * scale * tmpPosition;
 
@@ -420,10 +449,10 @@ if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
 gl.useProgram(program);
 
 
-const WIDTH = 1280;
-const HEIGHT = 720;
+const WIDTH = 16;
+const HEIGHT = 9;
 const Z_NEAR = -0.1;
-const Z_FAR = -100.0;
+const Z_FAR = -10.0;
 const a = 2 / WIDTH;
 const b = 2 / HEIGHT;
 const c = -2 / (Z_FAR - Z_NEAR);
@@ -477,7 +506,7 @@ gl.vertexAttribPointer(colorLocation, COLOR_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(colorLocation);
 ext.vertexAttribDivisorANGLE(colorLocation, 1);
 
-const XFORMS_ELEMENTS = 2;
+const XFORMS_ELEMENTS = 4;
 const XFORMS_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * XFORMS_ELEMENTS * MAX_ELEMENTS;
 const xformsData = new ArrayBuffer(XFORMS_BUFFER_SIZE);
 const xformsBuffer = gl.createBuffer();
