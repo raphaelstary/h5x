@@ -62,7 +62,7 @@ Promise.all([
         function createEntity(id, imgId, x, y) {
             positions[id * POS_ELEMENTS] = x;
             positions[id * POS_ELEMENTS + 1] = y;
-            positions[id * POS_ELEMENTS + 2] = 1.0;
+            positions[id * POS_ELEMENTS + 2] = -5.0;
 
             colors[id * COLOR_ELEMENTS] = 1.0;
             colors[id * COLOR_ELEMENTS + 1] = 1.0;
@@ -452,8 +452,10 @@ gl.useProgram(program);
 
 const WIDTH = 16;
 const HEIGHT = 9;
-const Z_NEAR = -0.1;
-const Z_FAR = -10.0;
+const Z_NEAR = 0.1;
+const Z_FAR = 10.0;
+
+// /*
 const a = 2 / WIDTH;
 const b = 2 / HEIGHT;
 const c = -2 / (Z_FAR - Z_NEAR);
@@ -466,7 +468,25 @@ gl.uniformMatrix4fv(projectionLocation, false, new Float32Array([
     0, 0, c, 0,
     -1, -1, tz, 1
 ]));
+// */
 
+/*
+const aspect = WIDTH / HEIGHT;
+const fov = Math.PI * 0.5;
+const f = 1.0 / Math.tan(fov / 2);
+
+const a = f / aspect;
+const c = (Z_NEAR + Z_FAR) / (Z_NEAR - Z_FAR);
+const d = (2 * Z_FAR * Z_NEAR) / (Z_NEAR - Z_FAR);
+
+const projectionLocation = gl.getUniformLocation(program, 'projection');
+gl.uniformMatrix4fv(projectionLocation, false, new Float32Array([
+    a, 0, 0, 0,
+    0, f, 0, 0,
+    0, 0, c, -1,
+    0, 0, d, 0
+]));
+// */
 
 const quadBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
