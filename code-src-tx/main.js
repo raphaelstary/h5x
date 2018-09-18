@@ -200,19 +200,19 @@ Promise.all([
             return dimensions[id * DIM_ELEMENTS + 1] * 2;
         }
 
-        createEntity(id, SubImage.CARD_SA, WIDTH / 2, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SA, 0, 0);
         id++;
-        createEntity(id, SubImage.CARD_S2, WIDTH / 2 + 1, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_S2, 1, 0);
         id++;
-        createEntity(id, SubImage.CARD_S3, WIDTH / 2 - 1, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_S3, -1, 0);
         id++;
-        createEntity(id, SubImage.CARD_SK, WIDTH / 2 + 2, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SK, 2, 0);
         id++;
-        createEntity(id, SubImage.CARD_SJ, WIDTH / 2 - 2, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SJ, -2, 0);
         id++;
-        createEntity(id, SubImage.CARD_SQ, WIDTH / 2 + 3, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_SQ, 3, 0);
         id++;
-        createEntity(id, SubImage.CARD_S4, WIDTH / 2 - 3, HEIGHT / 2);
+        createEntity(id, SubImage.CARD_S4, -3, 0);
         id++;
 
         // simplest fps meter 1/3
@@ -334,6 +334,7 @@ attribute vec4 color;
 attribute vec4 subImage;
 attribute vec4 quad;
 
+uniform mat4 view;
 uniform mat4 projection;
 
 varying vec2 texCoord;
@@ -396,7 +397,7 @@ void main() {
     translate[3][1] = position.y;
     translate[3][2] = position.z;
 
-    gl_Position = projection * translate * scale * tmpPosition;
+    gl_Position = projection * view * translate * scale * tmpPosition;
 
     texCoord = vec2(subImage.x + subImage.z * quad.z, subImage.y + subImage.w * quad.w);
     texColor = color;
@@ -454,6 +455,14 @@ const WIDTH = 16;
 const HEIGHT = 9;
 const Z_NEAR = 0.1;
 const Z_FAR = 10.0;
+
+const viewLocation = gl.getUniformLocation(program, 'view');
+gl.uniformMatrix4fv(viewLocation, false, new Float32Array([
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    WIDTH / 2, HEIGHT / 2, 0, 1
+]));
 
 // /*
 const a = 2 / WIDTH;
