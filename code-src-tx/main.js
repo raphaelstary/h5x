@@ -321,6 +321,7 @@ console.log('max vertex attribs: ' + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
 gl.enable(gl.DEPTH_TEST);
 gl.enable(gl.BLEND);
 gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+gl.enable(gl.CULL_FACE);
 
 const MAX_ELEMENTS = 100;
 
@@ -471,8 +472,8 @@ const quadBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
     -1.0, -1.0, 0.0, 1.0,
-    -1.0, 1.0, 0.0, 0.0,
     1.0, -1.0, 1.0, 1.0,
+    -1.0, 1.0, 0.0, 0.0,
     1.0, 1.0, 1.0, 0.0
 ]), gl.STATIC_DRAW);
 
