@@ -464,38 +464,21 @@ gl.uniformMatrix4fv(viewLocation, false, new Float32Array([
     0, 0, 0, 1
 ]));
 
-/*
-const a = 2 / WIDTH;
-const b = 2 / HEIGHT;
-const c = -2 / (Z_FAR - Z_NEAR);
-const tz = -(Z_FAR + Z_NEAR) / (Z_FAR - Z_NEAR);
-
-const projectionLocation = gl.getUniformLocation(program, 'projection');
-gl.uniformMatrix4fv(projectionLocation, false, new Float32Array([
-    a, 0, 0, 0,
-    0, b, 0, 0,
-    0, 0, c, 0,
-    -1, -1, tz, 1
-]));
-// */
-
-// /*
 const aspect = WIDTH / HEIGHT;
 const fov = Math.PI * 0.5;
 const f = 1.0 / Math.tan(fov / 2);
 
 const a = f / aspect;
 const c = (Z_NEAR + Z_FAR) / (Z_NEAR - Z_FAR);
-const d = (2 * Z_FAR * Z_NEAR) / (Z_NEAR - Z_FAR);
+const tz = 2 * Z_FAR * Z_NEAR / (Z_NEAR - Z_FAR);
 
 const projectionLocation = gl.getUniformLocation(program, 'projection');
 gl.uniformMatrix4fv(projectionLocation, false, new Float32Array([
     a, 0, 0, 0,
     0, f, 0, 0,
     0, 0, c, -1,
-    0, 0, d, 0
+    0, 0, tz, 0
 ]));
-// */
 
 const quadBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
