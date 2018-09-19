@@ -461,10 +461,10 @@ gl.uniformMatrix4fv(viewLocation, false, new Float32Array([
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
-    WIDTH / 2, HEIGHT / 2, 0, 1
+    0, 0, 0, 1
 ]));
 
-// /*
+/*
 const a = 2 / WIDTH;
 const b = 2 / HEIGHT;
 const c = -2 / (Z_FAR - Z_NEAR);
@@ -479,7 +479,7 @@ gl.uniformMatrix4fv(projectionLocation, false, new Float32Array([
 ]));
 // */
 
-/*
+// /*
 const aspect = WIDTH / HEIGHT;
 const fov = Math.PI * 0.5;
 const f = 1.0 / Math.tan(fov / 2);
