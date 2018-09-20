@@ -44,218 +44,274 @@ Promise.all([
         console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
         console.log(`texture atlas bitmap size: ${(img.width * img.height * 4 / 1024 / 1024).toFixed(2)} mb`);
 
-        const INIT_ELEMENTS = 10;
-        let positions = new Float32Array(positionData, 0, INIT_ELEMENTS * POS_ELEMENTS);
-        let colors = new Float32Array(colorData, 0, INIT_ELEMENTS * COLOR_ELEMENTS);
-        let xforms = new Float32Array(xformsData, 0, INIT_ELEMENTS * XFORMS_ELEMENTS);
-        let dimensions = new Float32Array(dimensionsData, 0, INIT_ELEMENTS * DIM_ELEMENTS);
-        let subImages = new Float32Array(subImageData, 0, INIT_ELEMENTS * SUB_IMG_ELEMENTS);
+        const ELEMENTS_CHUNK = 1 << 6;
 
-        const TOTAL_SUB_BUFFER_SIZE = positions.byteLength + colors.byteLength + xforms.byteLength + dimensions.byteLength + subImages.byteLength;
-        console.log(`initial gpu sub buffer tick update size: ${(TOTAL_SUB_BUFFER_SIZE / 1024).toFixed(2)} kb`);
+        let positions;
+        let colors;
+        let xforms;
+        let dimensions;
+        let subImages;
+
+        function resizeTypedViews(elements) {
+            positions = new Float32Array(positionData, 0, elements * POS_ELEMENTS);
+            colors = new Float32Array(colorData, 0, elements * COLOR_ELEMENTS);
+            xforms = new Float32Array(xformsData, 0, elements * XFORMS_ELEMENTS);
+            dimensions = new Float32Array(dimensionsData, 0, elements * DIM_ELEMENTS);
+            subImages = new Float32Array(subImageData, 0, elements * SUB_IMG_ELEMENTS);
+
+            const TOTAL_SUB_BUFFER_SIZE = positions.byteLength + colors.byteLength + xforms.byteLength +
+                dimensions.byteLength + subImages.byteLength;
+            console.log(`current gpu sub buffer tick update size: ${(TOTAL_SUB_BUFFER_SIZE / 1024).toFixed(2)} kb`);
+        }
+
+        let currentMaxElements = ELEMENTS_CHUNK;
+        resizeTypedViews(currentMaxElements);
 
 
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
-        let id = 0;
+        let spriteCount = 0;
+        let lowIndex = 0;
+        let highIndex = 0;
 
-        function createEntity(id, imgId, x, y) {
-            positions[id * POS_ELEMENTS] = x;
-            positions[id * POS_ELEMENTS + 1] = y;
-            positions[id * POS_ELEMENTS + 2] = -5.0;
+        const sprites = new Uint16Array(MAX_ELEMENTS);
+        console.log(`sprite store size: ${(sprites.byteLength / 1024).toFixed(2)} kb`);
 
-            colors[id * COLOR_ELEMENTS] = 1.0;
-            colors[id * COLOR_ELEMENTS + 1] = 1.0;
-            colors[id * COLOR_ELEMENTS + 2] = 1.0;
-            colors[id * COLOR_ELEMENTS + 3] = 0.0;
+        const ACTIVE_FLAG = 0b1;
+        const VERSION_BITS = 15;
+        const VERSION_MASK = 0b111111111111111;
+        const MAX_VERSION = (1 << VERSION_BITS) - 1;
 
-            xforms[id * XFORMS_ELEMENTS] = 0.0;
-            xforms[id * XFORMS_ELEMENTS + 1] = 0.0;
-            xforms[id * XFORMS_ELEMENTS + 2] = 0.0;
-            xforms[id * XFORMS_ELEMENTS + 3] = 1.0;
+        function getIndex(id) {
+            const idx = id >> VERSION_BITS;
+            const version = id & VERSION_MASK;
+            const currentVersion = sprites[idx] >> 1;
+
+            if (version == currentVersion)
+                return idx;
+            return -1;
+        }
+
+        function createSprite(imgId, x, y) {
+            let idx;
+            let version;
+
+            for (idx = 0; idx < sprites.length; idx++) {
+
+                const flags = sprites[idx];
+
+                if (!(flags & ACTIVE_FLAG)) {
+
+                    version = flags >> 1;
+                    sprites[idx] = flags | ACTIVE_FLAG;
+
+                    break;
+                }
+            }
+
+            if (idx == undefined || version == undefined)
+                throw new Error('could not create new sprite, probably no space left');
+
+
+            spriteCount++;
+
+            if (lowIndex > idx)
+                lowIndex = idx;
+
+            if (highIndex < idx) {
+                highIndex = idx;
+
+                if (highIndex + 1 > currentMaxElements) {
+                    currentMaxElements += ELEMENTS_CHUNK;
+                    resizeTypedViews(currentMaxElements);
+                }
+            }
+
+            positions[idx * POS_ELEMENTS] = x;
+            positions[idx * POS_ELEMENTS + 1] = y;
+            positions[idx * POS_ELEMENTS + 2] = -5.0;
+
+            colors[idx * COLOR_ELEMENTS] = 1.0;
+            colors[idx * COLOR_ELEMENTS + 1] = 1.0;
+            colors[idx * COLOR_ELEMENTS + 2] = 1.0;
+            colors[idx * COLOR_ELEMENTS + 3] = 0.0;
+
+            xforms[idx * XFORMS_ELEMENTS] = 0.0;
+            xforms[idx * XFORMS_ELEMENTS + 1] = 0.0;
+            xforms[idx * XFORMS_ELEMENTS + 2] = 0.0;
+            xforms[idx * XFORMS_ELEMENTS + 3] = 1.0;
 
             const dimIdx = imgId * DIM_ELEMENTS;
-            dimensions[id * DIM_ELEMENTS] = spriteDimensions[dimIdx];
-            dimensions[id * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
+            dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
+            dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
 
             const subImgIdx = imgId * SUB_IMG_ELEMENTS;
-            subImages[id * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
-            subImages[id * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
-            subImages[id * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
-            subImages[id * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
+            subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
+            subImages[idx * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
+            subImages[idx * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
+            subImages[idx * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
+
+            return idx << VERSION_BITS | version;
         }
 
-        function setX(id, x) {
-            positions[id * POS_ELEMENTS] = x;
+        function deleteSprite(idx) {
+            spriteCount--;
+
+            let currentVersion = sprites[idx] >> 1;
+
+            if (currentVersion < MAX_VERSION) {
+                currentVersion++; // increase version
+                sprites[idx] = currentVersion << 1; // clear active flag -> set inactive
+
+            } else {
+                console.log(`sprite @${idx} is at max version`);
+            }
+
+            setZ(idx, 1.0);
+
+            if (lowIndex == idx) {
+                for (let i = idx; i < sprites.length; i++) {
+                    if (sprites[i] & ACTIVE_FLAG) {
+                        lowIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (highIndex == idx) {
+                for (let i = idx; i >= 0; i--) {
+                    if (sprites[i] & ACTIVE_FLAG) {
+                        highIndex = i;
+                        break;
+                    }
+                }
+
+                if (highIndex + 1 < currentMaxElements - 2 * ELEMENTS_CHUNK) {
+                    currentMaxElements -= ELEMENTS_CHUNK;
+                    resizeTypedViews(currentMaxElements);
+                }
+            }
         }
 
-        function getX(id) {
-            return positions[id * POS_ELEMENTS];
+        function setX(idx, x) {
+            positions[idx * POS_ELEMENTS] = x;
         }
 
-        function setY(id, y) {
-            positions[id * POS_ELEMENTS + 1] = y;
+        function getX(idx) {
+            return positions[idx * POS_ELEMENTS];
         }
 
-        function getY(id) {
-            return positions[id * POS_ELEMENTS + 1];
+        function setY(idx, y) {
+            positions[idx * POS_ELEMENTS + 1] = y;
         }
 
-        function setZ(id, z) {
-            positions[id * POS_ELEMENTS + 2] = z;
+        function getY(idx) {
+            return positions[idx * POS_ELEMENTS + 1];
         }
 
-        function getZ(id) {
-            return positions[id * POS_ELEMENTS + 2];
+        function setZ(idx, z) {
+            positions[idx * POS_ELEMENTS + 2] = z;
         }
 
-        function setColor(id, r, g, b, a) {
-            colors[id * COLOR_ELEMENTS] = r;
-            colors[id * COLOR_ELEMENTS + 1] = g;
-            colors[id * COLOR_ELEMENTS + 2] = b;
-            colors[id * COLOR_ELEMENTS + 3] = a;
+        function getZ(idx) {
+            return positions[idx * POS_ELEMENTS + 2];
         }
 
-        function setRed(id, r) {
-            colors[id * COLOR_ELEMENTS] = r;
+        function setColor(idx, r, g, b, a) {
+            colors[idx * COLOR_ELEMENTS] = r;
+            colors[idx * COLOR_ELEMENTS + 1] = g;
+            colors[idx * COLOR_ELEMENTS + 2] = b;
+            colors[idx * COLOR_ELEMENTS + 3] = a;
         }
 
-        function getRed(id) {
-            return colors[id * COLOR_ELEMENTS];
+        function setRed(idx, r) {
+            colors[idx * COLOR_ELEMENTS] = r;
         }
 
-        function setGreen(id, g) {
-            colors[id * COLOR_ELEMENTS + 1] = g;
+        function getRed(idx) {
+            return colors[idx * COLOR_ELEMENTS];
         }
 
-        function getGreen(id) {
-            return colors[id * COLOR_ELEMENTS + 1];
+        function setGreen(idx, g) {
+            colors[idx * COLOR_ELEMENTS + 1] = g;
         }
 
-        function setBlue(id, b) {
-            colors[id * COLOR_ELEMENTS + 2] = b;
+        function getGreen(idx) {
+            return colors[idx * COLOR_ELEMENTS + 1];
         }
 
-        function getBlue(id) {
-            return colors[id * COLOR_ELEMENTS + 2];
+        function setBlue(idx, b) {
+            colors[idx * COLOR_ELEMENTS + 2] = b;
         }
 
-        function setAlpha(id, a) {
-            colors[id * COLOR_ELEMENTS + 3] = a;
+        function getBlue(idx) {
+            return colors[idx * COLOR_ELEMENTS + 2];
         }
 
-        function getAlpha(id) {
-            return colors[id * COLOR_ELEMENTS + 3];
+        function setAlpha(idx, a) {
+            colors[idx * COLOR_ELEMENTS + 3] = a;
         }
 
-        function setRotationX(id, rotation) {
-            xforms[id * XFORMS_ELEMENTS] = rotation;
+        function getAlpha(idx) {
+            return colors[idx * COLOR_ELEMENTS + 3];
         }
 
-        function getRotationX(id) {
-            return xforms[id * XFORMS_ELEMENTS];
+        function setRotationX(idx, rotation) {
+            xforms[idx * XFORMS_ELEMENTS] = rotation;
         }
 
-        function setRotationY(id, rotation) {
-            xforms[id * XFORMS_ELEMENTS + 1] = rotation;
+        function getRotationX(idx) {
+            return xforms[idx * XFORMS_ELEMENTS];
         }
 
-        function getRotationY(id) {
-            return xforms[id * XFORMS_ELEMENTS + 1];
+        function setRotationY(idx, rotation) {
+            xforms[idx * XFORMS_ELEMENTS + 1] = rotation;
         }
 
-        function setRotationZ(id, rotation) {
-            xforms[id * XFORMS_ELEMENTS + 2] = rotation;
+        function getRotationY(idx) {
+            return xforms[idx * XFORMS_ELEMENTS + 1];
         }
 
-        function getRotationZ(id) {
-            return xforms[id * XFORMS_ELEMENTS + 2];
+        function setRotationZ(idx, rotation) {
+            xforms[idx * XFORMS_ELEMENTS + 2] = rotation;
         }
 
-        function setScale(id, scale) {
-            xforms[id * XFORMS_ELEMENTS + 3] = scale;
+        function getRotationZ(idx) {
+            return xforms[idx * XFORMS_ELEMENTS + 2];
         }
 
-        function getScale(id) {
-            return xforms[id * XFORMS_ELEMENTS + 3];
+        function setScale(idx, scale) {
+            xforms[idx * XFORMS_ELEMENTS + 3] = scale;
         }
 
-        function setSubImage(id, imgId) {
+        function getScale(idx) {
+            return xforms[idx * XFORMS_ELEMENTS + 3];
+        }
+
+        function setSubImage(idx, imgId) {
             const dimIdx = imgId * DIM_ELEMENTS;
-            dimensions[id * DIM_ELEMENTS] = spriteDimensions[dimIdx];
-            dimensions[id * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
+            dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
+            dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
 
             const subImgIdx = imgId * SUB_IMG_ELEMENTS;
-            subImages[id * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
-            subImages[id * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
-            subImages[id * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
-            subImages[id * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
+            subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
+            subImages[idx * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
+            subImages[idx * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
+            subImages[idx * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
         }
 
-        function getWidth(id) {
-            return dimensions[id * DIM_ELEMENTS] * 2;
+        function getWidth(idx) {
+            return dimensions[idx * DIM_ELEMENTS] * 2;
         }
 
-        function getHeight(id) {
-            return dimensions[id * DIM_ELEMENTS + 1] * 2;
+        function getHeight(idx) {
+            return dimensions[idx * DIM_ELEMENTS + 1] * 2;
         }
 
-        createEntity(id, SubImage.CARD_SA, 0, 0);
-        id++;
-        createEntity(id, SubImage.CARD_S2, 1, 0);
-        id++;
-        createEntity(id, SubImage.CARD_S3, -1, 0);
-        id++;
-        createEntity(id, SubImage.CARD_SK, 2, 0);
-        id++;
-        createEntity(id, SubImage.CARD_SJ, -2, 0);
-        id++;
-        createEntity(id, SubImage.CARD_SQ, 3, 0);
-        id++;
-        createEntity(id, SubImage.CARD_S4, -3, 0);
-        id++;
-
-        // simplest fps meter 1/3
-        // let previousTime = Date.now();
-        // let ms = 0;
-        // let msMin = Infinity;
-        // let msMax = 0;
-        // let fps = 0;
-        // let fpsMin = Infinity;
-        // let fpsMax = 0;
-        // let frames = 0;
-
-        let subImageId = 0;
 
         function renderLoop() {
             requestAnimationFrame(renderLoop);
 
-            // simplest fps meter 2/3
-            // const startTime = Date.now();
-
-            {
-                const one_x = getX(0);
-                setX(0, one_x < WIDTH ? one_x + 0.01 : 0);
-
-                const two_y = getY(1);
-                setY(1, two_y < HEIGHT ? two_y + 0.01 : 0);
-
-                const three_scale = getScale(2);
-                setScale(2, three_scale < 2 ? three_scale + 0.01 : 1);
-
-                const four_rotation = getRotationX(3);
-                setRotationX(3, four_rotation > Math.PI * 2 ? 0.02 : four_rotation + 0.1);
-
-                const five_alpha = getAlpha(4);
-                setAlpha(4, five_alpha < 1 ? five_alpha + 0.01 : 0.0);
-
-                setSubImage(5, ++subImageId);
-                if (subImageId > 85)
-                    subImageId = 0;
-
-                // const seven_z = getZ(6);
-                // setZ(6, seven_z < 2 ? seven_z + 0.01 : 0.1);
-            }
 
             gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
             gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
@@ -276,36 +332,7 @@ Promise.all([
             gl.clearDepth(1.0);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-            ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, id);
-
-            // simplest fps meter 3/3
-            // {
-            //     const time = Date.now();
-            //
-            //     ms = time - startTime;
-            //     msMin = Math.min(msMin, ms);
-            //     msMax = Math.max(msMax, ms);
-            //
-            //     frames++;
-            //
-            //     if (time > previousTime + 1000) {
-            //
-            //         fps = Math.round(frames * 1000 / (time - previousTime));
-            //         fpsMin = Math.min(fpsMin, fps);
-            //         fpsMax = Math.max(fpsMax, fps);
-            //
-            //         previousTime = time;
-            //         frames = 0;
-            //
-            //         console.log(Date.now());
-            //         console.log('fps: ' + fps);
-            //         console.log('min fps: ' + fpsMin);
-            //         console.log('max fps: ' + fpsMax);
-            //         console.log('ms: ' + ms);
-            //         console.log('min ms: ' + msMin);
-            //         console.log('max ms: ' + msMax);
-            //     }
-            // }
+            ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, highIndex + 1);
         }
 
         renderLoop();
@@ -323,7 +350,7 @@ gl.enable(gl.BLEND);
 gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 gl.enable(gl.CULL_FACE);
 
-const MAX_ELEMENTS = 100;
+const MAX_ELEMENTS = 1 << 14;
 
 const vertexShaderSrc = `
 
@@ -557,7 +584,7 @@ ext.vertexAttribDivisorANGLE(subImageLocation, 1);
 
 const TOTAL_BUFFER_SIZE = POS_BUFFER_SIZE + COLOR_BUFFER_SIZE + XFORMS_BUFFER_SIZE + DIM_BUFFER_SIZE +
     SUB_IMG_BUFFER_SIZE;
-console.log(`total alloc buffer size: ${(TOTAL_BUFFER_SIZE / 1024).toFixed(2)} kb`);
+console.log(`total alloc buffer size: ${(TOTAL_BUFFER_SIZE / 1024 / 1024).toFixed(2)} mb`);
 
 const texture = gl.createTexture();
 gl.activeTexture(gl.TEXTURE0);
