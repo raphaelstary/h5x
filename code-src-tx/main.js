@@ -655,8 +655,8 @@ function getHeight(idx) {
 /*
  * ANIMATION
  */
-const ANIM_MAX_ELEMENTS = 1 << 14;
-const ANIM_BYTES_PER_ELEMENT = 28;
+const ANIM_MAX_ELEMENTS = 1 << 13;
+const ANIM_BYTES_PER_ELEMENT = 24;
 const ANIM_BUFFER_SIZE = ANIM_BYTES_PER_ELEMENT * ANIM_MAX_ELEMENTS;
 
 const animScaleBuffer = new ArrayBuffer(ANIM_BUFFER_SIZE);
@@ -665,17 +665,15 @@ let animScaleCount = 0;
 let animScaleMinIdx = 0;
 let animScaleMaxIdx = 0;
 
-// 4 bytes fields:
-const ANIM_VERSION_N_STATE_OFFSET = 0;  // 2 byte
-const ANIM_INFO_OFFSET = 2;     // 2 byte
-const ANIM_SPRITE_OFFSET = 4;   // 4 byte
-const ANIM_TIMING_OFFSET = 8;  // 2 byte
-// 2 byte padding (maybe add curve here)
-const ANIM_START_OFFSET = 12;   // 4 byte
-const ANIM_END_OFFSET = 16;     // 4 byte
-const ANIM_FROM_OFFSET = 20;    // 4 byte
-const ANIM_TO_OFFSET = 24;      // 4 byte
+const ANIM_VERSION_N_STATE_OFFSET = 0; // 2 byte
+const ANIM_TIMING_N_INFO_OFFSET = 2; // 2 byte
+const ANIM_SPRITE_OFFSET = 4; // 4 byte
+const ANIM_START_OFFSET = 8; // 4 byte
+const ANIM_END_OFFSET = 12; // 4 byte
+const ANIM_FROM_OFFSET = 16; // 4 byte
+const ANIM_TO_OFFSET = 20; // 4 byte
 
+const INFO_BITS = 2;
 // info flags
 const CALLBACK_FLAG = 0b0000000000000001;
 const LOOP_FLAG = 0b0000000000000010;
@@ -750,59 +748,30 @@ function createScaleAnimation(sprite, duration, toValue, timing) {
 
     const offset = idx * ANIM_BYTES_PER_ELEMENT;
 
-    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, 0);
+    scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, timing << INFO_BITS);
 
     scaleAnimations.setUint32(offset + ANIM_SPRITE_OFFSET, sprite);
-    scaleAnimations.setUint16(offset + ANIM_TIMING_OFFSET, timing);
     scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
     scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration);
-
     scaleAnimations.setFloat32(offset + ANIM_FROM_OFFSET, getScale(sprite >> VERSION_BITS));
     scaleAnimations.setFloat32(offset + ANIM_TO_OFFSET, toValue);
 
     return idx << VERSION_BITS | version;
 }
 
-function loopScaleAnimation(idx) {
+function setLoopScaleAnimation(idx, loop) {
     const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+    const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
 
-    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, info | LOOP_FLAG);
-}
-
-function stopLoopingScaleAnimation(idx) {
-    const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
-
-    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, info & ~LOOP_FLAG);
-}
-
-function isScaleAnimationLooping(idx) {
-    const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
-    return info & LOOP_FLAG;
+    scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, loop ? info | LOOP_FLAG : info & ~LOOP_FLAG);
 }
 
 function setScaleAnimationCallback(idx, callback) {
     const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+    const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
 
-    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, info | CALLBACK_FLAG);
+    scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, info | CALLBACK_FLAG);
     callbacks[ANIM_SCALE_CB_KEY + idx] = callback;
-}
-
-function removeScaleAnimationCallback(idx) {
-    const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
-
-    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, info & ~CALLBACK_FLAG);
-    delete callbacks[ANIM_SCALE_CB_KEY + idx];
-}
-
-function hasScaleAnimationCallback(idx) {
-    const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
-    return info & CALLBACK_FLAG;
 }
 
 function restartScaleAnimation(idx) {
@@ -857,74 +826,74 @@ function deleteScaleAnimation(idx) {
     }
 }
 
-// TRANSITION TIMING FLAGs (aka SPACING aka the transformation fn)
-const LINEAR = 0b0000000000000000;
-const EASE_IN_QUAD = 0b0000000000000001;
-const EASE_OUT_QUAD = 0b0000000000000010;
-const EASE_IN_OUT_QUAD = 0b0000000000000100;
-const EASE_IN_CUBIC = 0b0000000000001000;
-const EASE_OUT_CUBIC = 0b0000000000010000;
-const EASE_IN_OUT_CUBIC = 0b0000000000100000;
-const EASE_IN_QUART = 0b0000000001000000;
-const EASE_OUT_QUART = 0b0000000010000000;
-const EASE_IN_OUT_QUART = 0b0000000100000000;
-const EASE_IN_QUINT = 0b0000001000000000;
-const EASE_OUT_QUINT = 0b0000010000000000;
-const EASE_IN_OUT_QUINT = 0b0000100000000000;
+// TRANSITION TIMING CONSTANTS (aka SPACING aka the transformation fn)
+const LINEAR = 0;
+const EASE_IN_QUAD = 1;
+const EASE_OUT_QUAD = 2;
+const EASE_IN_OUT_QUAD = 3;
+const EASE_IN_CUBIC = 4;
+const EASE_OUT_CUBIC = 5;
+const EASE_IN_OUT_CUBIC = 6;
+const EASE_IN_QUART = 7;
+const EASE_OUT_QUART = 8;
+const EASE_IN_OUT_QUART = 9;
+const EASE_IN_QUINT = 10;
+const EASE_OUT_QUINT = 11;
+const EASE_IN_OUT_QUINT = 12;
 
 function map(x, minX, maxX, minY, maxY, trans) {
     const xNormalized = (x - minX) / (maxX - minX);
 
 
     let xTransformed;
-    if (trans & EASE_IN_QUAD)
+    if (trans == EASE_IN_QUAD)
         xTransformed = xNormalized * xNormalized;
-    else if (trans & EASE_IN_CUBIC)
+    else if (trans == EASE_IN_CUBIC)
         xTransformed = xNormalized * xNormalized * xNormalized;
-    else if (trans & EASE_IN_QUART)
+    else if (trans == EASE_IN_QUART)
         xTransformed = xNormalized * xNormalized * xNormalized * xNormalized;
-    else if (trans & EASE_IN_QUINT)
+    else if (trans == EASE_IN_QUINT)
         xTransformed = xNormalized * xNormalized * xNormalized * xNormalized * xNormalized;
 
-    else if (trans & EASE_OUT_QUAD) {
+    else if (trans == EASE_OUT_QUAD) {
         const t = (1 - xNormalized);
         xTransformed = 1 - t * t;
     }
-    else if (trans & EASE_OUT_CUBIC) {
+    else if (trans == EASE_OUT_CUBIC) {
         const t = (1 - xNormalized);
         xTransformed = 1 - t * t * t;
     }
-    else if (trans & EASE_OUT_QUART) {
+    else if (trans == EASE_OUT_QUART) {
         const t = (1 - xNormalized);
         xTransformed = 1 - t * t * t * t;
     }
-    else if (trans & EASE_OUT_QUINT) {
+    else if (trans == EASE_OUT_QUINT) {
         const t = (1 - xNormalized);
         xTransformed = 1 - t * t * t * t * t;
     }
 
-    else if (trans & EASE_IN_OUT_QUAD) {
+    else if (trans == EASE_IN_OUT_QUAD) {
         const x0 = xNormalized * xNormalized;
         const t = (1 - xNormalized);
         const x1 = 1 - t * t;
         const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
         xTransformed = xMixed;
     }
-    else if (trans & EASE_IN_OUT_CUBIC) {
+    else if (trans == EASE_IN_OUT_CUBIC) {
         const x0 = xNormalized * xNormalized * xNormalized;
         const t = (1 - xNormalized);
         const x1 = 1 - t * t * t;
         const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
         xTransformed = xMixed;
     }
-    else if (trans & EASE_IN_OUT_QUART) {
+    else if (trans == EASE_IN_OUT_QUART) {
         const x0 = xNormalized * xNormalized * xNormalized * xNormalized;
         const t = (1 - xNormalized);
         const x1 = 1 - t * t * t * t;
         const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
         xTransformed = xMixed;
     }
-    else if (trans & EASE_IN_OUT_QUINT) {
+    else if (trans == EASE_IN_OUT_QUINT) {
         const x0 = xNormalized * xNormalized * xNormalized * xNormalized * xNormalized;
         const t = (1 - xNormalized);
         const x1 = 1 - t * t * t * t * t;
@@ -932,7 +901,7 @@ function map(x, minX, maxX, minY, maxY, trans) {
         xTransformed = xMixed;
     }
 
-    else if (trans & LINEAR)
+    else if (trans == LINEAR)
         xTransformed = xNormalized;
 
 
@@ -960,13 +929,13 @@ function eventLoop() {
                     if (start > frame)
                         continue;
 
-                    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+                    const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
                     const sprite = scaleAnimations.getUint32(offset + ANIM_SPRITE_OFFSET);
-                    const timing = scaleAnimations.getUint16(offset + ANIM_TIMING_OFFSET);
                     const end = scaleAnimations.getUint32(offset + ANIM_END_OFFSET);
                     const from = scaleAnimations.getFloat32(offset + ANIM_FROM_OFFSET);
                     const to = scaleAnimations.getFloat32(offset + ANIM_TO_OFFSET);
 
+                    const timing = info >> INFO_BITS;
                     const nextScaleValue = map(frame, start, end, from, to, timing);
 
                     const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
@@ -1040,8 +1009,8 @@ function eventLoop() {
  */
 function runTestScene() {
     const aceOfSpades = createSprite(SubImage.CARD_SA, 0, 0);
-    const scalingRef = createScaleAnimation(aceOfSpades, 60 * 5, 5, EASE_IN_OUT_QUINT);
-    loopScaleAnimation(scalingRef >> VERSION_BITS);
+    const scalingRef = createScaleAnimation(aceOfSpades, 60 * 5, 5, EASE_OUT_QUINT);
+    // setLoopScaleAnimation(scalingRef >> VERSION_BITS, true);
     delayScaleAnimation(scalingRef >> VERSION_BITS, 60 * 2);
     setScaleAnimationCallback(scalingRef >> VERSION_BITS, () => console.log('scaling done'));
 }
