@@ -245,6 +245,9 @@ ext.vertexAttribDivisorANGLE(quadLocation, 0);
 const MAX_ELEMENTS = 1 << 14;
 
 const POS_ELEMENTS = 3;
+const POS_X_OFFSET = 0;
+const POS_Y_OFFSET = 1;
+const POS_Z_OFFSET = 2;
 const POS_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * POS_ELEMENTS * MAX_ELEMENTS;
 
 const positionData = new ArrayBuffer(POS_BUFFER_SIZE);
@@ -258,6 +261,10 @@ gl.enableVertexAttribArray(positionLocation);
 ext.vertexAttribDivisorANGLE(positionLocation, 1);
 
 const COLOR_ELEMENTS = 4;
+const COLOR_RED_OFFSET = 0;
+const COLOR_GREEN_OFFSET = 1;
+const COLOR_BLUE_OFFSET = 2;
+const COLOR_ALPHA_OFFSET = 3;
 const COLOR_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * COLOR_ELEMENTS * MAX_ELEMENTS;
 
 const colorData = new ArrayBuffer(COLOR_BUFFER_SIZE);
@@ -271,6 +278,10 @@ gl.enableVertexAttribArray(colorLocation);
 ext.vertexAttribDivisorANGLE(colorLocation, 1);
 
 const XFORMS_ELEMENTS = 4;
+const XFORMS_ROTATION_X_OFFSET = 0;
+const XFORMS_ROTATION_Y_OFFSET = 1;
+const XFORMS_ROTATION_Z_OFFSET = 2;
+const XFORMS_SCALE_OFFSET = 3;
 const XFORMS_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * XFORMS_ELEMENTS * MAX_ELEMENTS;
 
 const xformsData = new ArrayBuffer(XFORMS_BUFFER_SIZE);
@@ -501,122 +512,122 @@ function deleteSprite(idx) {
 }
 
 function setX(idx, x) {
-    positions[idx * POS_ELEMENTS] = x;
+    positions[idx * POS_ELEMENTS + POS_X_OFFSET] = x;
 
     changeFlags |= POS_CHANGED;
 }
 
 function getX(idx) {
-    return positions[idx * POS_ELEMENTS];
+    return positions[idx * POS_ELEMENTS + POS_X_OFFSET];
 }
 
 function setY(idx, y) {
-    positions[idx * POS_ELEMENTS + 1] = y;
+    positions[idx * POS_ELEMENTS + POS_Y_OFFSET] = y;
 
     changeFlags |= POS_CHANGED;
 }
 
 function getY(idx) {
-    return positions[idx * POS_ELEMENTS + 1];
+    return positions[idx * POS_ELEMENTS + POS_Y_OFFSET];
 }
 
 function setZ(idx, z) {
-    positions[idx * POS_ELEMENTS + 2] = z;
+    positions[idx * POS_ELEMENTS + POS_Z_OFFSET] = z;
 
     changeFlags |= POS_CHANGED;
 }
 
 function getZ(idx) {
-    return positions[idx * POS_ELEMENTS + 2];
+    return positions[idx * POS_ELEMENTS + POS_Z_OFFSET];
 }
 
 function setColor(idx, r, g, b, a) {
-    colors[idx * COLOR_ELEMENTS] = r;
-    colors[idx * COLOR_ELEMENTS + 1] = g;
-    colors[idx * COLOR_ELEMENTS + 2] = b;
-    colors[idx * COLOR_ELEMENTS + 3] = a;
+    colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET] = r;
+    colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET] = g;
+    colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET] = b;
+    colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET] = a;
 
     changeFlags |= COLORS_CHANGED;
 }
 
 function setRed(idx, r) {
-    colors[idx * COLOR_ELEMENTS] = r;
+    colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET] = r;
 
     changeFlags |= COLORS_CHANGED;
 }
 
 function getRed(idx) {
-    return colors[idx * COLOR_ELEMENTS];
+    return colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET];
 }
 
 function setGreen(idx, g) {
-    colors[idx * COLOR_ELEMENTS + 1] = g;
+    colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET] = g;
 
     changeFlags |= COLORS_CHANGED;
 }
 
 function getGreen(idx) {
-    return colors[idx * COLOR_ELEMENTS + 1];
+    return colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET];
 }
 
 function setBlue(idx, b) {
-    colors[idx * COLOR_ELEMENTS + 2] = b;
+    colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET] = b;
 
     changeFlags |= COLORS_CHANGED;
 }
 
 function getBlue(idx) {
-    return colors[idx * COLOR_ELEMENTS + 2];
+    return colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET];
 }
 
 function setAlpha(idx, a) {
-    colors[idx * COLOR_ELEMENTS + 3] = a;
+    colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET] = a;
 
     changeFlags |= COLORS_CHANGED;
 }
 
 function getAlpha(idx) {
-    return colors[idx * COLOR_ELEMENTS + 3];
+    return colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET];
 }
 
 function setRotationX(idx, rotation) {
-    xforms[idx * XFORMS_ELEMENTS] = rotation;
+    xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_X_OFFSET] = rotation;
 
     changeFlags |= COLORS_CHANGED;
 }
 
 function getRotationX(idx) {
-    return xforms[idx * XFORMS_ELEMENTS];
+    return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_X_OFFSET];
 }
 
 function setRotationY(idx, rotation) {
-    xforms[idx * XFORMS_ELEMENTS + 1] = rotation;
+    xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Y_OFFSET] = rotation;
 
     changeFlags |= XFORMS_CHANGED;
 }
 
 function getRotationY(idx) {
-    return xforms[idx * XFORMS_ELEMENTS + 1];
+    return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Y_OFFSET];
 }
 
 function setRotationZ(idx, rotation) {
-    xforms[idx * XFORMS_ELEMENTS + 2] = rotation;
+    xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Z_OFFSET] = rotation;
 
     changeFlags |= XFORMS_CHANGED;
 }
 
 function getRotationZ(idx) {
-    return xforms[idx * XFORMS_ELEMENTS + 2];
+    return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Z_OFFSET];
 }
 
 function setScale(idx, scale) {
-    xforms[idx * XFORMS_ELEMENTS + 3] = scale;
+    xforms[idx * XFORMS_ELEMENTS + XFORMS_SCALE_OFFSET] = scale;
 
     changeFlags |= XFORMS_CHANGED;
 }
 
 function getScale(idx) {
-    return xforms[idx * XFORMS_ELEMENTS + 3];
+    return xforms[idx * XFORMS_ELEMENTS + XFORMS_SCALE_OFFSET];
 }
 
 function setSubImage(idx, imgId) {
@@ -642,64 +653,294 @@ function getHeight(idx) {
 }
 
 /*
- * RENDERER API
- */
-function drawFrame() {
-    if (changeFlags & POS_CHANGED) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
-    }
-
-    if (changeFlags & COLORS_CHANGED) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, colors);
-    }
-
-    if (changeFlags & XFORMS_CHANGED) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, xformsBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, xforms);
-    }
-
-    if (changeFlags & DIM_CHANGED) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, dimensionsBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, dimensions);
-    }
-
-    if (changeFlags & SUB_IMG_CHANGED) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, subImageBuffer);
-        gl.bufferSubData(gl.ARRAY_BUFFER, 0, subImages);
-    }
-
-    changeFlags = NO_CHANGES;
-
-    gl.clearColor(1.0, 0.0, 1.0, 1.0);
-    gl.clearDepth(1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, highIndex + 1);
-}
-
-/*
  * ANIMATION
  */
-function normalize(x, min, max) {
-    return (x - min) / (max - min);
+const ANIM_MAX_ELEMENTS = 1 << 14;
+const ANIM_BYTES_PER_ELEMENT = 28;
+const ANIM_BUFFER_SIZE = ANIM_BYTES_PER_ELEMENT * ANIM_MAX_ELEMENTS;
+
+const animScaleBuffer = new ArrayBuffer(ANIM_BUFFER_SIZE);
+const scaleAnimations = new DataView(animScaleBuffer);
+let animScaleCount = 0;
+let animScaleMinIdx = 0;
+let animScaleMaxIdx = 0;
+
+// 4 bytes fields:
+const ANIM_VERSION_N_STATE_OFFSET = 0;  // 2 byte
+const ANIM_INFO_OFFSET = 2;     // 2 byte
+const ANIM_SPRITE_OFFSET = 4;   // 4 byte
+const ANIM_TIMING_OFFSET = 8;  // 2 byte
+// 2 byte padding (maybe add curve here)
+const ANIM_START_OFFSET = 12;   // 4 byte
+const ANIM_END_OFFSET = 16;     // 4 byte
+const ANIM_FROM_OFFSET = 20;    // 4 byte
+const ANIM_TO_OFFSET = 24;      // 4 byte
+
+// info flags
+const CALLBACK_FLAG = 0b0000000000000001;
+const LOOP_FLAG = 0b0000000000000010;
+
+const ANIM_SCALE_CB_KEY = 'anim-scale-';
+const callbacks = {};
+
+console.log(`scale animation system buffer size (excl. callback function pointers): ${(animScaleBuffer.byteLength / 1024).toFixed(2)} kb`);
+
+/*
+if (property & POS_X_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getX(spriteIdx));
+if (property & POS_Y_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getY(spriteIdx));
+if (property & POS_Z_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getZ(spriteIdx));
+if (property & COLOR_R_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getRed(spriteIdx));
+if (property & COLOR_G_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getGreen(spriteIdx));
+if (property & COLOR_B_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getBlue(spriteIdx));
+if (property & COLOR_A_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getAlpha(spriteIdx));
+if (property & XFORM_RX_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getRotationX(spriteIdx));
+if (property & XFORM_RY_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getRotationY(spriteIdx));
+if (property & XFORM_RZ_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getRotationZ(spriteIdx));
+if (property & XFORM_S_FLAG)
+    animations.setFloat32(offset + ANIM_FROM_OFFSET, getScale(spriteIdx));
+*/
+
+function getScaleAnimationIndex(id) {
+    const idx = id >> VERSION_BITS;
+    const version = id & VERSION_MASK;
+    const offset = idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET;
+    const currentVersion = scaleAnimations.getUint16(offset) >> 1;
+
+    if (version == currentVersion)
+        return idx;
+    return INVALID_INDEX;
 }
 
-function scale(x, min, max) {
-    return x * (max - min) + min;
+function createScaleAnimation(sprite, duration, toValue, timing) {
+    let idx;
+    let version;
+    for (idx = 0; idx < ANIM_MAX_ELEMENTS; idx++) {
+
+        const flags = scaleAnimations.getUint16(idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET);
+
+        if (!(flags & ACTIVE_FLAG)) {
+
+            version = flags >> 1;
+            scaleAnimations.setUint16(idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET, flags | ACTIVE_FLAG);
+
+            break;
+        }
+    }
+
+    if (idx == undefined)
+        throw new Error('could not create new scale animation, probably no space left');
+
+    animScaleCount++;
+
+    if (animScaleMinIdx > idx)
+        animScaleMinIdx = idx;
+
+    if (animScaleMaxIdx < idx)
+        animScaleMaxIdx = idx;
+
+    const offset = idx * ANIM_BYTES_PER_ELEMENT;
+
+    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, 0);
+
+    scaleAnimations.setUint32(offset + ANIM_SPRITE_OFFSET, sprite);
+    scaleAnimations.setUint16(offset + ANIM_TIMING_OFFSET, timing);
+    scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
+    scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration);
+
+    scaleAnimations.setFloat32(offset + ANIM_FROM_OFFSET, getScale(sprite >> VERSION_BITS));
+    scaleAnimations.setFloat32(offset + ANIM_TO_OFFSET, toValue);
+
+    return idx << VERSION_BITS | version;
 }
 
-// aka funky 1D normalized nonlinear transformation
-function easing(x) {
-    return x * x;
+function loopScaleAnimation(idx) {
+    const offset = idx * ANIM_BYTES_PER_ELEMENT;
+    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+
+    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, info | LOOP_FLAG);
 }
 
-function linearMap(x, minX, maxX, minY, maxY) {
-    const n = normalize(x, minX, minY);
-    const z = easing(n);
-    return scale(z, minY, maxY);
+function stopLoopingScaleAnimation(idx) {
+    const offset = idx * ANIM_BYTES_PER_ELEMENT;
+    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+
+    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, info & ~LOOP_FLAG);
 }
+
+function isScaleAnimationLooping(idx) {
+    const offset = idx * ANIM_BYTES_PER_ELEMENT;
+    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+    return info & LOOP_FLAG;
+}
+
+function setScaleAnimationCallback(idx, callback) {
+    const offset = idx * ANIM_BYTES_PER_ELEMENT;
+    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+
+    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, info | CALLBACK_FLAG);
+    callbacks[ANIM_SCALE_CB_KEY + idx] = callback;
+}
+
+function removeScaleAnimationCallback(idx) {
+    const offset = idx * ANIM_BYTES_PER_ELEMENT;
+    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+
+    scaleAnimations.setUint16(offset + ANIM_INFO_OFFSET, info & ~CALLBACK_FLAG);
+    delete callbacks[ANIM_SCALE_CB_KEY + idx];
+}
+
+function hasScaleAnimationCallback(idx) {
+    const offset = idx * ANIM_BYTES_PER_ELEMENT;
+    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+    return info & CALLBACK_FLAG;
+}
+
+function restartScaleAnimation(idx) {
+    const offset = idx * ANIM_BYTES_PER_ELEMENT;
+    const duration = scaleAnimations.getUint32(offset + ANIM_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
+    scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
+    scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration);
+}
+
+function delayScaleAnimation(idx, duration) {
+    const offset = idx * ANIM_BYTES_PER_ELEMENT;
+    const length = scaleAnimations.getUint32(offset + ANIM_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
+    scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame + duration);
+    scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration + length);
+}
+
+function deleteScaleAnimation(idx) {
+    animScaleCount--;
+
+    const offset = idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET;
+
+    let currentVersion = scaleAnimations.getUint16(offset) >> 1;
+
+    if (currentVersion < MAX_VERSION) {
+        currentVersion++; // increase version
+        scaleAnimations.setUint16(offset, currentVersion << 1);
+
+    } else {
+        console.log(`scale animation @${idx} is at max version`);
+    }
+
+    if (animScaleMinIdx == idx) {
+        for (let i = idx; i <= animScaleMaxIdx; i++) {
+            if (scaleAnimations.getUint16(i * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                animScaleMinIdx = i;
+                break;
+            }
+        }
+        if (animScaleMinIdx == idx)
+            animScaleMinIdx = animScaleMaxIdx;
+    }
+
+    if (animScaleMaxIdx == idx) {
+        for (let i = idx; i >= animScaleMinIdx; i--) {
+            if (scaleAnimations.getUint16(i * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                animScaleMaxIdx = i;
+                break;
+            }
+        }
+        if (animScaleMaxIdx == idx)
+            animScaleMaxIdx = animScaleMinIdx;
+    }
+}
+
+// TRANSITION TIMING FLAGs (aka SPACING aka the transformation fn)
+const LINEAR = 0b0000000000000000;
+const EASE_IN_QUAD = 0b0000000000000001;
+const EASE_OUT_QUAD = 0b0000000000000010;
+const EASE_IN_OUT_QUAD = 0b0000000000000100;
+const EASE_IN_CUBIC = 0b0000000000001000;
+const EASE_OUT_CUBIC = 0b0000000000010000;
+const EASE_IN_OUT_CUBIC = 0b0000000000100000;
+const EASE_IN_QUART = 0b0000000001000000;
+const EASE_OUT_QUART = 0b0000000010000000;
+const EASE_IN_OUT_QUART = 0b0000000100000000;
+const EASE_IN_QUINT = 0b0000001000000000;
+const EASE_OUT_QUINT = 0b0000010000000000;
+const EASE_IN_OUT_QUINT = 0b0000100000000000;
+
+function map(x, minX, maxX, minY, maxY, trans) {
+    const xNormalized = (x - minX) / (maxX - minX);
+
+
+    let xTransformed;
+    if (trans & EASE_IN_QUAD)
+        xTransformed = xNormalized * xNormalized;
+    else if (trans & EASE_IN_CUBIC)
+        xTransformed = xNormalized * xNormalized * xNormalized;
+    else if (trans & EASE_IN_QUART)
+        xTransformed = xNormalized * xNormalized * xNormalized * xNormalized;
+    else if (trans & EASE_IN_QUINT)
+        xTransformed = xNormalized * xNormalized * xNormalized * xNormalized * xNormalized;
+
+    else if (trans & EASE_OUT_QUAD) {
+        const t = (1 - xNormalized);
+        xTransformed = 1 - t * t;
+    }
+    else if (trans & EASE_OUT_CUBIC) {
+        const t = (1 - xNormalized);
+        xTransformed = 1 - t * t * t;
+    }
+    else if (trans & EASE_OUT_QUART) {
+        const t = (1 - xNormalized);
+        xTransformed = 1 - t * t * t * t;
+    }
+    else if (trans & EASE_OUT_QUINT) {
+        const t = (1 - xNormalized);
+        xTransformed = 1 - t * t * t * t * t;
+    }
+
+    else if (trans & EASE_IN_OUT_QUAD) {
+        const x0 = xNormalized * xNormalized;
+        const t = (1 - xNormalized);
+        const x1 = 1 - t * t;
+        const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
+        xTransformed = xMixed;
+    }
+    else if (trans & EASE_IN_OUT_CUBIC) {
+        const x0 = xNormalized * xNormalized * xNormalized;
+        const t = (1 - xNormalized);
+        const x1 = 1 - t * t * t;
+        const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
+        xTransformed = xMixed;
+    }
+    else if (trans & EASE_IN_OUT_QUART) {
+        const x0 = xNormalized * xNormalized * xNormalized * xNormalized;
+        const t = (1 - xNormalized);
+        const x1 = 1 - t * t * t * t;
+        const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
+        xTransformed = xMixed;
+    }
+    else if (trans & EASE_IN_OUT_QUINT) {
+        const x0 = xNormalized * xNormalized * xNormalized * xNormalized * xNormalized;
+        const t = (1 - xNormalized);
+        const x1 = 1 - t * t * t * t * t;
+        const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
+        xTransformed = xMixed;
+    }
+
+    else if (trans & LINEAR)
+        xTransformed = xNormalized;
+
+
+    const xScaled = xTransformed * (maxY - minY) + minY;
+    return xScaled;
+}
+
+let frame = 0;
 
 /*
  * EVENT LOOP
@@ -707,19 +948,100 @@ function linearMap(x, minX, maxX, minY, maxY) {
 function eventLoop() {
     requestAnimationFrame(eventLoop);
 
-    // const idx = getIndex(aceOfSpades);
-    // if (idx != INVALID_INDEX) {
-    //     setScale(idx, getScale(idx) + 0.1);
-    // }
+    // animate scaling for current frame
+    {
+        if (animScaleCount > 0)
+            for (var idx = animScaleMinIdx; idx <= animScaleMaxIdx; idx++) {
+                const offset = idx * ANIM_BYTES_PER_ELEMENT;
+                const flags = scaleAnimations.getUint16(offset + ANIM_VERSION_N_STATE_OFFSET);
+                if (flags & ACTIVE_FLAG) {
 
-    drawFrame();
+                    const start = scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
+                    if (start > frame)
+                        continue;
+
+                    const info = scaleAnimations.getUint16(offset + ANIM_INFO_OFFSET);
+                    const sprite = scaleAnimations.getUint32(offset + ANIM_SPRITE_OFFSET);
+                    const timing = scaleAnimations.getUint16(offset + ANIM_TIMING_OFFSET);
+                    const end = scaleAnimations.getUint32(offset + ANIM_END_OFFSET);
+                    const from = scaleAnimations.getFloat32(offset + ANIM_FROM_OFFSET);
+                    const to = scaleAnimations.getFloat32(offset + ANIM_TO_OFFSET);
+
+                    const nextScaleValue = map(frame, start, end, from, to, timing);
+
+                    const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
+                    {
+                        xforms[spriteIdx * XFORMS_ELEMENTS + XFORMS_SCALE_OFFSET] = nextScaleValue;
+                        changeFlags |= XFORMS_CHANGED;
+                    }
+
+                    if (end == frame) {
+                        if (info & LOOP_FLAG) {
+                            scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
+                            scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + (end - start));
+
+                            if (info & CALLBACK_FLAG) {
+                                callbacks[ANIM_SCALE_CB_KEY + idx]();
+                            }
+                        } else {
+                            deleteScaleAnimation(idx);
+
+                            if (info & CALLBACK_FLAG) {
+                                callbacks[ANIM_SCALE_CB_KEY + idx]();
+                                delete callbacks[ANIM_SCALE_CB_KEY + idx];
+                            }
+                        }
+                    }
+                }
+            }
+
+        frame++;
+    }
+
+    // draw frame
+    {
+        if (changeFlags & POS_CHANGED) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, positions);
+        }
+
+        if (changeFlags & COLORS_CHANGED) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, colors);
+        }
+
+        if (changeFlags & XFORMS_CHANGED) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, xformsBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, xforms);
+        }
+
+        if (changeFlags & DIM_CHANGED) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, dimensionsBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, dimensions);
+        }
+
+        if (changeFlags & SUB_IMG_CHANGED) {
+            gl.bindBuffer(gl.ARRAY_BUFFER, subImageBuffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, subImages);
+        }
+
+        changeFlags = NO_CHANGES;
+
+        gl.clearColor(1.0, 0.0, 1.0, 1.0);
+        gl.clearDepth(1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        ext.drawArraysInstancedANGLE(gl.TRIANGLE_STRIP, 0, 4, highIndex + 1);
+    }
 }
 
 /*
  * playground: test scene
  */
-let aceOfSpades;
-
 function runTestScene() {
-    aceOfSpades = createSprite(SubImage.CARD_SA, 0, 0);
+    const aceOfSpades = createSprite(SubImage.CARD_SA, 0, 0);
+    const scalingRef = createScaleAnimation(aceOfSpades, 60 * 5, 5, EASE_IN_OUT_QUINT);
+    loopScaleAnimation(scalingRef >> VERSION_BITS);
+    delayScaleAnimation(scalingRef >> VERSION_BITS, 60 * 2);
+    setScaleAnimationCallback(scalingRef >> VERSION_BITS, () => console.log('scaling done'));
 }
