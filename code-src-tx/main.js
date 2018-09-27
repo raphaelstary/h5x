@@ -858,7 +858,7 @@ const ANIM_ROT1D_Z_FLAG = 0b0000000000010000;
 const ANIM_ROT1D_CB_KEY = 'anim-rot1d-';
 
 const Rot1DAnimations = {
-    getIndex: function getRotationAnimationIndex(id) {
+    getIndex: function getRot1DAnimationIndex(id) {
         const idx = id >> VERSION_BITS;
         const version = id & VERSION_MASK;
         const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT + ANIM_ROT1D_VERSION_N_STATE_OFFSET;
@@ -983,7 +983,154 @@ const Rot1DAnimations = {
 };
 
 
-const totalSizeAnimBuffers = ANIM_SCALE_BUFFER_SIZE + ANIM_ROT1D_BUFFER_SIZE;
+const ANIM_COLOR1C_MAX_ELEMENTS = 1 << 13;
+const ANIM_COLOR1C_BYTES_PER_ELEMENT = 24;
+const ANIM_COLOR1C_BUFFER_SIZE = ANIM_COLOR1C_BYTES_PER_ELEMENT * ANIM_COLOR1C_MAX_ELEMENTS;
+
+const animColor1CBuffer = new ArrayBuffer(ANIM_COLOR1C_BUFFER_SIZE);
+const color1CAnimations = new DataView(animColor1CBuffer);
+let animColor1CCount = 0;
+let animColor1CMinIdx = 0;
+let animColor1CMaxIdx = 0;
+
+const ANIM_COLOR1C_VERSION_N_STATE_OFFSET = 0; // 2 byte
+const ANIM_COLOR1C_TIMING_N_INFO_OFFSET = 2; // 2 byte
+const ANIM_COLOR1C_SPRITE_OFFSET = 4; // 4 byte
+const ANIM_COLOR1C_START_OFFSET = 8; // 4 byte
+const ANIM_COLOR1C_END_OFFSET = 12; // 4 byte
+const ANIM_COLOR1C_FROM_OFFSET = 16; // 4 byte
+const ANIM_COLOR1C_TO_OFFSET = 20; // 4 byte
+
+const ANIM_COLOR1C_INFO_BITS = 2;
+// info flags
+const ANIM_COLOR1C_CALLBACK_FLAG = 0b0000000000000001;
+const ANIM_COLOR1C_LOOP_FLAG = 0b0000000000000010;
+
+const ANIM_COLOR1C_CB_KEY = 'anim-color1c-';
+
+const Color1CAnimations = {
+    getIndex: function getColor1CAnimationIndex(id) {
+        const idx = id >> VERSION_BITS;
+        const version = id & VERSION_MASK;
+        const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT + ANIM_COLOR1C_VERSION_N_STATE_OFFSET;
+        const currentVersion = color1CAnimations.getUint16(offset) >> 1;
+
+        if (version == currentVersion)
+            return idx;
+        return INVALID_INDEX;
+    }
+    ,
+    create: function createColor1CAnimation(sprite, duration, toValue, timing) {
+        let idx;
+        let version;
+        for (idx = 0; idx < ANIM_COLOR1C_MAX_ELEMENTS; idx++) {
+
+            const flags = color1CAnimations.getUint16(idx * ANIM_COLOR1C_BYTES_PER_ELEMENT + ANIM_COLOR1C_VERSION_N_STATE_OFFSET);
+
+            if (!(flags & ACTIVE_FLAG)) {
+
+                version = flags >> 1;
+                color1CAnimations.setUint16(idx * ANIM_COLOR1C_BYTES_PER_ELEMENT + ANIM_COLOR1C_VERSION_N_STATE_OFFSET, flags | ACTIVE_FLAG);
+
+                break;
+            }
+        }
+
+        if (idx == undefined)
+            throw new Error('could not create new color1c animation, probably no space left');
+
+        animColor1CCount++;
+
+        if (animColor1CMinIdx > idx)
+            animColor1CMinIdx = idx;
+
+        if (animColor1CMaxIdx < idx)
+            animColor1CMaxIdx = idx;
+
+        const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
+
+        color1CAnimations.setUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET, timing << ANIM_COLOR1C_INFO_BITS);
+
+        color1CAnimations.setUint32(offset + ANIM_COLOR1C_SPRITE_OFFSET, sprite);
+        color1CAnimations.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame);
+        color1CAnimations.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + duration);
+        // currently only ALPHA CHANNEL !!!
+        color1CAnimations.setFloat32(offset + ANIM_COLOR1C_FROM_OFFSET, Sprites.getAlpha(sprite >> VERSION_BITS));
+        color1CAnimations.setFloat32(offset + ANIM_COLOR1C_TO_OFFSET, toValue);
+
+        return idx << VERSION_BITS | version;
+    }
+    ,
+    setLoop: function setLoopColor1CAnimation(idx, loop) {
+        const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
+        const info = color1CAnimations.getUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET);
+
+        color1CAnimations.setUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET, loop ? info | ANIM_COLOR1C_LOOP_FLAG : info & ~ANIM_COLOR1C_LOOP_FLAG);
+    }
+    ,
+    setCallback: function setColor1CAnimationCallback(idx, callback) {
+        const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
+        const info = color1CAnimations.getUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET);
+
+        color1CAnimations.setUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET, info | ANIM_COLOR1C_CALLBACK_FLAG);
+        callbacks[ANIM_COLOR1C_CB_KEY + idx] = callback;
+    }
+    ,
+    restart: function restartColor1CAnimation(idx) {
+        const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
+        const duration = color1CAnimations.getUint32(offset + ANIM_COLOR1C_END_OFFSET) - color1CAnimations.getUint32(offset + ANIM_COLOR1C_START_OFFSET);
+        color1CAnimations.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame);
+        color1CAnimations.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + duration);
+    }
+    ,
+    delay: function delayColor1CAnimation(idx, duration) {
+        const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
+        const length = color1CAnimations.getUint32(offset + ANIM_COLOR1C_END_OFFSET) - color1CAnimations.getUint32(offset + ANIM_COLOR1C_START_OFFSET);
+        color1CAnimations.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame + duration);
+        color1CAnimations.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + duration + length);
+    }
+    ,
+    remove: function deleteColor1CAnimation(idx) {
+        animColor1CCount--;
+
+        const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT + ANIM_COLOR1C_VERSION_N_STATE_OFFSET;
+
+        let currentVersion = color1CAnimations.getUint16(offset) >> 1;
+
+        if (currentVersion < MAX_VERSION) {
+            currentVersion++; // increase version
+            color1CAnimations.setUint16(offset, currentVersion << 1);
+
+        } else {
+            console.log(`color1c animation @${idx} is at max version`);
+        }
+
+        if (animColor1CMinIdx == idx) {
+            for (let i = idx; i <= animColor1CMaxIdx; i++) {
+                if (color1CAnimations.getUint16(i * ANIM_COLOR1C_BYTES_PER_ELEMENT + ANIM_COLOR1C_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                    animColor1CMinIdx = i;
+                    break;
+                }
+            }
+            if (animColor1CMinIdx == idx)
+                animColor1CMinIdx = animColor1CMaxIdx;
+        }
+
+        if (animColor1CMaxIdx == idx) {
+            for (let i = idx; i >= animColor1CMinIdx; i--) {
+                if (color1CAnimations.getUint16(i * ANIM_COLOR1C_BYTES_PER_ELEMENT + ANIM_COLOR1C_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                    animColor1CMaxIdx = i;
+                    break;
+                }
+            }
+            if (animColor1CMaxIdx == idx)
+                animColor1CMaxIdx = animColor1CMinIdx;
+        }
+    }
+};
+
+
+const totalSizeAnimBuffers = ANIM_SCALE_BUFFER_SIZE + ANIM_ROT1D_BUFFER_SIZE + ANIM_COLOR1C_BUFFER_SIZE;
 console.log(`animation system buffer size (excl. callback function pointers): ${(totalSizeAnimBuffers / 1024).toFixed(2)} kb`);
 
 // TRANSITION TIMING CONSTANTS (aka SPACING aka the transformation fn)
@@ -1178,6 +1325,53 @@ function eventLoop() {
             }
         }
 
+        if (animColor1CCount > 0) {
+            let idx;
+            for (idx = animColor1CMinIdx; idx <= animColor1CMaxIdx; idx++) {
+                const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
+                const flags = color1CAnimations.getUint16(offset + ANIM_COLOR1C_VERSION_N_STATE_OFFSET);
+                if (flags & ACTIVE_FLAG) {
+
+                    const start = color1CAnimations.getUint32(offset + ANIM_COLOR1C_START_OFFSET);
+                    if (start > frame)
+                        continue;
+
+                    const info = color1CAnimations.getUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET);
+                    const sprite = color1CAnimations.getUint32(offset + ANIM_COLOR1C_SPRITE_OFFSET);
+                    const end = color1CAnimations.getUint32(offset + ANIM_COLOR1C_END_OFFSET);
+                    const from = color1CAnimations.getFloat32(offset + ANIM_COLOR1C_FROM_OFFSET);
+                    const to = color1CAnimations.getFloat32(offset + ANIM_COLOR1C_TO_OFFSET);
+
+                    const timing = info >> ANIM_COLOR1C_INFO_BITS;
+                    const nextColor1CValue = map(frame, start, end, from, to, timing);
+
+                    const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
+                    {
+                        colors[spriteIdx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET] = nextColor1CValue;
+                        changeFlags |= COLORS_CHANGED;
+                    }
+
+                    if (end == frame) {
+                        if (info & ANIM_COLOR1C_LOOP_FLAG) {
+                            color1CAnimations.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame);
+                            color1CAnimations.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + (end - start));
+
+                            if (info & ANIM_COLOR1C_CALLBACK_FLAG) {
+                                callbacks[ANIM_COLOR1C_CB_KEY + idx]();
+                            }
+                        } else {
+                            Color1CAnimations.remove(idx);
+
+                            if (info & ANIM_COLOR1C_CALLBACK_FLAG) {
+                                callbacks[ANIM_COLOR1C_CB_KEY + idx]();
+                                delete callbacks[ANIM_COLOR1C_CB_KEY + idx];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         frame++;
     }
 
@@ -1223,6 +1417,7 @@ function eventLoop() {
  */
 function runTestScene() {
     const aceOfSpades = Sprites.create(SubImage.CARD_SA, 0, 0);
+
     const scalingRef = ScaleAnimations.create(aceOfSpades, 60 * 5, 5, EASE_OUT_QUINT);
     ScaleAnimations.setLoop(scalingRef >> VERSION_BITS, true);
     ScaleAnimations.delay(scalingRef >> VERSION_BITS, 60 * 2);
@@ -1243,4 +1438,7 @@ function runTestScene() {
     Rot1DAnimations.delay(rotZRef >> VERSION_BITS, 60 * 4);
     Rot1DAnimations.setCallback(rotZRef >> VERSION_BITS, () => console.log('rot-z done'));
 
+    const alphaRef = Color1CAnimations.create(aceOfSpades, 60 * 2, 1.0, LINEAR);
+    Color1CAnimations.setLoop(alphaRef >> VERSION_BITS, true);
+    Color1CAnimations.setCallback(alphaRef >> VERSION_BITS, () => console.log('color alpha done'));
 }
