@@ -657,33 +657,7 @@ const Sprites = {
 /*
  * ANIMATION
  */
-const ANIM_MAX_ELEMENTS = 1 << 13;
-const ANIM_BYTES_PER_ELEMENT = 24;
-const ANIM_BUFFER_SIZE = ANIM_BYTES_PER_ELEMENT * ANIM_MAX_ELEMENTS;
-
-const animScaleBuffer = new ArrayBuffer(ANIM_BUFFER_SIZE);
-const scaleAnimations = new DataView(animScaleBuffer);
-let animScaleCount = 0;
-let animScaleMinIdx = 0;
-let animScaleMaxIdx = 0;
-
-const ANIM_VERSION_N_STATE_OFFSET = 0; // 2 byte
-const ANIM_TIMING_N_INFO_OFFSET = 2; // 2 byte
-const ANIM_SPRITE_OFFSET = 4; // 4 byte
-const ANIM_START_OFFSET = 8; // 4 byte
-const ANIM_END_OFFSET = 12; // 4 byte
-const ANIM_FROM_OFFSET = 16; // 4 byte
-const ANIM_TO_OFFSET = 20; // 4 byte
-
-const INFO_BITS = 2;
-// info flags
-const CALLBACK_FLAG = 0b0000000000000001;
-const LOOP_FLAG = 0b0000000000000010;
-
-const ANIM_SCALE_CB_KEY = 'anim-scale-';
 const callbacks = {};
-
-console.log(`scale animation system buffer size (excl. callback function pointers): ${(animScaleBuffer.byteLength / 1024).toFixed(2)} kb`);
 
 /*
 if (property & POS_X_FLAG)
@@ -710,11 +684,36 @@ if (property & XFORM_S_FLAG)
     animations.setFloat32(offset + ANIM_FROM_OFFSET, getScale(spriteIdx));
 */
 
+const ANIM_SCALE_MAX_ELEMENTS = 1 << 13;
+const ANIM_SCALE_BYTES_PER_ELEMENT = 24;
+const ANIM_SCALE_BUFFER_SIZE = ANIM_SCALE_BYTES_PER_ELEMENT * ANIM_SCALE_MAX_ELEMENTS;
+
+const animScaleBuffer = new ArrayBuffer(ANIM_SCALE_BUFFER_SIZE);
+const scaleAnimations = new DataView(animScaleBuffer);
+let animScaleCount = 0;
+let animScaleMinIdx = 0;
+let animScaleMaxIdx = 0;
+
+const ANIM_SCALE_VERSION_N_STATE_OFFSET = 0; // 2 byte
+const ANIM_SCALE_TIMING_N_INFO_OFFSET = 2; // 2 byte
+const ANIM_SCALE_SPRITE_OFFSET = 4; // 4 byte
+const ANIM_SCALE_START_OFFSET = 8; // 4 byte
+const ANIM_SCALE_END_OFFSET = 12; // 4 byte
+const ANIM_SCALE_FROM_OFFSET = 16; // 4 byte
+const ANIM_SCALE_TO_OFFSET = 20; // 4 byte
+
+const ANIM_SCALE_INFO_BITS = 2;
+// info flags
+const ANIM_SCALE_CALLBACK_FLAG = 0b0000000000000001;
+const ANIM_SCALE_LOOP_FLAG = 0b0000000000000010;
+
+const ANIM_SCALE_CB_KEY = 'anim-scale-';
+
 const ScaleAnimations = {
     getIndex: function getScaleAnimationIndex(id) {
         const idx = id >> VERSION_BITS;
         const version = id & VERSION_MASK;
-        const offset = idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET;
+        const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT + ANIM_SCALE_VERSION_N_STATE_OFFSET;
         const currentVersion = scaleAnimations.getUint16(offset) >> 1;
 
         if (version == currentVersion)
@@ -725,14 +724,14 @@ const ScaleAnimations = {
     create: function createScaleAnimation(sprite, duration, toValue, timing) {
         let idx;
         let version;
-        for (idx = 0; idx < ANIM_MAX_ELEMENTS; idx++) {
+        for (idx = 0; idx < ANIM_SCALE_MAX_ELEMENTS; idx++) {
 
-            const flags = scaleAnimations.getUint16(idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET);
+            const flags = scaleAnimations.getUint16(idx * ANIM_SCALE_BYTES_PER_ELEMENT + ANIM_SCALE_VERSION_N_STATE_OFFSET);
 
             if (!(flags & ACTIVE_FLAG)) {
 
                 version = flags >> 1;
-                scaleAnimations.setUint16(idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET, flags | ACTIVE_FLAG);
+                scaleAnimations.setUint16(idx * ANIM_SCALE_BYTES_PER_ELEMENT + ANIM_SCALE_VERSION_N_STATE_OFFSET, flags | ACTIVE_FLAG);
 
                 break;
             }
@@ -749,52 +748,52 @@ const ScaleAnimations = {
         if (animScaleMaxIdx < idx)
             animScaleMaxIdx = idx;
 
-        const offset = idx * ANIM_BYTES_PER_ELEMENT;
+        const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
 
-        scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, timing << INFO_BITS);
+        scaleAnimations.setUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET, timing << ANIM_SCALE_INFO_BITS);
 
-        scaleAnimations.setUint32(offset + ANIM_SPRITE_OFFSET, sprite);
-        scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
-        scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration);
-        scaleAnimations.setFloat32(offset + ANIM_FROM_OFFSET, Sprites.getScale(sprite >> VERSION_BITS));
-        scaleAnimations.setFloat32(offset + ANIM_TO_OFFSET, toValue);
+        scaleAnimations.setUint32(offset + ANIM_SCALE_SPRITE_OFFSET, sprite);
+        scaleAnimations.setUint32(offset + ANIM_SCALE_START_OFFSET, frame);
+        scaleAnimations.setUint32(offset + ANIM_SCALE_END_OFFSET, frame + duration);
+        scaleAnimations.setFloat32(offset + ANIM_SCALE_FROM_OFFSET, Sprites.getScale(sprite >> VERSION_BITS));
+        scaleAnimations.setFloat32(offset + ANIM_SCALE_TO_OFFSET, toValue);
 
         return idx << VERSION_BITS | version;
     }
     ,
     setLoop: function setLoopScaleAnimation(idx, loop) {
-        const offset = idx * ANIM_BYTES_PER_ELEMENT;
-        const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
+        const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
+        const info = scaleAnimations.getUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET);
 
-        scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, loop ? info | LOOP_FLAG : info & ~LOOP_FLAG);
+        scaleAnimations.setUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET, loop ? info | ANIM_SCALE_LOOP_FLAG : info & ~ANIM_SCALE_LOOP_FLAG);
     }
     ,
     setCallback: function setScaleAnimationCallback(idx, callback) {
-        const offset = idx * ANIM_BYTES_PER_ELEMENT;
-        const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
+        const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
+        const info = scaleAnimations.getUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET);
 
-        scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, info | CALLBACK_FLAG);
+        scaleAnimations.setUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET, info | ANIM_SCALE_CALLBACK_FLAG);
         callbacks[ANIM_SCALE_CB_KEY + idx] = callback;
     }
     ,
     restart: function restartScaleAnimation(idx) {
-        const offset = idx * ANIM_BYTES_PER_ELEMENT;
-        const duration = scaleAnimations.getUint32(offset + ANIM_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
-        scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
-        scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration);
+        const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
+        const duration = scaleAnimations.getUint32(offset + ANIM_SCALE_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_SCALE_START_OFFSET);
+        scaleAnimations.setUint32(offset + ANIM_SCALE_START_OFFSET, frame);
+        scaleAnimations.setUint32(offset + ANIM_SCALE_END_OFFSET, frame + duration);
     }
     ,
     delay: function delayScaleAnimation(idx, duration) {
-        const offset = idx * ANIM_BYTES_PER_ELEMENT;
-        const length = scaleAnimations.getUint32(offset + ANIM_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
-        scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame + duration);
-        scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration + length);
+        const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
+        const length = scaleAnimations.getUint32(offset + ANIM_SCALE_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_SCALE_START_OFFSET);
+        scaleAnimations.setUint32(offset + ANIM_SCALE_START_OFFSET, frame + duration);
+        scaleAnimations.setUint32(offset + ANIM_SCALE_END_OFFSET, frame + duration + length);
     }
     ,
     remove: function deleteScaleAnimation(idx) {
         animScaleCount--;
 
-        const offset = idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET;
+        const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT + ANIM_SCALE_VERSION_N_STATE_OFFSET;
 
         let currentVersion = scaleAnimations.getUint16(offset) >> 1;
 
@@ -808,7 +807,7 @@ const ScaleAnimations = {
 
         if (animScaleMinIdx == idx) {
             for (let i = idx; i <= animScaleMaxIdx; i++) {
-                if (scaleAnimations.getUint16(i * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                if (scaleAnimations.getUint16(i * ANIM_SCALE_BYTES_PER_ELEMENT + ANIM_SCALE_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
                     animScaleMinIdx = i;
                     break;
                 }
@@ -819,7 +818,7 @@ const ScaleAnimations = {
 
         if (animScaleMaxIdx == idx) {
             for (let i = idx; i >= animScaleMinIdx; i--) {
-                if (scaleAnimations.getUint16(i * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                if (scaleAnimations.getUint16(i * ANIM_SCALE_BYTES_PER_ELEMENT + ANIM_SCALE_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
                     animScaleMaxIdx = i;
                     break;
                 }
@@ -830,6 +829,162 @@ const ScaleAnimations = {
     }
 };
 
+const ANIM_ROT1D_MAX_ELEMENTS = 1 << 13;
+const ANIM_ROT1D_BYTES_PER_ELEMENT = 24;
+const ANIM_ROT1D_BUFFER_SIZE = ANIM_ROT1D_BYTES_PER_ELEMENT * ANIM_ROT1D_MAX_ELEMENTS;
+
+const animRot1DBuffer = new ArrayBuffer(ANIM_ROT1D_BUFFER_SIZE);
+const rot1DAnimations = new DataView(animRot1DBuffer);
+let animRot1DCount = 0;
+let animRot1DMinIdx = 0;
+let animRot1DMaxIdx = 0;
+
+const ANIM_ROT1D_VERSION_N_STATE_OFFSET = 0; // 2 byte
+const ANIM_ROT1D_TIMING_N_INFO_OFFSET = 2; // 2 byte
+const ANIM_ROT1D_SPRITE_OFFSET = 4; // 4 byte
+const ANIM_ROT1D_START_OFFSET = 8; // 4 byte
+const ANIM_ROT1D_END_OFFSET = 12; // 4 byte
+const ANIM_ROT1D_FROM_OFFSET = 16; // 4 byte
+const ANIM_ROT1D_TO_OFFSET = 20; // 4 byte
+
+const ANIM_ROT1D_INFO_BITS = 5;
+// info flags
+const ANIM_ROT1D_CALLBACK_FLAG = 0b0000000000000001;
+const ANIM_ROT1D_LOOP_FLAG = 0b0000000000000010;
+const ANIM_ROT1D_X_FLAG = 0b0000000000000100;
+const ANIM_ROT1D_Y_FLAG = 0b0000000000001000;
+const ANIM_ROT1D_Z_FLAG = 0b0000000000010000;
+
+const ANIM_ROT1D_CB_KEY = 'anim-rot1d-';
+
+const Rot1DAnimations = {
+    getIndex: function getRotationAnimationIndex(id) {
+        const idx = id >> VERSION_BITS;
+        const version = id & VERSION_MASK;
+        const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT + ANIM_ROT1D_VERSION_N_STATE_OFFSET;
+        const currentVersion = rot1DAnimations.getUint16(offset) >> 1;
+
+        if (version == currentVersion)
+            return idx;
+        return INVALID_INDEX;
+    }
+    ,
+    create: function createRot1DAnimation(sprite, property, duration, toValue, timing) {
+        let idx;
+        let version;
+        for (idx = 0; idx < ANIM_ROT1D_MAX_ELEMENTS; idx++) {
+
+            const flags = rot1DAnimations.getUint16(idx * ANIM_ROT1D_BYTES_PER_ELEMENT + ANIM_ROT1D_VERSION_N_STATE_OFFSET);
+
+            if (!(flags & ACTIVE_FLAG)) {
+
+                version = flags >> 1;
+                rot1DAnimations.setUint16(idx * ANIM_ROT1D_BYTES_PER_ELEMENT + ANIM_ROT1D_VERSION_N_STATE_OFFSET, flags | ACTIVE_FLAG);
+
+                break;
+            }
+        }
+
+        if (idx == undefined)
+            throw new Error('could not create new rot1d animation, probably no space left');
+
+        animRot1DCount++;
+
+        if (animRot1DMinIdx > idx)
+            animRot1DMinIdx = idx;
+
+        if (animRot1DMaxIdx < idx)
+            animRot1DMaxIdx = idx;
+
+        const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
+
+        rot1DAnimations.setUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET, timing << ANIM_ROT1D_INFO_BITS | property);
+
+        rot1DAnimations.setUint32(offset + ANIM_ROT1D_SPRITE_OFFSET, sprite);
+        rot1DAnimations.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame);
+        rot1DAnimations.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + duration);
+        if (property & ANIM_ROT1D_X_FLAG)
+            rot1DAnimations.setFloat32(offset + ANIM_ROT1D_FROM_OFFSET, Sprites.getRotationX(sprite >> VERSION_BITS));
+        else if (property & ANIM_ROT1D_Y_FLAG)
+            rot1DAnimations.setFloat32(offset + ANIM_ROT1D_FROM_OFFSET, Sprites.getRotationY(sprite >> VERSION_BITS));
+        else if (property & ANIM_ROT1D_Z_FLAG)
+            rot1DAnimations.setFloat32(offset + ANIM_ROT1D_FROM_OFFSET, Sprites.getRotationZ(sprite >> VERSION_BITS));
+        rot1DAnimations.setFloat32(offset + ANIM_ROT1D_TO_OFFSET, toValue);
+
+        return idx << VERSION_BITS | version;
+    }
+    ,
+    setLoop: function setLoopRot1DAnimation(idx, loop) {
+        const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
+        const info = rot1DAnimations.getUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET);
+
+        rot1DAnimations.setUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET, loop ? info | ANIM_ROT1D_LOOP_FLAG : info & ~ANIM_ROT1D_LOOP_FLAG);
+    }
+    ,
+    setCallback: function setRot1DAnimationCallback(idx, callback) {
+        const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
+        const info = rot1DAnimations.getUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET);
+
+        rot1DAnimations.setUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET, info | ANIM_ROT1D_CALLBACK_FLAG);
+        callbacks[ANIM_ROT1D_CB_KEY + idx] = callback;
+    }
+    ,
+    restart: function restartRot1DAnimation(idx) {
+        const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
+        const duration = rot1DAnimations.getUint32(offset + ANIM_ROT1D_END_OFFSET) - rot1DAnimations.getUint32(offset + ANIM_ROT1D_START_OFFSET);
+        rot1DAnimations.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame);
+        rot1DAnimations.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + duration);
+    }
+    ,
+    delay: function delayRot1DAnimation(idx, duration) {
+        const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
+        const length = rot1DAnimations.getUint32(offset + ANIM_ROT1D_END_OFFSET) - rot1DAnimations.getUint32(offset + ANIM_ROT1D_START_OFFSET);
+        rot1DAnimations.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame + duration);
+        rot1DAnimations.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + duration + length);
+    }
+    ,
+    remove: function deleteRot1DAnimation(idx) {
+        animRot1DCount--;
+
+        const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT + ANIM_ROT1D_VERSION_N_STATE_OFFSET;
+
+        let currentVersion = rot1DAnimations.getUint16(offset) >> 1;
+
+        if (currentVersion < MAX_VERSION) {
+            currentVersion++; // increase version
+            rot1DAnimations.setUint16(offset, currentVersion << 1);
+
+        } else {
+            console.log(`rot1d animation @${idx} is at max version`);
+        }
+
+        if (animRot1DMinIdx == idx) {
+            for (let i = idx; i <= animRot1DMaxIdx; i++) {
+                if (rot1DAnimations.getUint16(i * ANIM_ROT1D_BYTES_PER_ELEMENT + ANIM_ROT1D_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                    animRot1DMinIdx = i;
+                    break;
+                }
+            }
+            if (animRot1DMinIdx == idx)
+                animRot1DMinIdx = animRot1DMaxIdx;
+        }
+
+        if (animRot1DMaxIdx == idx) {
+            for (let i = idx; i >= animRot1DMinIdx; i--) {
+                if (rot1DAnimations.getUint16(i * ANIM_ROT1D_BYTES_PER_ELEMENT + ANIM_ROT1D_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                    animRot1DMaxIdx = i;
+                    break;
+                }
+            }
+            if (animRot1DMaxIdx == idx)
+                animRot1DMaxIdx = animRot1DMinIdx;
+        }
+    }
+};
+
+
+const totalSizeAnimBuffers = ANIM_SCALE_BUFFER_SIZE + ANIM_ROT1D_BUFFER_SIZE;
+console.log(`animation system buffer size (excl. callback function pointers): ${(totalSizeAnimBuffers / 1024).toFixed(2)} kb`);
 
 // TRANSITION TIMING CONSTANTS (aka SPACING aka the transformation fn)
 const LINEAR = 0;
@@ -922,25 +1077,26 @@ let frame = 0;
 function eventLoop() {
     requestAnimationFrame(eventLoop);
 
-    // animate scaling for current frame
+    // animate frame
     {
-        if (animScaleCount > 0)
-            for (var idx = animScaleMinIdx; idx <= animScaleMaxIdx; idx++) {
-                const offset = idx * ANIM_BYTES_PER_ELEMENT;
-                const flags = scaleAnimations.getUint16(offset + ANIM_VERSION_N_STATE_OFFSET);
+        if (animScaleCount > 0) {
+            let idx;
+            for (idx = animScaleMinIdx; idx <= animScaleMaxIdx; idx++) {
+                const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
+                const flags = scaleAnimations.getUint16(offset + ANIM_SCALE_VERSION_N_STATE_OFFSET);
                 if (flags & ACTIVE_FLAG) {
 
-                    const start = scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
+                    const start = scaleAnimations.getUint32(offset + ANIM_SCALE_START_OFFSET);
                     if (start > frame)
                         continue;
 
-                    const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
-                    const sprite = scaleAnimations.getUint32(offset + ANIM_SPRITE_OFFSET);
-                    const end = scaleAnimations.getUint32(offset + ANIM_END_OFFSET);
-                    const from = scaleAnimations.getFloat32(offset + ANIM_FROM_OFFSET);
-                    const to = scaleAnimations.getFloat32(offset + ANIM_TO_OFFSET);
+                    const info = scaleAnimations.getUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET);
+                    const sprite = scaleAnimations.getUint32(offset + ANIM_SCALE_SPRITE_OFFSET);
+                    const end = scaleAnimations.getUint32(offset + ANIM_SCALE_END_OFFSET);
+                    const from = scaleAnimations.getFloat32(offset + ANIM_SCALE_FROM_OFFSET);
+                    const to = scaleAnimations.getFloat32(offset + ANIM_SCALE_TO_OFFSET);
 
-                    const timing = info >> INFO_BITS;
+                    const timing = info >> ANIM_SCALE_INFO_BITS;
                     const nextScaleValue = map(frame, start, end, from, to, timing);
 
                     const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
@@ -950,17 +1106,17 @@ function eventLoop() {
                     }
 
                     if (end == frame) {
-                        if (info & LOOP_FLAG) {
-                            scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
-                            scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + (end - start));
+                        if (info & ANIM_SCALE_LOOP_FLAG) {
+                            scaleAnimations.setUint32(offset + ANIM_SCALE_START_OFFSET, frame);
+                            scaleAnimations.setUint32(offset + ANIM_SCALE_END_OFFSET, frame + (end - start));
 
-                            if (info & CALLBACK_FLAG) {
+                            if (info & ANIM_SCALE_CALLBACK_FLAG) {
                                 callbacks[ANIM_SCALE_CB_KEY + idx]();
                             }
                         } else {
                             ScaleAnimations.remove(idx);
 
-                            if (info & CALLBACK_FLAG) {
+                            if (info & ANIM_SCALE_CALLBACK_FLAG) {
                                 callbacks[ANIM_SCALE_CB_KEY + idx]();
                                 delete callbacks[ANIM_SCALE_CB_KEY + idx];
                             }
@@ -968,6 +1124,59 @@ function eventLoop() {
                     }
                 }
             }
+        }
+
+        if (animRot1DCount > 0) {
+            let idx;
+            for (idx = animRot1DMinIdx; idx <= animRot1DMaxIdx; idx++) {
+                const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
+                const flags = rot1DAnimations.getUint16(offset + ANIM_ROT1D_VERSION_N_STATE_OFFSET);
+                if (flags & ACTIVE_FLAG) {
+
+                    const start = rot1DAnimations.getUint32(offset + ANIM_ROT1D_START_OFFSET);
+                    if (start > frame)
+                        continue;
+
+                    const info = rot1DAnimations.getUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET);
+                    const sprite = rot1DAnimations.getUint32(offset + ANIM_ROT1D_SPRITE_OFFSET);
+                    const end = rot1DAnimations.getUint32(offset + ANIM_ROT1D_END_OFFSET);
+                    const from = rot1DAnimations.getFloat32(offset + ANIM_ROT1D_FROM_OFFSET);
+                    const to = rot1DAnimations.getFloat32(offset + ANIM_ROT1D_TO_OFFSET);
+
+                    const timing = info >> ANIM_ROT1D_INFO_BITS;
+                    const nextRot1DValue = map(frame, start, end, from, to, timing);
+
+                    const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
+                    {
+                        if (info & ANIM_ROT1D_X_FLAG)
+                            xforms[spriteIdx * XFORMS_ELEMENTS + XFORMS_ROTATION_X_OFFSET] = nextRot1DValue;
+                        else if (info & ANIM_ROT1D_Y_FLAG)
+                            xforms[spriteIdx * XFORMS_ELEMENTS + XFORMS_ROTATION_Y_OFFSET] = nextRot1DValue;
+                        else if (info & ANIM_ROT1D_Z_FLAG)
+                            xforms[spriteIdx * XFORMS_ELEMENTS + XFORMS_ROTATION_Z_OFFSET] = nextRot1DValue;
+                        changeFlags |= XFORMS_CHANGED;
+                    }
+
+                    if (end == frame) {
+                        if (info & ANIM_ROT1D_LOOP_FLAG) {
+                            rot1DAnimations.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame);
+                            rot1DAnimations.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + (end - start));
+
+                            if (info & ANIM_ROT1D_CALLBACK_FLAG) {
+                                callbacks[ANIM_ROT1D_CB_KEY + idx]();
+                            }
+                        } else {
+                            Rot1DAnimations.remove(idx);
+
+                            if (info & ANIM_ROT1D_CALLBACK_FLAG) {
+                                callbacks[ANIM_ROT1D_CB_KEY + idx]();
+                                delete callbacks[ANIM_ROT1D_CB_KEY + idx];
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         frame++;
     }
@@ -1018,4 +1227,20 @@ function runTestScene() {
     ScaleAnimations.setLoop(scalingRef >> VERSION_BITS, true);
     ScaleAnimations.delay(scalingRef >> VERSION_BITS, 60 * 2);
     ScaleAnimations.setCallback(scalingRef >> VERSION_BITS, () => console.log('scaling done'));
+
+    const rotXRef = Rot1DAnimations.create(aceOfSpades, ANIM_ROT1D_X_FLAG, 60, Math.PI * 2, LINEAR);
+    Rot1DAnimations.setLoop(rotXRef >> VERSION_BITS, true);
+    Rot1DAnimations.delay(rotXRef >> VERSION_BITS, 60);
+    Rot1DAnimations.setCallback(rotXRef >> VERSION_BITS, () => console.log('rot-x done'));
+
+    const rotYRef = Rot1DAnimations.create(aceOfSpades, ANIM_ROT1D_Y_FLAG, 60, Math.PI * 2, LINEAR);
+    Rot1DAnimations.setLoop(rotYRef >> VERSION_BITS, true);
+    Rot1DAnimations.delay(rotYRef >> VERSION_BITS, 60 * 3);
+    Rot1DAnimations.setCallback(rotYRef >> VERSION_BITS, () => console.log('rot-y done'));
+
+    const rotZRef = Rot1DAnimations.create(aceOfSpades, ANIM_ROT1D_Z_FLAG, 60, Math.PI * 2, LINEAR);
+    Rot1DAnimations.setLoop(rotZRef >> VERSION_BITS, true);
+    Rot1DAnimations.delay(rotZRef >> VERSION_BITS, 60 * 4);
+    Rot1DAnimations.setCallback(rotZRef >> VERSION_BITS, () => console.log('rot-z done'));
+
 }
