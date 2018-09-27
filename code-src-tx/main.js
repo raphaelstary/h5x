@@ -399,258 +399,260 @@ console.log(`sprite store size: ${(sprites.byteLength / 1024).toFixed(2)} kb`);
 /*
  * SPRITE API
  */
-function getIndex(id) {
-    const idx = id >> VERSION_BITS;
-    const version = id & VERSION_MASK;
-    const currentVersion = sprites[idx] >> 1;
+const Sprites = {
+    getIndex: function getIndex(id) {
+        const idx = id >> VERSION_BITS;
+        const version = id & VERSION_MASK;
+        const currentVersion = sprites[idx] >> 1;
 
-    if (version == currentVersion)
-        return idx;
-    return INVALID_INDEX;
-}
-
-function createSprite(imgId, x, y) {
-    let idx;
-    let version;
-
-    for (idx = 0; idx < sprites.length; idx++) {
-
-        const flags = sprites[idx];
-
-        if (!(flags & ACTIVE_FLAG)) {
-
-            version = flags >> 1;
-            sprites[idx] = flags | ACTIVE_FLAG;
-
-            break;
-        }
+        if (version == currentVersion)
+            return idx;
+        return INVALID_INDEX;
     }
+    ,
+    create: function createSprite(imgId, x, y) {
+        let idx;
+        let version;
 
-    if (idx == undefined || version == undefined)
-        throw new Error('could not create new sprite, probably no space left');
+        for (idx = 0; idx < sprites.length; idx++) {
 
+            const flags = sprites[idx];
 
-    spriteCount++;
-    changeFlags = POS_CHANGED | COLORS_CHANGED | XFORMS_CHANGED | DIM_CHANGED | SUB_IMG_CHANGED;
+            if (!(flags & ACTIVE_FLAG)) {
 
-    if (lowIndex > idx)
-        lowIndex = idx;
+                version = flags >> 1;
+                sprites[idx] = flags | ACTIVE_FLAG;
 
-    if (highIndex < idx) {
-        highIndex = idx;
-
-        if (highIndex + 1 > currentMaxElements) {
-            currentMaxElements += ELEMENTS_CHUNK;
-            resizeTypedViews(currentMaxElements);
-        }
-    }
-
-    positions[idx * POS_ELEMENTS] = x;
-    positions[idx * POS_ELEMENTS + 1] = y;
-    positions[idx * POS_ELEMENTS + 2] = -5.0;
-
-    colors[idx * COLOR_ELEMENTS] = 1.0;
-    colors[idx * COLOR_ELEMENTS + 1] = 1.0;
-    colors[idx * COLOR_ELEMENTS + 2] = 1.0;
-    colors[idx * COLOR_ELEMENTS + 3] = 0.0;
-
-    xforms[idx * XFORMS_ELEMENTS] = 0.0;
-    xforms[idx * XFORMS_ELEMENTS + 1] = 0.0;
-    xforms[idx * XFORMS_ELEMENTS + 2] = 0.0;
-    xforms[idx * XFORMS_ELEMENTS + 3] = 1.0;
-
-    const dimIdx = imgId * DIM_ELEMENTS;
-    dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
-    dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
-
-    const subImgIdx = imgId * SUB_IMG_ELEMENTS;
-    subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
-    subImages[idx * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
-    subImages[idx * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
-    subImages[idx * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
-
-    return idx << VERSION_BITS | version;
-}
-
-function deleteSprite(idx) {
-    spriteCount--;
-
-    let currentVersion = sprites[idx] >> 1;
-
-    if (currentVersion < MAX_VERSION) {
-        currentVersion++; // increase version
-        sprites[idx] = currentVersion << 1; // clear active flag -> set inactive
-
-    } else {
-        console.log(`sprite @${idx} is at max version`);
-    }
-
-    setZ(idx, 1.0);
-
-    if (lowIndex == idx) {
-        for (let i = idx; i < sprites.length; i++) {
-            if (sprites[i] & ACTIVE_FLAG) {
-                lowIndex = i;
-                break;
-            }
-        }
-    }
-
-    if (highIndex == idx) {
-        for (let i = idx; i >= 0; i--) {
-            if (sprites[i] & ACTIVE_FLAG) {
-                highIndex = i;
                 break;
             }
         }
 
-        if (highIndex + 1 < currentMaxElements - 2 * ELEMENTS_CHUNK) {
-            currentMaxElements -= ELEMENTS_CHUNK;
-            resizeTypedViews(currentMaxElements);
+        if (idx == undefined || version == undefined)
+            throw new Error('could not create new sprite, probably no space left');
+
+
+        spriteCount++;
+        changeFlags = POS_CHANGED | COLORS_CHANGED | XFORMS_CHANGED | DIM_CHANGED | SUB_IMG_CHANGED;
+
+        if (lowIndex > idx)
+            lowIndex = idx;
+
+        if (highIndex < idx) {
+            highIndex = idx;
+
+            if (highIndex + 1 > currentMaxElements) {
+                currentMaxElements += ELEMENTS_CHUNK;
+                resizeTypedViews(currentMaxElements);
+            }
+        }
+
+        positions[idx * POS_ELEMENTS] = x;
+        positions[idx * POS_ELEMENTS + 1] = y;
+        positions[idx * POS_ELEMENTS + 2] = -5.0;
+
+        colors[idx * COLOR_ELEMENTS] = 1.0;
+        colors[idx * COLOR_ELEMENTS + 1] = 1.0;
+        colors[idx * COLOR_ELEMENTS + 2] = 1.0;
+        colors[idx * COLOR_ELEMENTS + 3] = 0.0;
+
+        xforms[idx * XFORMS_ELEMENTS] = 0.0;
+        xforms[idx * XFORMS_ELEMENTS + 1] = 0.0;
+        xforms[idx * XFORMS_ELEMENTS + 2] = 0.0;
+        xforms[idx * XFORMS_ELEMENTS + 3] = 1.0;
+
+        const dimIdx = imgId * DIM_ELEMENTS;
+        dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
+        dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
+
+        const subImgIdx = imgId * SUB_IMG_ELEMENTS;
+        subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
+        subImages[idx * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
+        subImages[idx * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
+        subImages[idx * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
+
+        return idx << VERSION_BITS | version;
+    }
+    ,
+    remove: function deleteSprite(idx) {
+        spriteCount--;
+
+        let currentVersion = sprites[idx] >> 1;
+
+        if (currentVersion < MAX_VERSION) {
+            currentVersion++; // increase version
+            sprites[idx] = currentVersion << 1; // clear active flag -> set inactive
+
+        } else {
+            console.log(`sprite @${idx} is at max version`);
+        }
+
+        setZ(idx, 1.0);
+
+        if (lowIndex == idx) {
+            for (let i = idx; i < sprites.length; i++) {
+                if (sprites[i] & ACTIVE_FLAG) {
+                    lowIndex = i;
+                    break;
+                }
+            }
+        }
+
+        if (highIndex == idx) {
+            for (let i = idx; i >= 0; i--) {
+                if (sprites[i] & ACTIVE_FLAG) {
+                    highIndex = i;
+                    break;
+                }
+            }
+
+            if (highIndex + 1 < currentMaxElements - 2 * ELEMENTS_CHUNK) {
+                currentMaxElements -= ELEMENTS_CHUNK;
+                resizeTypedViews(currentMaxElements);
+            }
         }
     }
-}
+    ,
+    setX: function setX(idx, x) {
+        positions[idx * POS_ELEMENTS + POS_X_OFFSET] = x;
 
-function setX(idx, x) {
-    positions[idx * POS_ELEMENTS + POS_X_OFFSET] = x;
+        changeFlags |= POS_CHANGED;
+    }
+    ,
+    getX: function getX(idx) {
+        return positions[idx * POS_ELEMENTS + POS_X_OFFSET];
+    }
+    ,
+    setY: function setY(idx, y) {
+        positions[idx * POS_ELEMENTS + POS_Y_OFFSET] = y;
 
-    changeFlags |= POS_CHANGED;
-}
+        changeFlags |= POS_CHANGED;
+    }
+    ,
+    getY: function getY(idx) {
+        return positions[idx * POS_ELEMENTS + POS_Y_OFFSET];
+    }
+    ,
+    setZ: function setZ(idx, z) {
+        positions[idx * POS_ELEMENTS + POS_Z_OFFSET] = z;
 
-function getX(idx) {
-    return positions[idx * POS_ELEMENTS + POS_X_OFFSET];
-}
+        changeFlags |= POS_CHANGED;
+    }
+    ,
+    getZ: function getZ(idx) {
+        return positions[idx * POS_ELEMENTS + POS_Z_OFFSET];
+    }
+    ,
+    setColor: function setColor(idx, r, g, b, a) {
+        colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET] = r;
+        colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET] = g;
+        colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET] = b;
+        colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET] = a;
 
-function setY(idx, y) {
-    positions[idx * POS_ELEMENTS + POS_Y_OFFSET] = y;
+        changeFlags |= COLORS_CHANGED;
+    }
+    ,
+    setRed: function setRed(idx, r) {
+        colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET] = r;
 
-    changeFlags |= POS_CHANGED;
-}
+        changeFlags |= COLORS_CHANGED;
+    }
+    ,
+    getRed: function getRed(idx) {
+        return colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET];
+    }
+    ,
+    setGreen: function setGreen(idx, g) {
+        colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET] = g;
 
-function getY(idx) {
-    return positions[idx * POS_ELEMENTS + POS_Y_OFFSET];
-}
+        changeFlags |= COLORS_CHANGED;
+    }
+    ,
+    getGreen: function getGreen(idx) {
+        return colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET];
+    }
+    ,
+    setBlue: function setBlue(idx, b) {
+        colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET] = b;
 
-function setZ(idx, z) {
-    positions[idx * POS_ELEMENTS + POS_Z_OFFSET] = z;
+        changeFlags |= COLORS_CHANGED;
+    }
+    ,
+    getBlue: function getBlue(idx) {
+        return colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET];
+    }
+    ,
+    setAlpha: function setAlpha(idx, a) {
+        colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET] = a;
 
-    changeFlags |= POS_CHANGED;
-}
+        changeFlags |= COLORS_CHANGED;
+    }
+    ,
+    getAlpha: function getAlpha(idx) {
+        return colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET];
+    }
+    ,
+    setRotationX: function setRotationX(idx, rotation) {
+        xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_X_OFFSET] = rotation;
 
-function getZ(idx) {
-    return positions[idx * POS_ELEMENTS + POS_Z_OFFSET];
-}
+        changeFlags |= COLORS_CHANGED;
+    }
+    ,
+    getRotationX: function getRotationX(idx) {
+        return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_X_OFFSET];
+    }
+    ,
+    setRotationY: function setRotationY(idx, rotation) {
+        xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Y_OFFSET] = rotation;
 
-function setColor(idx, r, g, b, a) {
-    colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET] = r;
-    colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET] = g;
-    colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET] = b;
-    colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET] = a;
+        changeFlags |= XFORMS_CHANGED;
+    }
+    ,
+    getRotationY: function getRotationY(idx) {
+        return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Y_OFFSET];
+    }
+    ,
+    setRotationZ: function setRotationZ(idx, rotation) {
+        xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Z_OFFSET] = rotation;
 
-    changeFlags |= COLORS_CHANGED;
-}
+        changeFlags |= XFORMS_CHANGED;
+    }
+    ,
+    getRotationZ: function getRotationZ(idx) {
+        return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Z_OFFSET];
+    }
+    ,
+    setScale: function setScale(idx, scale) {
+        xforms[idx * XFORMS_ELEMENTS + XFORMS_SCALE_OFFSET] = scale;
 
-function setRed(idx, r) {
-    colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET] = r;
+        changeFlags |= XFORMS_CHANGED;
+    }
+    ,
+    getScale: function getScale(idx) {
+        return xforms[idx * XFORMS_ELEMENTS + XFORMS_SCALE_OFFSET];
+    }
+    ,
+    setSubImage: function setSubImage(idx, imgId) {
+        const dimIdx = imgId * DIM_ELEMENTS;
+        dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
+        dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
 
-    changeFlags |= COLORS_CHANGED;
-}
+        const subImgIdx = imgId * SUB_IMG_ELEMENTS;
+        subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
+        subImages[idx * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
+        subImages[idx * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
+        subImages[idx * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
 
-function getRed(idx) {
-    return colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET];
-}
-
-function setGreen(idx, g) {
-    colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET] = g;
-
-    changeFlags |= COLORS_CHANGED;
-}
-
-function getGreen(idx) {
-    return colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET];
-}
-
-function setBlue(idx, b) {
-    colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET] = b;
-
-    changeFlags |= COLORS_CHANGED;
-}
-
-function getBlue(idx) {
-    return colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET];
-}
-
-function setAlpha(idx, a) {
-    colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET] = a;
-
-    changeFlags |= COLORS_CHANGED;
-}
-
-function getAlpha(idx) {
-    return colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET];
-}
-
-function setRotationX(idx, rotation) {
-    xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_X_OFFSET] = rotation;
-
-    changeFlags |= COLORS_CHANGED;
-}
-
-function getRotationX(idx) {
-    return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_X_OFFSET];
-}
-
-function setRotationY(idx, rotation) {
-    xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Y_OFFSET] = rotation;
-
-    changeFlags |= XFORMS_CHANGED;
-}
-
-function getRotationY(idx) {
-    return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Y_OFFSET];
-}
-
-function setRotationZ(idx, rotation) {
-    xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Z_OFFSET] = rotation;
-
-    changeFlags |= XFORMS_CHANGED;
-}
-
-function getRotationZ(idx) {
-    return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Z_OFFSET];
-}
-
-function setScale(idx, scale) {
-    xforms[idx * XFORMS_ELEMENTS + XFORMS_SCALE_OFFSET] = scale;
-
-    changeFlags |= XFORMS_CHANGED;
-}
-
-function getScale(idx) {
-    return xforms[idx * XFORMS_ELEMENTS + XFORMS_SCALE_OFFSET];
-}
-
-function setSubImage(idx, imgId) {
-    const dimIdx = imgId * DIM_ELEMENTS;
-    dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
-    dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
-
-    const subImgIdx = imgId * SUB_IMG_ELEMENTS;
-    subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
-    subImages[idx * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
-    subImages[idx * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
-    subImages[idx * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
-
-    changeFlags |= DIM_CHANGED | SUB_IMG_CHANGED;
-}
-
-function getWidth(idx) {
-    return dimensions[idx * DIM_ELEMENTS] * 2;
-}
-
-function getHeight(idx) {
-    return dimensions[idx * DIM_ELEMENTS + 1] * 2;
-}
+        changeFlags |= DIM_CHANGED | SUB_IMG_CHANGED;
+    }
+    ,
+    getWidth: function getWidth(idx) {
+        return dimensions[idx * DIM_ELEMENTS] * 2;
+    }
+    ,
+    getHeight: function getHeight(idx) {
+        return dimensions[idx * DIM_ELEMENTS + 1] * 2;
+    }
+};
 
 /*
  * ANIMATION
@@ -708,123 +710,126 @@ if (property & XFORM_S_FLAG)
     animations.setFloat32(offset + ANIM_FROM_OFFSET, getScale(spriteIdx));
 */
 
-function getScaleAnimationIndex(id) {
-    const idx = id >> VERSION_BITS;
-    const version = id & VERSION_MASK;
-    const offset = idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET;
-    const currentVersion = scaleAnimations.getUint16(offset) >> 1;
+const ScaleAnimations = {
+    getIndex: function getScaleAnimationIndex(id) {
+        const idx = id >> VERSION_BITS;
+        const version = id & VERSION_MASK;
+        const offset = idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET;
+        const currentVersion = scaleAnimations.getUint16(offset) >> 1;
 
-    if (version == currentVersion)
-        return idx;
-    return INVALID_INDEX;
-}
-
-function createScaleAnimation(sprite, duration, toValue, timing) {
-    let idx;
-    let version;
-    for (idx = 0; idx < ANIM_MAX_ELEMENTS; idx++) {
-
-        const flags = scaleAnimations.getUint16(idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET);
-
-        if (!(flags & ACTIVE_FLAG)) {
-
-            version = flags >> 1;
-            scaleAnimations.setUint16(idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET, flags | ACTIVE_FLAG);
-
-            break;
-        }
+        if (version == currentVersion)
+            return idx;
+        return INVALID_INDEX;
     }
+    ,
+    create: function createScaleAnimation(sprite, duration, toValue, timing) {
+        let idx;
+        let version;
+        for (idx = 0; idx < ANIM_MAX_ELEMENTS; idx++) {
 
-    if (idx == undefined)
-        throw new Error('could not create new scale animation, probably no space left');
+            const flags = scaleAnimations.getUint16(idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET);
 
-    animScaleCount++;
+            if (!(flags & ACTIVE_FLAG)) {
 
-    if (animScaleMinIdx > idx)
-        animScaleMinIdx = idx;
+                version = flags >> 1;
+                scaleAnimations.setUint16(idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET, flags | ACTIVE_FLAG);
 
-    if (animScaleMaxIdx < idx)
-        animScaleMaxIdx = idx;
-
-    const offset = idx * ANIM_BYTES_PER_ELEMENT;
-
-    scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, timing << INFO_BITS);
-
-    scaleAnimations.setUint32(offset + ANIM_SPRITE_OFFSET, sprite);
-    scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
-    scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration);
-    scaleAnimations.setFloat32(offset + ANIM_FROM_OFFSET, getScale(sprite >> VERSION_BITS));
-    scaleAnimations.setFloat32(offset + ANIM_TO_OFFSET, toValue);
-
-    return idx << VERSION_BITS | version;
-}
-
-function setLoopScaleAnimation(idx, loop) {
-    const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
-
-    scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, loop ? info | LOOP_FLAG : info & ~LOOP_FLAG);
-}
-
-function setScaleAnimationCallback(idx, callback) {
-    const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
-
-    scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, info | CALLBACK_FLAG);
-    callbacks[ANIM_SCALE_CB_KEY + idx] = callback;
-}
-
-function restartScaleAnimation(idx) {
-    const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const duration = scaleAnimations.getUint32(offset + ANIM_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
-    scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
-    scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration);
-}
-
-function delayScaleAnimation(idx, duration) {
-    const offset = idx * ANIM_BYTES_PER_ELEMENT;
-    const length = scaleAnimations.getUint32(offset + ANIM_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
-    scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame + duration);
-    scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration + length);
-}
-
-function deleteScaleAnimation(idx) {
-    animScaleCount--;
-
-    const offset = idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET;
-
-    let currentVersion = scaleAnimations.getUint16(offset) >> 1;
-
-    if (currentVersion < MAX_VERSION) {
-        currentVersion++; // increase version
-        scaleAnimations.setUint16(offset, currentVersion << 1);
-
-    } else {
-        console.log(`scale animation @${idx} is at max version`);
-    }
-
-    if (animScaleMinIdx == idx) {
-        for (let i = idx; i <= animScaleMaxIdx; i++) {
-            if (scaleAnimations.getUint16(i * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
-                animScaleMinIdx = i;
                 break;
             }
         }
-        if (animScaleMinIdx == idx)
-            animScaleMinIdx = animScaleMaxIdx;
-    }
 
-    if (animScaleMaxIdx == idx) {
-        for (let i = idx; i >= animScaleMinIdx; i--) {
-            if (scaleAnimations.getUint16(i * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
-                animScaleMaxIdx = i;
-                break;
-            }
-        }
-        if (animScaleMaxIdx == idx)
-            animScaleMaxIdx = animScaleMinIdx;
+        if (idx == undefined)
+            throw new Error('could not create new scale animation, probably no space left');
+
+        animScaleCount++;
+
+        if (animScaleMinIdx > idx)
+            animScaleMinIdx = idx;
+
+        if (animScaleMaxIdx < idx)
+            animScaleMaxIdx = idx;
+
+        const offset = idx * ANIM_BYTES_PER_ELEMENT;
+
+        scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, timing << INFO_BITS);
+
+        scaleAnimations.setUint32(offset + ANIM_SPRITE_OFFSET, sprite);
+        scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
+        scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration);
+        scaleAnimations.setFloat32(offset + ANIM_FROM_OFFSET, Sprites.getScale(sprite >> VERSION_BITS));
+        scaleAnimations.setFloat32(offset + ANIM_TO_OFFSET, toValue);
+
+        return idx << VERSION_BITS | version;
     }
-}
+    ,
+    setLoop: function setLoopScaleAnimation(idx, loop) {
+        const offset = idx * ANIM_BYTES_PER_ELEMENT;
+        const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
+
+        scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, loop ? info | LOOP_FLAG : info & ~LOOP_FLAG);
+    }
+    ,
+    setCallback: function setScaleAnimationCallback(idx, callback) {
+        const offset = idx * ANIM_BYTES_PER_ELEMENT;
+        const info = scaleAnimations.getUint16(offset + ANIM_TIMING_N_INFO_OFFSET);
+
+        scaleAnimations.setUint16(offset + ANIM_TIMING_N_INFO_OFFSET, info | CALLBACK_FLAG);
+        callbacks[ANIM_SCALE_CB_KEY + idx] = callback;
+    }
+    ,
+    restart: function restartScaleAnimation(idx) {
+        const offset = idx * ANIM_BYTES_PER_ELEMENT;
+        const duration = scaleAnimations.getUint32(offset + ANIM_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
+        scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame);
+        scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration);
+    }
+    ,
+    delay: function delayScaleAnimation(idx, duration) {
+        const offset = idx * ANIM_BYTES_PER_ELEMENT;
+        const length = scaleAnimations.getUint32(offset + ANIM_END_OFFSET) - scaleAnimations.getUint32(offset + ANIM_START_OFFSET);
+        scaleAnimations.setUint32(offset + ANIM_START_OFFSET, frame + duration);
+        scaleAnimations.setUint32(offset + ANIM_END_OFFSET, frame + duration + length);
+    }
+    ,
+    remove: function deleteScaleAnimation(idx) {
+        animScaleCount--;
+
+        const offset = idx * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET;
+
+        let currentVersion = scaleAnimations.getUint16(offset) >> 1;
+
+        if (currentVersion < MAX_VERSION) {
+            currentVersion++; // increase version
+            scaleAnimations.setUint16(offset, currentVersion << 1);
+
+        } else {
+            console.log(`scale animation @${idx} is at max version`);
+        }
+
+        if (animScaleMinIdx == idx) {
+            for (let i = idx; i <= animScaleMaxIdx; i++) {
+                if (scaleAnimations.getUint16(i * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                    animScaleMinIdx = i;
+                    break;
+                }
+            }
+            if (animScaleMinIdx == idx)
+                animScaleMinIdx = animScaleMaxIdx;
+        }
+
+        if (animScaleMaxIdx == idx) {
+            for (let i = idx; i >= animScaleMinIdx; i--) {
+                if (scaleAnimations.getUint16(i * ANIM_BYTES_PER_ELEMENT + ANIM_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                    animScaleMaxIdx = i;
+                    break;
+                }
+            }
+            if (animScaleMaxIdx == idx)
+                animScaleMaxIdx = animScaleMinIdx;
+        }
+    }
+};
+
 
 // TRANSITION TIMING CONSTANTS (aka SPACING aka the transformation fn)
 const LINEAR = 0;
@@ -953,7 +958,7 @@ function eventLoop() {
                                 callbacks[ANIM_SCALE_CB_KEY + idx]();
                             }
                         } else {
-                            deleteScaleAnimation(idx);
+                            ScaleAnimations.remove(idx);
 
                             if (info & CALLBACK_FLAG) {
                                 callbacks[ANIM_SCALE_CB_KEY + idx]();
@@ -1008,9 +1013,9 @@ function eventLoop() {
  * playground: test scene
  */
 function runTestScene() {
-    const aceOfSpades = createSprite(SubImage.CARD_SA, 0, 0);
-    const scalingRef = createScaleAnimation(aceOfSpades, 60 * 5, 5, EASE_OUT_QUINT);
-    // setLoopScaleAnimation(scalingRef >> VERSION_BITS, true);
-    delayScaleAnimation(scalingRef >> VERSION_BITS, 60 * 2);
-    setScaleAnimationCallback(scalingRef >> VERSION_BITS, () => console.log('scaling done'));
+    const aceOfSpades = Sprites.create(SubImage.CARD_SA, 0, 0);
+    const scalingRef = ScaleAnimations.create(aceOfSpades, 60 * 5, 5, EASE_OUT_QUINT);
+    ScaleAnimations.setLoop(scalingRef >> VERSION_BITS, true);
+    ScaleAnimations.delay(scalingRef >> VERSION_BITS, 60 * 2);
+    ScaleAnimations.setCallback(scalingRef >> VERSION_BITS, () => console.log('scaling done'));
 }
