@@ -322,7 +322,7 @@ ext.vertexAttribDivisorANGLE(subImageLocation, 1);
 
 const TOTAL_BUFFER_SIZE = POS_BUFFER_SIZE + COLOR_BUFFER_SIZE + XFORMS_BUFFER_SIZE + DIM_BUFFER_SIZE +
     SUB_IMG_BUFFER_SIZE;
-console.log(`total alloc buffer size: ${(TOTAL_BUFFER_SIZE / 1024 / 1024).toFixed(2)} mb`);
+console.log(`total alloc gfx buffer size: ${(TOTAL_BUFFER_SIZE / 1024 / 1024).toFixed(2)} mb`);
 
 const texture = gl.createTexture();
 gl.activeTexture(gl.TEXTURE0);
@@ -645,12 +645,12 @@ const Sprites = {
         changeFlags |= DIM_CHANGED | SUB_IMG_CHANGED;
     }
     ,
-    getWidth: function getWidth(idx) {
-        return dimensions[idx * DIM_ELEMENTS] * 2;
+    getWidthHalf: function getWidthHalf(idx) {
+        return dimensions[idx * DIM_ELEMENTS];
     }
     ,
-    getHeight: function getHeight(idx) {
-        return dimensions[idx * DIM_ELEMENTS + 1] * 2;
+    getHeightHalf: function getHeightHalf(idx) {
+        return dimensions[idx * DIM_ELEMENTS + 1];
     }
 };
 
@@ -1263,7 +1263,184 @@ const PositionAnimations = {
 };
 
 
-const totalSizeAnimBuffers = ANIM_SCALE_BUFFER_SIZE + ANIM_ROT1D_BUFFER_SIZE + ANIM_COLOR1C_BUFFER_SIZE + ANIM_POS_BUFFER_SIZE;
+const ANIM_POSC_MAX_ELEMENTS = 1 << 13;
+const ANIM_POSC_BYTES_PER_ELEMENT = 64;
+const ANIM_POSC_BUFFER_SIZE = ANIM_POSC_BYTES_PER_ELEMENT * ANIM_POSC_MAX_ELEMENTS;
+
+const animPosCBuffer = new ArrayBuffer(ANIM_POSC_BUFFER_SIZE);
+const posCAnims = new DataView(animPosCBuffer);
+let animPosCCount = 0;
+let animPosCMinIdx = 0;
+let animPosCMaxIdx = 0;
+
+const ANIM_POSC_VERSION_N_STATE_OFFSET = 0; // 2 byte
+const ANIM_POSC_TIMING_N_INFO_OFFSET = 2; // 2 byte
+
+const ANIM_POSC_SPRITE_OFFSET = 4; // 4 byte
+
+const ANIM_POSC_START_OFFSET = 8; // 4 byte
+const ANIM_POSC_END_OFFSET = 12; // 4 byte
+
+const ANIM_POSC_A_X_OFFSET = 16; // 4 bytes
+const ANIM_POSC_A_Y_OFFSET = 20; // 4 bytes
+const ANIM_POSC_A_Z_OFFSET = 24; // 4 bytes
+
+const ANIM_POSC_B_X_OFFSET = 28; // 4 bytes
+const ANIM_POSC_B_Y_OFFSET = 32; // 4 bytes
+const ANIM_POSC_B_Z_OFFSET = 36; // 4 bytes
+
+const ANIM_POSC_C_X_OFFSET = 40; // 4 bytes
+const ANIM_POSC_C_Y_OFFSET = 44; // 4 bytes
+const ANIM_POSC_C_Z_OFFSET = 48; // 4 bytes
+
+const ANIM_POSC_D_X_OFFSET = 52; // 4 bytes
+const ANIM_POSC_D_Y_OFFSET = 56; // 4 bytes
+const ANIM_POSC_D_Z_OFFSET = 60; // 4 bytes
+
+
+const ANIM_POSC_INFO_BITS = 2;
+// info flags
+const ANIM_POSC_CALLBACK_FLAG = 0b0000000000000001;
+const ANIM_POSC_LOOP_FLAG = 0b0000000000000010;
+
+const ANIM_POSC_CB_KEY = 'anim-posc-';
+
+const PositionCurveAnimations = {
+    getIndex: function getPosCAnimIndex(id) {
+        const idx = id >> VERSION_BITS;
+        const version = id & VERSION_MASK;
+        const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT + ANIM_POSC_VERSION_N_STATE_OFFSET;
+        const currentVersion = posCAnims.getUint16(offset) >> 1;
+
+        if (version == currentVersion)
+            return idx;
+        return INVALID_INDEX;
+    }
+    ,
+    create: function createPosCAnim(sprite, duration, bX, bY, bZ, cX, cY, cZ, dX, dY, dZ, timing) {
+        let idx;
+        let version;
+        for (idx = 0; idx < ANIM_POSC_MAX_ELEMENTS; idx++) {
+
+            const flags = posCAnims.getUint16(idx * ANIM_POSC_BYTES_PER_ELEMENT + ANIM_POSC_VERSION_N_STATE_OFFSET);
+
+            if (!(flags & ACTIVE_FLAG)) {
+
+                version = flags >> 1;
+                posCAnims.setUint16(idx * ANIM_POSC_BYTES_PER_ELEMENT + ANIM_POSC_VERSION_N_STATE_OFFSET, flags | ACTIVE_FLAG);
+
+                break;
+            }
+        }
+
+        if (idx == undefined)
+            throw new Error('could not create new position curve animation, probably no space left');
+
+        animPosCCount++;
+
+        if (animPosCMinIdx > idx)
+            animPosCMinIdx = idx;
+
+        if (animPosCMaxIdx < idx)
+            animPosCMaxIdx = idx;
+
+        const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
+
+        posCAnims.setUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET, timing << ANIM_POSC_INFO_BITS);
+
+        posCAnims.setUint32(offset + ANIM_POSC_SPRITE_OFFSET, sprite);
+        posCAnims.setUint32(offset + ANIM_POSC_START_OFFSET, frame);
+        posCAnims.setUint32(offset + ANIM_POSC_END_OFFSET, frame + duration);
+
+        posCAnims.setFloat32(offset + ANIM_POSC_A_X_OFFSET, Sprites.getX(sprite >> VERSION_BITS));
+        posCAnims.setFloat32(offset + ANIM_POSC_A_Y_OFFSET, Sprites.getY(sprite >> VERSION_BITS));
+        posCAnims.setFloat32(offset + ANIM_POSC_A_Z_OFFSET, Sprites.getZ(sprite >> VERSION_BITS));
+
+        posCAnims.setFloat32(offset + ANIM_POSC_B_X_OFFSET, bX);
+        posCAnims.setFloat32(offset + ANIM_POSC_B_Y_OFFSET, bY);
+        posCAnims.setFloat32(offset + ANIM_POSC_B_Z_OFFSET, bZ);
+
+        posCAnims.setFloat32(offset + ANIM_POSC_C_X_OFFSET, cX);
+        posCAnims.setFloat32(offset + ANIM_POSC_C_Y_OFFSET, cY);
+        posCAnims.setFloat32(offset + ANIM_POSC_C_Z_OFFSET, cZ);
+
+        posCAnims.setFloat32(offset + ANIM_POSC_D_X_OFFSET, dX);
+        posCAnims.setFloat32(offset + ANIM_POSC_D_Y_OFFSET, dY);
+        posCAnims.setFloat32(offset + ANIM_POSC_D_Z_OFFSET, dZ);
+
+        return idx << VERSION_BITS | version;
+    }
+    ,
+    setLoop: function setLoopPosCAnim(idx, loop) {
+        const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
+        const info = posCAnims.getUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET);
+
+        posCAnims.setUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET, loop ? info | ANIM_POSC_LOOP_FLAG : info & ~ANIM_POSC_LOOP_FLAG);
+    }
+    ,
+    setCallback: function setPosCAnimCallback(idx, callback) {
+        const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
+        const info = posCAnims.getUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET);
+
+        posCAnims.setUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET, info | ANIM_POSC_CALLBACK_FLAG);
+        callbacks[ANIM_POSC_CB_KEY + idx] = callback;
+    }
+    ,
+    restart: function restartPosCAnim(idx) {
+        const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
+        const duration = posCAnims.getUint32(offset + ANIM_POSC_END_OFFSET) - posCAnims.getUint32(offset + ANIM_POSC_START_OFFSET);
+        posCAnims.setUint32(offset + ANIM_POSC_START_OFFSET, frame);
+        posCAnims.setUint32(offset + ANIM_POSC_END_OFFSET, frame + duration);
+    }
+    ,
+    delay: function delayPosCAnim(idx, duration) {
+        const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
+        const length = posCAnims.getUint32(offset + ANIM_POSC_END_OFFSET) - posCAnims.getUint32(offset + ANIM_POSC_START_OFFSET);
+        posCAnims.setUint32(offset + ANIM_POSC_START_OFFSET, frame + duration);
+        posCAnims.setUint32(offset + ANIM_POSC_END_OFFSET, frame + duration + length);
+    }
+    ,
+    remove: function deletePosCAnim(idx) {
+        animPosCCount--;
+
+        const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT + ANIM_POSC_VERSION_N_STATE_OFFSET;
+
+        let currentVersion = posCAnims.getUint16(offset) >> 1;
+
+        if (currentVersion < MAX_VERSION) {
+            currentVersion++; // increase version
+            posCAnims.setUint16(offset, currentVersion << 1);
+
+        } else {
+            console.log(`position curve animation @${idx} is at max version`);
+        }
+
+        if (animPosCMinIdx == idx) {
+            for (let i = idx; i <= animPosCMaxIdx; i++) {
+                if (posCAnims.getUint16(i * ANIM_POSC_BYTES_PER_ELEMENT + ANIM_POSC_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                    animPosCMinIdx = i;
+                    break;
+                }
+            }
+            if (animPosCMinIdx == idx)
+                animPosCMinIdx = animPosCMaxIdx;
+        }
+
+        if (animPosCMaxIdx == idx) {
+            for (let i = idx; i >= animPosCMinIdx; i--) {
+                if (posCAnims.getUint16(i * ANIM_POSC_BYTES_PER_ELEMENT + ANIM_POSC_VERSION_N_STATE_OFFSET) & ACTIVE_FLAG) {
+                    animPosCMaxIdx = i;
+                    break;
+                }
+            }
+            if (animPosCMaxIdx == idx)
+                animPosCMaxIdx = animPosCMinIdx;
+        }
+    }
+};
+
+
+const totalSizeAnimBuffers = ANIM_SCALE_BUFFER_SIZE + ANIM_ROT1D_BUFFER_SIZE + ANIM_COLOR1C_BUFFER_SIZE + ANIM_POS_BUFFER_SIZE + ANIM_POSC_BUFFER_SIZE;
 console.log(`animation system buffer size (excl. callback function pointers): ${(totalSizeAnimBuffers / 1024 / 1024).toFixed(2)} mb`);
 
 // TRANSITION TIMING CONSTANTS (aka SPACING aka the transformation fn)
@@ -1284,69 +1461,67 @@ const EASE_IN_OUT_QUINT = 12;
 function map(x, minX, maxX, minY, maxY, trans) {
     const xNormalized = (x - minX) / (maxX - minX);
 
-
-    let xTransformed;
-    if (trans == EASE_IN_QUAD)
-        xTransformed = xNormalized * xNormalized;
-    else if (trans == EASE_IN_CUBIC)
-        xTransformed = xNormalized * xNormalized * xNormalized;
-    else if (trans == EASE_IN_QUART)
-        xTransformed = xNormalized * xNormalized * xNormalized * xNormalized;
-    else if (trans == EASE_IN_QUINT)
-        xTransformed = xNormalized * xNormalized * xNormalized * xNormalized * xNormalized;
-
-    else if (trans == EASE_OUT_QUAD) {
-        const t = (1 - xNormalized);
-        xTransformed = 1 - t * t;
-    }
-    else if (trans == EASE_OUT_CUBIC) {
-        const t = (1 - xNormalized);
-        xTransformed = 1 - t * t * t;
-    }
-    else if (trans == EASE_OUT_QUART) {
-        const t = (1 - xNormalized);
-        xTransformed = 1 - t * t * t * t;
-    }
-    else if (trans == EASE_OUT_QUINT) {
-        const t = (1 - xNormalized);
-        xTransformed = 1 - t * t * t * t * t;
-    }
-
-    else if (trans == EASE_IN_OUT_QUAD) {
-        const x0 = xNormalized * xNormalized;
-        const t = (1 - xNormalized);
-        const x1 = 1 - t * t;
-        const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
-        xTransformed = xMixed;
-    }
-    else if (trans == EASE_IN_OUT_CUBIC) {
-        const x0 = xNormalized * xNormalized * xNormalized;
-        const t = (1 - xNormalized);
-        const x1 = 1 - t * t * t;
-        const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
-        xTransformed = xMixed;
-    }
-    else if (trans == EASE_IN_OUT_QUART) {
-        const x0 = xNormalized * xNormalized * xNormalized * xNormalized;
-        const t = (1 - xNormalized);
-        const x1 = 1 - t * t * t * t;
-        const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
-        xTransformed = xMixed;
-    }
-    else if (trans == EASE_IN_OUT_QUINT) {
-        const x0 = xNormalized * xNormalized * xNormalized * xNormalized * xNormalized;
-        const t = (1 - xNormalized);
-        const x1 = 1 - t * t * t * t * t;
-        const xMixed = x0 * (1 - xNormalized) + x1 * xNormalized;
-        xTransformed = xMixed;
-    }
-
-    else if (trans == LINEAR)
-        xTransformed = xNormalized;
-
+    const xTransformed = (trans == LINEAR) ? xNormalized : nonLinearTransform(xNormalized, trans);
 
     const xScaled = xTransformed * (maxY - minY) + minY;
     return xScaled;
+}
+
+function nonLinearTransform(x, spacing) {
+    if (spacing == EASE_IN_QUAD)
+        return x * x;
+    else if (spacing == EASE_IN_CUBIC)
+        return x * x * x;
+    else if (spacing == EASE_IN_QUART)
+        return x * x * x * x;
+    else if (spacing == EASE_IN_QUINT)
+        return x * x * x * x * x;
+
+    else if (spacing == EASE_OUT_QUAD) {
+        const xInv = (1 - x);
+        return 1 - xInv * xInv;
+    }
+    else if (spacing == EASE_OUT_CUBIC) {
+        const xInv = (1 - x);
+        return 1 - xInv * xInv * xInv;
+    }
+    else if (spacing == EASE_OUT_QUART) {
+        const xInv = (1 - x);
+        return 1 - xInv * xInv * xInv * xInv;
+    }
+    else if (spacing == EASE_OUT_QUINT) {
+        const xInv = (1 - x);
+        return 1 - xInv * xInv * xInv * xInv * xInv;
+    }
+
+    else if (spacing == EASE_IN_OUT_QUAD) {
+        const x2 = x * x;
+        const xInv = (1 - x);
+        const xInv2Inv = 1 - xInv * xInv;
+        const xMixed = x2 * xInv + xInv2Inv * x;
+        return xMixed;
+    }
+    else if (spacing == EASE_IN_OUT_CUBIC) {
+        const x3 = x * x * x;
+        const xInv = (1 - x);
+        const xInv3Inv = 1 - xInv * xInv * xInv;
+        const xMixed = x3 * xInv + xInv3Inv * x;
+        return xMixed;
+    }
+    else if (spacing == EASE_IN_OUT_QUART) {
+        const x4 = x * x * x * x;
+        const xInv = (1 - x);
+        const xInv4Inv = 1 - xInv * xInv * xInv * xInv;
+        const xMixed = x4 * xInv + xInv4Inv * x;
+        return xMixed;
+    }
+    else if (spacing == EASE_IN_OUT_QUINT) {
+        const x5 = x * x * x * x * x;
+        const xInv = (1 - x);
+        const xInv5Inv = 1 - xInv * xInv * xInv * xInv * xInv;
+        const xMixed = x5 * xInv + xInv5Inv * x;
+        return xMixed;
+    }
 }
 
 let frame = 0;
@@ -1531,10 +1706,14 @@ function eventLoop() {
 
                     const timing = info >> ANIM_POS_INFO_BITS;
 
-                    // noinspection JSSuspiciousNameCombination
-                    const nextPosXValue = map(frame, start, end, fromX, toX, timing);
-                    const nextPosYValue = map(frame, start, end, fromY, toY, timing);
-                    const nextPosZValue = map(frame, start, end, fromZ, toZ, timing);
+                    const tNormalized = (frame - start) / (end - start);
+
+                    const t = (timing == LINEAR) ?
+                        tNormalized : nonLinearTransform(tNormalized, timing);
+
+                    const nextPosXValue = fromX + t * (toX - fromX);
+                    const nextPosYValue = fromY + t * (toY - fromY);
+                    const nextPosZValue = fromZ + t * (toZ - fromZ);
 
                     const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
                     {
@@ -1559,6 +1738,84 @@ function eventLoop() {
                             if (info & ANIM_POS_CALLBACK_FLAG) {
                                 callbacks[ANIM_POS_CB_KEY + idx]();
                                 delete callbacks[ANIM_POS_CB_KEY + idx];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (animPosCCount > 0) {
+            let idx;
+            for (idx = animPosCMinIdx; idx <= animPosCMaxIdx; idx++) {
+                const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
+                const flags = posCAnims.getUint16(offset + ANIM_POSC_VERSION_N_STATE_OFFSET);
+                if (flags & ACTIVE_FLAG) {
+
+                    const start = posCAnims.getUint32(offset + ANIM_POSC_START_OFFSET);
+                    if (start > frame)
+                        continue;
+
+                    const info = posCAnims.getUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET);
+                    const sprite = posCAnims.getUint32(offset + ANIM_POSC_SPRITE_OFFSET);
+                    const end = posCAnims.getUint32(offset + ANIM_POSC_END_OFFSET);
+
+                    const aX = posCAnims.getFloat32(offset + ANIM_POSC_A_X_OFFSET);
+                    const aY = posCAnims.getFloat32(offset + ANIM_POSC_A_Y_OFFSET);
+                    const aZ = posCAnims.getFloat32(offset + ANIM_POSC_A_Z_OFFSET);
+
+                    const bX = posCAnims.getFloat32(offset + ANIM_POSC_B_X_OFFSET);
+                    const bY = posCAnims.getFloat32(offset + ANIM_POSC_B_Y_OFFSET);
+                    const bZ = posCAnims.getFloat32(offset + ANIM_POSC_B_Z_OFFSET);
+
+                    const cX = posCAnims.getFloat32(offset + ANIM_POSC_C_X_OFFSET);
+                    const cY = posCAnims.getFloat32(offset + ANIM_POSC_C_Y_OFFSET);
+                    const cZ = posCAnims.getFloat32(offset + ANIM_POSC_C_Z_OFFSET);
+
+                    const dX = posCAnims.getFloat32(offset + ANIM_POSC_D_X_OFFSET);
+                    const dY = posCAnims.getFloat32(offset + ANIM_POSC_D_Y_OFFSET);
+                    const dZ = posCAnims.getFloat32(offset + ANIM_POSC_D_Z_OFFSET);
+
+                    const timing = info >> ANIM_POSC_INFO_BITS;
+
+                    const tNormalized = (frame - start) / (end - start);
+
+                    const t = (timing == LINEAR) ?
+                        tNormalized : nonLinearTransform(tNormalized, timing);
+
+                    const s = 1 - t;
+                    const s2 = s * s;
+                    const s3 = s2 * s;
+                    const t2 = t * t;
+                    const t3 = t2 * t;
+
+                    const nextPosXValue = s3 * aX + 3 * s2 * t * bX + 3 * s * t2 * cX + t3 * dX;
+                    const nextPosYValue = s3 * aY + 3 * s2 * t * bY + 3 * s * t2 * cY + t3 * dY;
+                    const nextPosZValue = s3 * aZ + 3 * s2 * t * bZ + 3 * s * t2 * cZ + t3 * dZ;
+
+                    const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
+                    {
+                        positions[spriteIdx * POS_ELEMENTS + POS_X_OFFSET] = nextPosXValue;
+                        positions[spriteIdx * POS_ELEMENTS + POS_Y_OFFSET] = nextPosYValue;
+                        positions[spriteIdx * POS_ELEMENTS + POS_Z_OFFSET] = nextPosZValue;
+
+                        changeFlags |= POS_CHANGED;
+                    }
+
+                    if (end == frame) {
+                        if (info & ANIM_POSC_LOOP_FLAG) {
+                            posCAnims.setUint32(offset + ANIM_POSC_START_OFFSET, frame);
+                            posCAnims.setUint32(offset + ANIM_POSC_END_OFFSET, frame + (end - start));
+
+                            if (info & ANIM_POSC_CALLBACK_FLAG) {
+                                callbacks[ANIM_POSC_CB_KEY + idx]();
+                            }
+                        } else {
+                            PositionCurveAnimations.remove(idx);
+
+                            if (info & ANIM_POSC_CALLBACK_FLAG) {
+                                callbacks[ANIM_POSC_CB_KEY + idx]();
+                                delete callbacks[ANIM_POSC_CB_KEY + idx];
                             }
                         }
                     }
@@ -1610,11 +1867,21 @@ function eventLoop() {
  * playground: test scene
  */
 function runTestScene() {
-    const aceOfSpades = Sprites.create(SubImage.CARD_SA, 0, 0);
+    const a_x = -1;
+    const a_y = 0;
+    const a_z = -5;
 
-    const alphaRef = Color1CAnimations.create(aceOfSpades, 60 * 2, 1.0, LINEAR);
-    Color1CAnimations.setLoop(alphaRef >> VERSION_BITS, true);
+    const multiple = 2/3;
 
-    const mv = PositionAnimations.create(aceOfSpades, 60, -8, 3, -10, EASE_IN_OUT_QUINT);
-    PositionAnimations.setLoop(mv >> VERSION_BITS, true);
+
+    const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y);
+
+    const radius = Sprites.getWidthHalf(aceOfSpades >> VERSION_BITS);
+
+    const b_z = a_z + radius * 4 / 3;
+    const d_x = a_x + 2 * radius;
+
+    Rot1DAnimations.create(aceOfSpades, ANIM_ROT1D_Y_FLAG, 60, Math.PI, LINEAR);
+    PositionCurveAnimations.create(aceOfSpades, 60, a_x, a_y, b_z, d_x, a_y, b_z, d_x, a_y, a_z, LINEAR);
+
 }
