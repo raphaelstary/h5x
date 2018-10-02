@@ -1,7 +1,7 @@
 import * as SubImage from '../code-gen/SubImage.js';
-import spriteDimensions from '../code-gen/SpriteDimensions.js';
 
 let baseSubImages;
+let spriteDimensions;
 
 if (window.Windows)
     console.log(`I'm running on Windows 😎`);
@@ -33,11 +33,20 @@ Promise.all([
                 img.onload = () => resolve(img);
                 img.src = URL.createObjectURL(blob);
             });
+        }),
+
+    fetch('../asset-gen/sprite-dimensions.h5')
+        .then(response => {
+            if (response.ok)
+                return response.arrayBuffer();
+
+            throw new Error('could not fetch sprite-dimension-data');
         })
 ])
     .catch(error => console.log(error))
     .then(values => {
         baseSubImages = new Float32Array(values[1]);
+        spriteDimensions = new Float32Array(values[3]);
         const img = values[2];
 
         const BASE_DIM_BUFFER_SIZE = spriteDimensions.byteLength;
