@@ -51,14 +51,28 @@ Promise.all([
                 return response.arrayBuffer();
 
             throw new Error('could not fetch audio-segment-data');
+        }),
+
+    fetch('../asset-gen/audio-sprite.mp3')
+        .then(response => {
+            if (response.ok)
+                return response.arrayBuffer();
+
+            throw new Error('could not fetch audio-segment-data');
+        })
+        .then(buffer => {
+            console.log(`encoded mp3 buffer size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)} mb`);
+            return audioCtx.decodeAudioData(buffer);
         })
 ])
     .catch(error => console.log(error))
     .then(values => {
         baseSubImages = new Float32Array(values[1]);
+        const img = values[2];
         spriteDimensions = new Float32Array(values[3]);
         audioSegments = new Float32Array(values[4]);
-        const img = values[2];
+        const audioBuffer = values[5];
+        console.log('audio buffer sample-frames: ' + audioBuffer.length);
 
         const BASE_DIM_BUFFER_SIZE = spriteDimensions.byteLength;
         const BASE_AUDIO_SEG_BUFFER_SIZE = audioSegments.byteLength;
@@ -73,6 +87,8 @@ Promise.all([
 
         runTestScene();
     });
+
+const audioCtx = new AudioContext();
 
 const canvas = document.getElementById('screen');
 const gl = canvas.getContext('webgl', {alpha: false});
