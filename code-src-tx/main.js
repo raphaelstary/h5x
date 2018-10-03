@@ -1,7 +1,9 @@
 import * as SubImage from '../code-gen/SubImage.js';
+import * as AudioSegment from '../code-gen/AudioSegment.js';
 
 let baseSubImages;
 let spriteDimensions;
+let audioSegments;
 
 if (window.Windows)
     console.log(`I'm running on Windows 😎`);
@@ -41,17 +43,27 @@ Promise.all([
                 return response.arrayBuffer();
 
             throw new Error('could not fetch sprite-dimension-data');
+        }),
+
+    fetch('../asset-gen/audio-segments.h5')
+        .then(response => {
+            if (response.ok)
+                return response.arrayBuffer();
+
+            throw new Error('could not fetch audio-segment-data');
         })
 ])
     .catch(error => console.log(error))
     .then(values => {
         baseSubImages = new Float32Array(values[1]);
         spriteDimensions = new Float32Array(values[3]);
+        audioSegments = new Float32Array(values[4]);
         const img = values[2];
 
         const BASE_DIM_BUFFER_SIZE = spriteDimensions.byteLength;
+        const BASE_AUDIO_SEG_BUFFER_SIZE = audioSegments.byteLength;
         const BASE_SUB_IMG_BUFFER_SIZE = baseSubImages.byteLength;
-        const TOTAL_BASE_BUFFER_SIZE = BASE_DIM_BUFFER_SIZE + BASE_SUB_IMG_BUFFER_SIZE;
+        const TOTAL_BASE_BUFFER_SIZE = BASE_DIM_BUFFER_SIZE + BASE_SUB_IMG_BUFFER_SIZE + BASE_AUDIO_SEG_BUFFER_SIZE;
         console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
         console.log(`texture atlas bitmap size: ${(img.width * img.height * 4 / 1024 / 1024).toFixed(2)} mb`);
 
