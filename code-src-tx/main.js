@@ -1,5 +1,5 @@
 import * as SubImage from '../code-gen/SubImage.js';
-import * as AudioSegment from '../code-gen/AudioSegment.js';
+import * as AudioSegment from '../code-gen/SFXSegment.js';
 
 let baseSubImages;
 let spriteDimensions;
@@ -45,20 +45,20 @@ Promise.all([
             throw new Error('could not fetch sprite-dimension-data');
         }),
 
-    fetch('../asset-gen/audio-segments.h5')
+    fetch('../asset-gen/sfx-segments.h5')
         .then(response => {
             if (response.ok)
                 return response.arrayBuffer();
 
-            throw new Error('could not fetch audio-segment-data');
+            throw new Error('could not fetch sfx audio-segment-data');
         }),
 
-    fetch('../asset-gen/audio-sprite.mp3')
+    fetch('../asset-gen/sfx.wav')
         .then(response => {
             if (response.ok)
                 return response.arrayBuffer();
 
-            throw new Error('could not fetch audio-segment-data');
+            throw new Error('could not fetch sfx audio-sprite');
         })
         .then(buffer => {
             console.log(`encoded mp3 buffer size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)} mb`);
@@ -72,14 +72,15 @@ Promise.all([
         spriteDimensions = new Float32Array(values[3]);
         audioSegments = new Float32Array(values[4]);
         const audioBuffer = values[5];
-        console.log('audio buffer sample-frames: ' + audioBuffer.length);
+        const audioBufferSize = audioBuffer.length * audioBuffer.numberOfChannels * Float32Array.BYTES_PER_ELEMENT;
+        console.log(`audio buffer size: ${(audioBufferSize / 1024 / 1024).toFixed(2)} mb`);
 
         const BASE_DIM_BUFFER_SIZE = spriteDimensions.byteLength;
         const BASE_AUDIO_SEG_BUFFER_SIZE = audioSegments.byteLength;
         const BASE_SUB_IMG_BUFFER_SIZE = baseSubImages.byteLength;
         const TOTAL_BASE_BUFFER_SIZE = BASE_DIM_BUFFER_SIZE + BASE_SUB_IMG_BUFFER_SIZE + BASE_AUDIO_SEG_BUFFER_SIZE;
         console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
-        console.log(`texture atlas bitmap size: ${(img.width * img.height * 4 / 1024 / 1024).toFixed(2)} mb`);
+        console.log(`texture atlas back buffer size: ${(img.width * img.height * 4 / 1024 / 1024).toFixed(2)} mb`);
 
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
 
