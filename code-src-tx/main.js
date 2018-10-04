@@ -1,9 +1,10 @@
 import * as SubImage from '../code-gen/SubImage.js';
-import * as AudioSegment from '../code-gen/SFXSegment.js';
+import * as SFXSegment from '../code-gen/SFXSegment.js';
 
 let baseSubImages;
 let spriteDimensions;
 let audioSegments;
+let audioBuffer;
 
 if (window.Windows)
     console.log(`I'm running on Windows 😎`);
@@ -71,7 +72,7 @@ Promise.all([
         const img = values[2];
         spriteDimensions = new Float32Array(values[3]);
         audioSegments = new Float32Array(values[4]);
-        const audioBuffer = values[5];
+        audioBuffer = values[5];
         const audioBufferSize = audioBuffer.length * audioBuffer.numberOfChannels * Float32Array.BYTES_PER_ELEMENT;
         console.log(`audio buffer size: ${(audioBufferSize / 1024 / 1024).toFixed(2)} mb`);
 
@@ -89,7 +90,6 @@ Promise.all([
         runTestScene();
     });
 
-const audioCtx = new AudioContext();
 
 const canvas = document.getElementById('screen');
 const gl = canvas.getContext('webgl', {alpha: false});
@@ -1705,6 +1705,53 @@ function nonLinearTransform(x, spacing) {
     }
 }
 
+
+/*
+ * AUDIO
+ */
+const audioCtx = new AudioContext();
+const volume = audioCtx.createGain();
+volume.connect(audioCtx.destination);
+volume.gain.setValueAtTime(1, audioCtx.currentTime);
+
+/**
+ *
+ * @param {number} audioId segment to play {@see SFXSegment}
+ * @param {boolean} [loop=false]
+ * @param {number} [delay=0] delay in seconds
+ * @param {function} [callback]
+ * @returns {AudioBufferSourceNode}
+ */
+function playSound(audioId, loop, delay, callback) {
+    const offset = audioSegments[audioId * 2];
+    const duration = audioSegments[audioId * 2 + 1];
+
+    const source = audioCtx.createBufferSource();
+
+    if (callback) {
+        source.onended = callback;
+    }
+
+    source.buffer = audioBuffer;
+    source.connect(volume);
+
+    const when = delay == undefined ? 0 : delay;
+
+    if (loop) {
+        source.loop = true;
+        source.loopStart = offset;
+        source.loopEnd = offset + duration;
+
+        source.start(when, offset);
+
+    } else {
+        source.start(when, offset, duration);
+    }
+
+    return source;
+}
+
+
 let frame = 0;
 
 /*
@@ -2062,4 +2109,5 @@ function runTestScene() {
     Rot1DAnimations.create(aceOfSpades, ANIM_ROT1D_Y_FLAG, 60, Math.PI, LINEAR);
     PositionCurveAnimations.create(aceOfSpades, 60, a_x, a_y, b_z, d_x, a_y, b_z, d_x, a_y, a_z, LINEAR);
 
+    playSound(SFXSegment.SIMPLEST_GUNSHOT);
 }
