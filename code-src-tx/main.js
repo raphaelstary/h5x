@@ -61,7 +61,7 @@ Promise.all([
             throw new Error('could not fetch sfx audio-sprite');
         })
         .then(buffer => {
-            console.log(`encoded mp3 buffer size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)} mb`);
+            console.log(`encoded audio buffer size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)} mb`);
             return audioCtx.decodeAudioData(buffer);
         })
 ])
