@@ -725,7 +725,7 @@ const Sprites = {
 /*
  * ANIMATION
  */
-const callbacks = {};
+const callbacks = new Map();
 
 
 const ANIM_SCALE_MAX_ELEMENTS = 1 << 13;
@@ -820,7 +820,7 @@ const ScaleAnimations = {
         const info = scaleAnims.getUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET);
 
         scaleAnims.setUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET, info | ANIM_SCALE_CALLBACK_FLAG);
-        callbacks[ANIM_SCALE_CB_KEY + idx] = callback;
+        callbacks.set(ANIM_SCALE_CB_KEY + idx, callback);
     }
     ,
     restart: function restartScaleAnim(idx) {
@@ -997,7 +997,7 @@ const Rot1DAnimations = {
         const info = rot1DAnims.getUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET);
 
         rot1DAnims.setUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET, info | ANIM_ROT1D_CALLBACK_FLAG);
-        callbacks[ANIM_ROT1D_CB_KEY + idx] = callback;
+        callbacks.set(ANIM_ROT1D_CB_KEY + idx, callback);
     }
     ,
     restart: function restartRot1DAnim(idx) {
@@ -1173,7 +1173,7 @@ const Color1CAnimations = {
         const info = color1CAnims.getUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET);
 
         color1CAnims.setUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET, info | ANIM_COLOR1C_CALLBACK_FLAG);
-        callbacks[ANIM_COLOR1C_CB_KEY + idx] = callback;
+        callbacks.set(ANIM_COLOR1C_CB_KEY + idx, callback);
     }
     ,
     restart: function restartColor1CAnim(idx) {
@@ -1350,7 +1350,7 @@ const PositionAnimations = {
         const info = posAnims.getUint16(offset + ANIM_POS_TIMING_N_INFO_OFFSET);
 
         posAnims.setUint16(offset + ANIM_POS_TIMING_N_INFO_OFFSET, info | ANIM_POS_CALLBACK_FLAG);
-        callbacks[ANIM_POS_CB_KEY + idx] = callback;
+        callbacks.set(ANIM_POS_CB_KEY + idx, callback);
     }
     ,
     restart: function restartPosAnim(idx) {
@@ -1547,7 +1547,7 @@ const PositionCurveAnimations = {
         const info = posCAnims.getUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET);
 
         posCAnims.setUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET, info | ANIM_POSC_CALLBACK_FLAG);
-        callbacks[ANIM_POSC_CB_KEY + idx] = callback;
+        callbacks.set(ANIM_POSC_CB_KEY + idx, callback);
     }
     ,
     restart: function restartPosCAnim(idx) {
@@ -1813,14 +1813,14 @@ function eventLoop() {
                             scaleAnims.setUint32(offset + ANIM_SCALE_END_OFFSET, frame + (end - start));
 
                             if (info & ANIM_SCALE_CALLBACK_FLAG) {
-                                callbacks[ANIM_SCALE_CB_KEY + idx]();
+                                callbacks.get(ANIM_SCALE_CB_KEY + idx)();
                             }
                         } else {
                             ScaleAnimations.remove(idx);
 
                             if (info & ANIM_SCALE_CALLBACK_FLAG) {
-                                callbacks[ANIM_SCALE_CB_KEY + idx]();
-                                delete callbacks[ANIM_SCALE_CB_KEY + idx];
+                                callbacks.get(ANIM_SCALE_CB_KEY + idx)();
+                                callbacks.delete(ANIM_SCALE_CB_KEY + idx);
                             }
                         }
                     }
@@ -1865,14 +1865,14 @@ function eventLoop() {
                             rot1DAnims.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + (end - start));
 
                             if (info & ANIM_ROT1D_CALLBACK_FLAG) {
-                                callbacks[ANIM_ROT1D_CB_KEY + idx]();
+                                callbacks.get(ANIM_ROT1D_CB_KEY + idx)();
                             }
                         } else {
                             Rot1DAnimations.remove(idx);
 
                             if (info & ANIM_ROT1D_CALLBACK_FLAG) {
-                                callbacks[ANIM_ROT1D_CB_KEY + idx]();
-                                delete callbacks[ANIM_ROT1D_CB_KEY + idx];
+                                callbacks.get(ANIM_ROT1D_CB_KEY + idx)();
+                                callbacks.delete(ANIM_ROT1D_CB_KEY + idx);
                             }
                         }
                     }
@@ -1912,14 +1912,14 @@ function eventLoop() {
                             color1CAnims.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + (end - start));
 
                             if (info & ANIM_COLOR1C_CALLBACK_FLAG) {
-                                callbacks[ANIM_COLOR1C_CB_KEY + idx]();
+                                callbacks.get(ANIM_COLOR1C_CB_KEY + idx)();
                             }
                         } else {
                             Color1CAnimations.remove(idx);
 
                             if (info & ANIM_COLOR1C_CALLBACK_FLAG) {
-                                callbacks[ANIM_COLOR1C_CB_KEY + idx]();
-                                delete callbacks[ANIM_COLOR1C_CB_KEY + idx];
+                                callbacks.get(ANIM_COLOR1C_CB_KEY + idx)();
+                                callbacks.delete(ANIM_COLOR1C_CB_KEY + idx);
                             }
                         }
                     }
@@ -1977,14 +1977,14 @@ function eventLoop() {
                             posAnims.setUint32(offset + ANIM_POS_END_OFFSET, frame + (end - start));
 
                             if (info & ANIM_POS_CALLBACK_FLAG) {
-                                callbacks[ANIM_POS_CB_KEY + idx]();
+                                callbacks.get(ANIM_POS_CB_KEY + idx)();
                             }
                         } else {
                             PositionAnimations.remove(idx);
 
                             if (info & ANIM_POS_CALLBACK_FLAG) {
-                                callbacks[ANIM_POS_CB_KEY + idx]();
-                                delete callbacks[ANIM_POS_CB_KEY + idx];
+                                callbacks.get(ANIM_POS_CB_KEY + idx)();
+                                callbacks.delete(ANIM_POS_CB_KEY + idx);
                             }
                         }
                     }
@@ -2055,14 +2055,14 @@ function eventLoop() {
                             posCAnims.setUint32(offset + ANIM_POSC_END_OFFSET, frame + (end - start));
 
                             if (info & ANIM_POSC_CALLBACK_FLAG) {
-                                callbacks[ANIM_POSC_CB_KEY + idx]();
+                                callbacks.get(ANIM_POSC_CB_KEY + idx)();
                             }
                         } else {
                             PositionCurveAnimations.remove(idx);
 
                             if (info & ANIM_POSC_CALLBACK_FLAG) {
-                                callbacks[ANIM_POSC_CB_KEY + idx]();
-                                delete callbacks[ANIM_POSC_CB_KEY + idx];
+                                callbacks.get(ANIM_POSC_CB_KEY + idx)();
+                                callbacks.delete(ANIM_POSC_CB_KEY + idx);
                             }
                         }
                     }
