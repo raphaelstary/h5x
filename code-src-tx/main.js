@@ -6,7 +6,8 @@ let spriteDimensions;
 let audioSegments;
 let audioBuffer;
 
-if (window.Windows)
+const isUWP = window.Windows != undefined;
+if (isUWP)
     console.log(`I'm running on Windows 😎`);
 
 Promise.all([
@@ -1760,18 +1761,32 @@ let frame = 0;
 function eventLoop() {
     requestAnimationFrame(eventLoop);
 
-    // capture DOM gamepad input
-    {
+    // capture gamepad input
+    if (isUWP) {
+        for (const gamepad of gamepads) {
+            const oldReading = oldReadings.get(gamepad);
+            const newReading = gamepad.getCurrentReading();
+            oldReadings.set(gamepad, newReading);
+
+            if (buttonPressed(newReading, oldReading, GamepadButtons.a)) {
+                console.log(`a gamepad pressed A button`);
+
+            } else if (buttonReleased(newReading, oldReading, GamepadButtons.a)) {
+                console.log(`a gamepad released A button`);
+            }
+        }
+
+    } else {
         navigator.getGamepads(); // fetch new input reading (objects get updated for no reason, there should be no ref)
 
         for (let container of domGamepads.values()) {
 
             parseDOMGamepadState(container.gamepad, container.newReading);
 
-            if (buttonPressed(container.newReading, container.oldReading, WinRTGamepadButtonFlag.A)) {
+            if (buttonPressed(container.newReading, container.oldReading, GamepadButtons.a)) {
                 console.log(`gamepad ${container.gamepad.index} pressed A button`);
 
-            } else if (buttonReleased(container.newReading, container.oldReading, WinRTGamepadButtonFlag.A)) {
+            } else if (buttonReleased(container.newReading, container.oldReading, GamepadButtons.a)) {
                 console.log(`gamepad ${container.gamepad.index} released A button`);
             }
 
@@ -2159,21 +2174,21 @@ const DOMGamepadAxis = Object.freeze({
 });
 
 const WinRTGamepadButtonFlag = Object.freeze({
-    A: 4,
-    B: 8,
-    D_PAD_DOWN: 128,
-    D_PAD_LEFT: 256,
-    D_PAD_RIGHT: 512,
-    D_PAD_UP: 64,
-    LEFT_BUMPER: 1024,
-    LEFT_STICK: 4096,
-    MENU: 1,
-    NONE: 0,
-    RIGHT_BUMPER: 2048,
-    RIGHT_STICK: 8192,
-    VIEW: 2,
-    X: 16,
-    Y: 32
+    a: 4,
+    b: 8,
+    dPadDown: 128,
+    dPadLeft: 256,
+    dPadRight: 512,
+    dPadUp: 64,
+    leftShoulder: 1024,
+    leftThumbstick: 4096,
+    menu: 1,
+    none: 0,
+    rightShoulder: 2048,
+    rightThumbstick: 8192,
+    view: 2,
+    x: 16,
+    y: 32
 });
 
 /**
@@ -2184,46 +2199,46 @@ function parseDOMGamepadState(gamepad, outReading) {
     let btnFlags = 0;
 
     if (gamepad.buttons[DOMGamepadButton.A].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.A;
+        btnFlags |= WinRTGamepadButtonFlag.a;
     }
     if (gamepad.buttons[DOMGamepadButton.B].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.B;
+        btnFlags |= WinRTGamepadButtonFlag.b;
     }
     if (gamepad.buttons[DOMGamepadButton.X].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.X;
+        btnFlags |= WinRTGamepadButtonFlag.x;
     }
     if (gamepad.buttons[DOMGamepadButton.Y].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.Y;
+        btnFlags |= WinRTGamepadButtonFlag.y;
     }
     if (gamepad.buttons[DOMGamepadButton.LEFT_BUMPER].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.LEFT_BUMPER;
+        btnFlags |= WinRTGamepadButtonFlag.leftShoulder;
     }
     if (gamepad.buttons[DOMGamepadButton.RIGHT_BUMPER].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.RIGHT_BUMPER;
+        btnFlags |= WinRTGamepadButtonFlag.rightShoulder;
     }
     if (gamepad.buttons[DOMGamepadButton.VIEW].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.VIEW;
+        btnFlags |= WinRTGamepadButtonFlag.view;
     }
     if (gamepad.buttons[DOMGamepadButton.MENU].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.MENU;
+        btnFlags |= WinRTGamepadButtonFlag.menu;
     }
     if (gamepad.buttons[DOMGamepadButton.LEFT_STICK].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.LEFT_STICK;
+        btnFlags |= WinRTGamepadButtonFlag.leftThumbstick;
     }
     if (gamepad.buttons[DOMGamepadButton.RIGHT_STICK].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.RIGHT_STICK;
+        btnFlags |= WinRTGamepadButtonFlag.rightThumbstick;
     }
     if (gamepad.buttons[DOMGamepadButton.D_PAD_UP].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.D_PAD_UP;
+        btnFlags |= WinRTGamepadButtonFlag.dPadUp;
     }
     if (gamepad.buttons[DOMGamepadButton.D_PAD_DOWN].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.D_PAD_DOWN;
+        btnFlags |= WinRTGamepadButtonFlag.dPadDown;
     }
     if (gamepad.buttons[DOMGamepadButton.D_PAD_LEFT].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.D_PAD_LEFT;
+        btnFlags |= WinRTGamepadButtonFlag.dPadLeft;
     }
     if (gamepad.buttons[DOMGamepadButton.D_PAD_RIGHT].pressed) {
-        btnFlags |= WinRTGamepadButtonFlag.D_PAD_RIGHT;
+        btnFlags |= WinRTGamepadButtonFlag.dPadRight;
     }
 
     outReading.buttons = btnFlags;
@@ -2254,22 +2269,22 @@ function copyReading(inReading, outReading) {
 }
 
 /**
- * @param {DOMGamepadReading} currentReading
- * @param {DOMGamepadReading} previousReading
- * @param {WinRTGamepadButtonFlag} flag
+ * @param {Windows.Gaming.Input.GamepadReading} currentReading
+ * @param {Windows.Gaming.Input.GamepadReading} previousReading
+ * @param {Windows.Gaming.Input.GamepadButtons} flag
  */
 function buttonPressed(currentReading, previousReading, flag) {
     return (currentReading.buttons & flag) == flag &&
-        (previousReading.buttons & flag) == WinRTGamepadButtonFlag.NONE;
+        (previousReading.buttons & flag) == GamepadButtons.none;
 }
 
 /**
- * @param {DOMGamepadReading} currentReading
- * @param {DOMGamepadReading} previousReading
- * @param {WinRTGamepadButtonFlag} flag
+ * @param {Windows.Gaming.Input.GamepadReading} currentReading
+ * @param {Windows.Gaming.Input.GamepadReading} previousReading
+ * @param {Windows.Gaming.Input.GamepadButtons} flag
  */
 function buttonReleased(currentReading, previousReading, flag) {
-    return (currentReading.buttons & flag) == WinRTGamepadButtonFlag.NONE &&
+    return (currentReading.buttons & flag) == GamepadButtons.none &&
         (previousReading.buttons & flag) == flag;
 }
 
@@ -2311,29 +2326,88 @@ class DOMGamepadContainer {
     }
 }
 
-const domGamepads = new Map();
+class UWPGamepadContainer {
+    /**
+     * @param {Windows.Gaming.Input.Gamepad} gamepad
+     * @param {Windows.Gaming.Input.GamepadReading} oldReading
+     * @param {Windows.Gaming.Input.GamepadReading} newReading
+     */
+    constructor(gamepad, oldReading, newReading) {
+        this.gamepad = gamepad;
+        this.oldReading = oldReading;
+        this.newReading = newReading;
 
-const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-if (isChrome) {
-    const gamepadSlots = navigator.getGamepads();
-    for (let i = 0; i < gamepadSlots.length; i++) {
-        const gamepad = gamepadSlots[i];
-        if (gamepad && gamepad.mapping == 'standard')
-            domGamepads.set(gamepad.index, new DOMGamepadContainer(gamepad));
+        Object.seal(this);
     }
 }
 
-window.addEventListener('gamepadconnected', event => {
-    if (isChrome && event.gamepad.mapping != 'standard')
-        return;
+/**
+ * @type {Windows.Gaming.Input.GamepadButtons}
+ */
+const GamepadButtons = isUWP ? Windows.Gaming.Input.GamepadButtons : WinRTGamepadButtonFlag;
 
-    console.log(`gamepad connected: ${event.gamepad.index}`);
-    domGamepads.set(event.gamepad.index, new DOMGamepadContainer(event.gamepad));
-});
+/**
+ * @type {Set<Windows.Gaming.Input.Gamepad>}
+ */
+let gamepads;
 
-window.addEventListener('gamepaddisconnected', event => {
-    console.log(`gamepad disconnected: ${event.gamepad.index}`);
-    domGamepads.delete(event.gamepad.index);
-});
+/**
+ * @type {WeakMap<Windows.Gaming.Input.Gamepad, Windows.Gaming.Input.GamepadReading>}
+ */
+let oldReadings;
 
-console.log(`gamepad slots available: ${navigator.getGamepads().length}`);
+/**
+ * @type {Map<number, Gamepad>}
+ */
+let domGamepads;
+
+if (isUWP) {
+    gamepads = new Set();
+    oldReadings = new WeakMap();
+
+    Windows.Gaming.Input.Gamepad.addEventListener('gamepadadded', event => {
+        event.detail.forEach(gamepad => {
+            console.log(`gamepad connected`);
+
+            gamepads.add(gamepad);
+            oldReadings.set(gamepad, gamepad.getCurrentReading());
+        });
+    });
+
+    Windows.Gaming.Input.Gamepad.addEventListener('gamepadremoved', event => {
+        event.detail.forEach(gamepad => {
+            console.log(`gamepad disconnected`);
+
+            gamepads.delete(gamepad);
+            oldReadings.delete(gamepad);
+        });
+    });
+
+} else {
+    domGamepads = new Map();
+
+    const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+    if (isChrome) {
+        const gamepadSlots = navigator.getGamepads();
+        for (let i = 0; i < gamepadSlots.length; i++) {
+            const gamepad = gamepadSlots[i];
+            if (gamepad && gamepad.mapping == 'standard')
+                domGamepads.set(gamepad.index, new DOMGamepadContainer(gamepad));
+        }
+    }
+
+    window.addEventListener('gamepadconnected', event => {
+        if (isChrome && event.gamepad.mapping != 'standard')
+            return;
+
+        console.log(`gamepad connected: ${event.gamepad.index}`);
+        domGamepads.set(event.gamepad.index, new DOMGamepadContainer(event.gamepad));
+    });
+
+    window.addEventListener('gamepaddisconnected', event => {
+        console.log(`gamepad disconnected: ${event.gamepad.index}`);
+        domGamepads.delete(event.gamepad.index);
+    });
+
+    console.log(`gamepad slots available: ${navigator.getGamepads().length}`);
+}
