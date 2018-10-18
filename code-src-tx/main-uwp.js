@@ -12,7 +12,7 @@ Promise.all([
 
     new Promise(resolve => window.onload = resolve),
 
-    fetch('../asset-gen/sub-images_720.h5')
+    fetch('../asset-gen/sub-images_1080.h5')
         .then(response => {
             if (response.ok)
                 return response.arrayBuffer();
@@ -20,7 +20,7 @@ Promise.all([
             throw new Error('could not fetch sub-image-data');
         }),
 
-    fetch('../asset-gen/atlas_720_0.png')
+    fetch('../asset-gen/atlas_1080_0.png')
         .then(response => {
             if (response.ok)
                 return response.blob();
@@ -60,10 +60,15 @@ Promise.all([
 
             throw new Error('could not fetch sfx audio-sprite');
         })
-        .then(buffer => {
-            console.log(`encoded audio buffer size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)} mb`);
-            return audioCtx.decodeAudioData(buffer);
-        })
+        .then(
+            /**
+             * @param {Response | ArrayBuffer} buffer audio array buffer
+             * @returns {Promise<AudioBuffer>} decoded audio data
+             */
+            buffer => {
+                console.log(`encoded audio buffer size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)} mb`);
+                return audioCtx.decodeAudioData(buffer);
+            })
 ])
     .catch(error => console.log(error))
     .then(values => {
@@ -1750,7 +1755,11 @@ function playSound(audioId, loop, delay, callback) {
     return source;
 }
 
-
+/**
+ * global current time frame based on {@see requestAnimationFrame} frames elapsed since app started
+ *
+ * @type {number}
+ */
 let frame = 0;
 
 /*
@@ -1762,16 +1771,34 @@ function eventLoop() {
     // capture gamepad input
     {
         for (const gamepad of gamepads) {
-            const oldReading = oldReadings.get(gamepad);
+            const info = gamepadInfo.get(gamepad);
             const newReading = gamepad.getCurrentReading();
-            oldReadings.set(gamepad, newReading);
 
-            if (buttonPressed(newReading, oldReading, GamepadButtons.a)) {
+            if (buttonPressed(newReading, info.oldReading, GamepadButtons.a)) {
                 console.log(`a gamepad pressed A button`);
+                vibrate(gamepad, info, heartBeatFrames);
 
-            } else if (buttonReleased(newReading, oldReading, GamepadButtons.a)) {
+            } else if (buttonReleased(newReading, info.oldReading, GamepadButtons.a)) {
                 console.log(`a gamepad released A button`);
             }
+
+            if (info.isVibrating) {
+                const vibration = info.vibration;
+                if (frame == vibration.nextTimeFrame) {
+                    vibration.currentFrame++;
+
+                    if (vibration.currentFrame < vibration.frames.length) {
+                        const keyframe = vibration.frames[vibration.currentFrame];
+                        vibration.nextTimeFrame = frame + keyframe.duration;
+                        gamepad.vibration = keyframe.vibration;
+
+                    } else {
+                        info.isVibrating = false;
+                    }
+                }
+            }
+
+            info.oldReading = newReading;
         }
 
     }
@@ -2117,9 +2144,9 @@ function eventLoop() {
  */
 const gamepads = new Set();
 /**
- * @type {WeakMap<Windows.Gaming.Input.Gamepad, Windows.Gaming.Input.GamepadReading>}
+ * @type {WeakMap<Windows.Gaming.Input.Gamepad, GamepadInfo>}
  */
-const oldReadings = new WeakMap();
+const gamepadInfo = new WeakMap();
 
 /**
  * @param {Windows.Gaming.Input.GamepadReading} currentReading current reading
@@ -2143,12 +2170,106 @@ function buttonReleased(currentReading, previousReading, flag) {
         (previousReading.buttons & flag) == flag;
 }
 
+class GamepadInfo {
+    /**
+     * @param {Windows.Gaming.Input.GamepadReading} oldReading last reading
+     * @param {boolean} isVibrating {TRUE} if vibration is set & ongoing
+     * @param {VibrationPattern} vibration current vibration pattern
+     */
+    constructor(oldReading, isVibrating, vibration) {
+        /** @type {Windows.Gaming.Input.GamepadReading} */
+        this.oldReading = oldReading;
+        /** @type {boolean} */
+        this.isVibrating = isVibrating;
+        /** @type {VibrationPattern} */
+        this.vibration = vibration;
+
+        Object.seal(this);
+    }
+}
+
+class GamepadVibration {
+    /**
+     * @param {number} leftMotor normalized [0,1] value for level of left vibration motor
+     * @param {number} leftTrigger normalized [0,1] value for level of left trigger vibration motor
+     * @param {number} rightMotor normalized [0,1] value for level of right vibration motor
+     * @param {number} rightTrigger normalized [0,1] value for level of right trigger vibration motor
+     */
+    constructor(leftMotor, leftTrigger, rightMotor, rightTrigger) {
+        /** @type {number} */
+        this.leftMotor = leftMotor;
+        /** @type {number} */
+        this.leftTrigger = leftTrigger;
+        /** @type {number} */
+        this.rightMotor = rightMotor;
+        /** @type {number} */
+        this.rightTrigger = rightTrigger;
+
+        Object.freeze(this);
+    }
+}
+
+const Vibration = Object.freeze({
+    NONE: new GamepadVibration(0, 0, 0, 0),
+    LEFT_TRIGGER_HALF: new GamepadVibration(0, 0.5, 0, 0),
+    RIGHT_TRIGGER_HALF: new GamepadVibration(0, 0, 0, 0.5)
+});
+
+class VibrationFrame {
+    /**
+     * @param {GamepadVibration} vibration gamepad vibration value object
+     * @param {number} duration duration, how long vibration lasts - in elapsed {@see window.requestAnimationFrames}
+     */
+    constructor(vibration, duration) {
+        /** @type {GamepadVibration} */
+        this.vibration = vibration;
+        /** @type {number} */
+        this.duration = duration;
+
+        Object.freeze(this);
+    }
+}
+
+class VibrationPattern {
+    /**
+     *
+     * @param {ReadonlyArray<VibrationFrame>} [frames] all vibration key frames
+     * @param {number} [currentFrame=0] current key frame index
+     * @param {number} [nextTimeFrame=0] next global time frame {@see frame} to trigger next key frame
+     */
+    constructor(frames, currentFrame, nextTimeFrame) {
+        /** @type {ReadonlyArray<VibrationFrame>} */
+        this.frames = frames;
+        /** @type {number} */
+        this.currentFrame = currentFrame || 0;
+        /** @type {number} */
+        this.nextTimeFrame = nextTimeFrame || 0;
+
+        Object.seal(this);
+    }
+}
+
+/**
+ *
+ * @param {Windows.Gaming.Input.Gamepad} gamepad gamepad to vibrate
+ * @param {GamepadInfo} info gamepad info wrapper
+ * @param {ReadonlyArray<VibrationFrame>} frames vibration animation frames
+ */
+function vibrate(gamepad, info, frames) {
+    info.vibration.frames = frames;
+    info.vibration.currentFrame = 0;
+    info.vibration.nextTimeFrame = frame + frames[0].duration;
+    info.isVibrating = true;
+
+    gamepad.vibration = frames[0].vibration;
+}
+
 Windows.Gaming.Input.Gamepad.addEventListener('gamepadadded', event => {
     event.detail.forEach(gamepad => {
         console.log(`gamepad connected`);
 
         gamepads.add(gamepad);
-        oldReadings.set(gamepad, gamepad.getCurrentReading());
+        gamepadInfo.set(gamepad, new GamepadInfo(gamepad.getCurrentReading(), false, new VibrationPattern()));
     });
 });
 
@@ -2157,14 +2278,28 @@ Windows.Gaming.Input.Gamepad.addEventListener('gamepadremoved', event => {
         console.log(`gamepad disconnected`);
 
         gamepads.delete(gamepad);
-        oldReadings.delete(gamepad);
+        gamepadInfo.delete(gamepad);
     });
 });
 
 
 /*
+ * UWP SYSTEM
+ */
+
+Windows.UI.WebUI.WebUIApplication.addEventListener('activated', event => console.log(event));
+Windows.UI.WebUI.WebUIApplication.addEventListener('suspending', event => console.log(event));
+Windows.UI.WebUI.WebUIApplication.addEventListener('resuming', event => console.log(event));
+Windows.UI.WebUI.WebUIApplication.addEventListener('navigated', event => console.log(event));
+Windows.UI.WebUI.WebUIApplication.addEventListener('enteredbackground', event => console.log(event));
+Windows.UI.WebUI.WebUIApplication.addEventListener('leavingbackground', event => console.log(event));
+
+/*
  * playground: test scene
  */
+
+let heartBeatFrames;
+
 function runTestScene() {
     const a_x = -1;
     const a_y = 0;
@@ -2181,4 +2316,22 @@ function runTestScene() {
     PositionCurveAnimations.create(aceOfSpades, 60, a_x, a_y, b_z, d_x, a_y, b_z, d_x, a_y, a_z, LINEAR);
 
     playSound(SFXSegment.SIMPLEST_GUNSHOT);
+
+    const holdNoVibration = new VibrationFrame(Vibration.NONE, 30);
+    const shortLeftTrigger = new VibrationFrame(Vibration.LEFT_TRIGGER_HALF, 15);
+    const shortRightTrigger = new VibrationFrame(Vibration.RIGHT_TRIGGER_HALF, 15);
+
+    heartBeatFrames = Object.freeze([
+        shortLeftTrigger,
+        holdNoVibration,
+        shortRightTrigger,
+        holdNoVibration,
+        shortLeftTrigger,
+        holdNoVibration,
+        shortRightTrigger,
+        holdNoVibration
+    ]);
+
+    const gamepad = gamepads.values().next().value;
+    vibrate(gamepad, gamepadInfo.get(gamepad), heartBeatFrames);
 }
