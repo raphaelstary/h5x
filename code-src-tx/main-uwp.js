@@ -96,7 +96,7 @@ Promise.all([
 
 
 const canvas = document.getElementById('screen');
-const gl = canvas.getContext('webgl', {alpha: false});
+const gl = canvas.getContext('webgl', { alpha: false });
 const ext = gl.getExtension('ANGLE_instanced_arrays');
 
 console.log('max texture size: ' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
@@ -2287,12 +2287,40 @@ Windows.Gaming.Input.Gamepad.addEventListener('gamepadremoved', event => {
  * UWP SYSTEM
  */
 
+navigator.gamepadInputEmulation = 'gamepad';
+{
+    const result = Windows.UI.ViewManagement.ApplicationViewScaling.trySetDisableLayoutScaling(true);
+    console.log('layout scaling disabled: ' + result);
+}
+
+const applicationView = Windows.UI.ViewManagement.ApplicationView.getForCurrentView();
+{
+    const result = applicationView.setDesiredBoundsMode(Windows.UI.ViewManagement.ApplicationViewBoundsMode.useCoreWindow);
+    console.log('overscan turned off: ' + result);
+}
+
 Windows.UI.WebUI.WebUIApplication.addEventListener('activated', event => console.log(event));
 Windows.UI.WebUI.WebUIApplication.addEventListener('suspending', event => console.log(event));
 Windows.UI.WebUI.WebUIApplication.addEventListener('resuming', event => console.log(event));
 Windows.UI.WebUI.WebUIApplication.addEventListener('navigated', event => console.log(event));
 Windows.UI.WebUI.WebUIApplication.addEventListener('enteredbackground', event => console.log(event));
 Windows.UI.WebUI.WebUIApplication.addEventListener('leavingbackground', event => console.log(event));
+
+const msg = new Windows.UI.Popups.MessageDialog('Quit Bang Bang Poker?');
+msg.commands.append(new Windows.UI.Popups.UICommand('Yes'));
+msg.commands.append(new Windows.UI.Popups.UICommand('Cancel'));
+msg.defaultCommandIndex = 0;
+msg.cancelCommandIndex = 1;
+
+const systemManager = Windows.UI.Core.SystemNavigationManager.getForCurrentView();
+
+systemManager.addEventListener('backrequested', backRequestedEventArgs => {
+    console.log('back requested');
+    backRequestedEventArgs.handled = true;
+    //msg.showAsync().then(cmd => {
+    //    console.log('popup user interaction: ' + cmd.label);
+    //});
+});
 
 /*
  * playground: test scene
