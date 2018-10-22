@@ -2306,20 +2306,19 @@ Windows.UI.WebUI.WebUIApplication.addEventListener('navigated', event => console
 Windows.UI.WebUI.WebUIApplication.addEventListener('enteredbackground', event => console.log(event));
 Windows.UI.WebUI.WebUIApplication.addEventListener('leavingbackground', event => console.log(event));
 
-const msg = new Windows.UI.Popups.MessageDialog('Quit Bang Bang Poker?');
-msg.commands.append(new Windows.UI.Popups.UICommand('Yes'));
-msg.commands.append(new Windows.UI.Popups.UICommand('Cancel'));
-msg.defaultCommandIndex = 0;
-msg.cancelCommandIndex = 1;
+//const msg = new Windows.UI.Popups.MessageDialog('Quit Bang Bang Poker?');
+//msg.commands.append(new Windows.UI.Popups.UICommand('Yes'));
+//msg.commands.append(new Windows.UI.Popups.UICommand('Cancel'));
+//msg.defaultCommandIndex = 0;
+//msg.cancelCommandIndex = 1;
+//msg.showAsync().then(cmd => {
+//    console.log('popup user interaction: ' + cmd.label);
+//});
 
 const systemManager = Windows.UI.Core.SystemNavigationManager.getForCurrentView();
-
 systemManager.addEventListener('backrequested', backRequestedEventArgs => {
     console.log('back requested');
     backRequestedEventArgs.handled = true;
-    //msg.showAsync().then(cmd => {
-    //    console.log('popup user interaction: ' + cmd.label);
-    //});
 });
 
 /*
@@ -2361,5 +2360,5 @@ function runTestScene() {
     ]);
 
     const gamepad = gamepads.values().next().value;
-    vibrate(gamepad, gamepadInfo.get(gamepad), heartBeatFrames);
+    //vibrate(gamepad, gamepadInfo.get(gamepad), heartBeatFrames);
 }
