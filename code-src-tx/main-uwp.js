@@ -1782,6 +1782,10 @@ function eventLoop() {
                 console.log(`a gamepad released A button`);
             }
 
+            if (buttonPressed(newReading, info.oldReading, GamepadButtons.y)) {
+                signIn(gamepad);
+            }
+
             if (info.isVibrating) {
                 const vibration = info.vibration;
                 if (frame == vibration.nextTimeFrame) {
@@ -2321,11 +2325,53 @@ systemManager.addEventListener('backrequested', backRequestedEventArgs => {
     backRequestedEventArgs.handled = true;
 });
 
+console.log('is user picker supported: ' + Windows.System.UserPicker.isSupported());
+
 /*
  * playground: test scene
  */
 
 let heartBeatFrames;
+
+function signIn(gamepad) {
+    const userPicker = new Windows.System.UserPicker();
+    userPicker.suggestedSelectedUser = gamepad.user;
+    userPicker.pickSingleUserAsync()
+        .then(user => {
+            const xblUser = new Microsoft.Xbox.Services.System.XboxLiveUser(user);
+
+            try {
+                xblUser.signInAsync(null)
+                    .then(signInResult => {
+                        if (signInResult.status == Microsoft.Xbox.Services.System.SignInStatus.success) {
+                            console.log('user signed in successfully');
+                            console.log('gamer tag: ' + xblUser.gamertag);
+
+                            const xblCtx = new Microsoft.Xbox.Services.XboxLiveContext(xblUser);
+                            xblCtx.profileService.getUserProfileAsync(xblUser.xboxUserId)
+                                .then(profile => {
+                                    console.log('got user profile');
+                                    console.log('name: ' + profile.gameDisplayName);
+                                    console.log('pic: ' + profile.gameDisplayPictureResizeUri);
+                                    console.log('score: ' + profile.gamerscore);
+                                    console.log('tag again: ' + profile.gamertag);
+                                });
+
+                        } else if (signInResult.status == Microsoft.Xbox.Services.System.SignInStatus.userCancel) {
+                            console.log('user canceled sign in');
+                        } else {
+                            console.log('could not sign in: ' + signInResult);
+                        }
+                    }, error => {
+                        console.log('sign in error: ' + error);
+                    });
+
+            } catch (error) {
+                console.log('sign in failed: ' + error);
+            }
+        });
+
+}
 
 function runTestScene() {
     const a_x = -1;
@@ -2359,6 +2405,4 @@ function runTestScene() {
         holdNoVibration
     ]);
 
-    const gamepad = gamepads.values().next().value;
-    //vibrate(gamepad, gamepadInfo.get(gamepad), heartBeatFrames);
 }
