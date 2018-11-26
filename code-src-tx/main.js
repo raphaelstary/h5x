@@ -105,7 +105,7 @@ const vertexShaderSrc = `
 
 attribute vec3 position;
 attribute vec4 xforms;
-attribute vec2 dimensions;
+attribute vec4 dimensions;
 attribute vec4 color;
 attribute vec4 subImage;
 attribute vec4 quad;
@@ -169,8 +169,8 @@ void main() {
 
     tmpPosition = rotateX * rotateY * rotateZ * translate * tmpPosition;
 
-    translate[3][0] = position.x;
-    translate[3][1] = position.y;
+    translate[3][0] = position.x + dimensions.x * dimensions.z;
+    translate[3][1] = position.y + dimensions.y * dimensions.w;
     translate[3][2] = position.z;
 
     gl_Position = projection * view * translate * scale * tmpPosition;
@@ -329,7 +329,7 @@ gl.vertexAttribPointer(xformsLocation, XFORMS_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(xformsLocation);
 ext.vertexAttribDivisorANGLE(xformsLocation, 1);
 
-const DIM_ELEMENTS = 2;
+const DIM_ELEMENTS = 4;
 const DIM_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * DIM_ELEMENTS * MAX_ELEMENTS;
 
 const dimensionsData = new ArrayBuffer(DIM_BUFFER_SIZE);
@@ -514,6 +514,8 @@ const Sprites = {
         const dimIdx = imgId * DIM_ELEMENTS;
         dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
         dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
+        dimensions[idx * DIM_ELEMENTS + 2] = spriteDimensions[dimIdx + 2];
+        dimensions[idx * DIM_ELEMENTS + 3] = spriteDimensions[dimIdx + 3];
 
         const subImgIdx = imgId * SUB_IMG_ELEMENTS;
         subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
@@ -700,6 +702,8 @@ const Sprites = {
         const dimIdx = imgId * DIM_ELEMENTS;
         dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
         dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
+        dimensions[idx * DIM_ELEMENTS + 2] = spriteDimensions[dimIdx + 2];
+        dimensions[idx * DIM_ELEMENTS + 3] = spriteDimensions[dimIdx + 3];
 
         const subImgIdx = imgId * SUB_IMG_ELEMENTS;
         subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
@@ -716,6 +720,26 @@ const Sprites = {
     ,
     getHeightHalf: function getHeightHalf(idx) {
         return dimensions[idx * DIM_ELEMENTS + 1];
+    }
+    ,
+    getAnchorX: function getAnchorX(idx) {
+        return dimensions[idx * DIM_ELEMENTS + 2];
+    }
+    ,
+    getAnchorY: function getAnchorY(idx) {
+        return dimensions[idx * DIM_ELEMENTS + 3];
+    }
+    ,
+    setAnchorX: function setAnchorX(idx, offsetX) {
+        dimensions[idx * DIM_ELEMENTS + 2] = offsetX;
+
+        changeFlags |= DIM_CHANGED;
+    }
+    ,
+    setAnchorY: function setAnchorY(idx, offsetY) {
+        dimensions[idx * DIM_ELEMENTS + 3] = offsetY;
+
+        changeFlags |= DIM_CHANGED;
     }
 };
 
@@ -1658,42 +1682,34 @@ function nonLinearTransform(x, spacing) {
     else if (spacing == EASE_OUT_QUAD) {
         const xInv = 1 - x;
         return 1 - xInv * xInv;
-    }
-    else if (spacing == EASE_OUT_CUBIC) {
+    } else if (spacing == EASE_OUT_CUBIC) {
         const xInv = 1 - x;
         return 1 - xInv * xInv * xInv;
-    }
-    else if (spacing == EASE_OUT_QUART) {
+    } else if (spacing == EASE_OUT_QUART) {
         const xInv = 1 - x;
         return 1 - xInv * xInv * xInv * xInv;
-    }
-    else if (spacing == EASE_OUT_QUINT) {
+    } else if (spacing == EASE_OUT_QUINT) {
         const xInv = 1 - x;
         return 1 - xInv * xInv * xInv * xInv * xInv;
-    }
-
-    else if (spacing == EASE_IN_OUT_QUAD) {
+    } else if (spacing == EASE_IN_OUT_QUAD) {
         const x2 = x * x;
         const xInv = 1 - x;
         const xInv2Inv = 1 - xInv * xInv;
         const xMixed = x2 * xInv + xInv2Inv * x;
         return xMixed;
-    }
-    else if (spacing == EASE_IN_OUT_CUBIC) {
+    } else if (spacing == EASE_IN_OUT_CUBIC) {
         const x3 = x * x * x;
         const xInv = 1 - x;
         const xInv3Inv = 1 - xInv * xInv * xInv;
         const xMixed = x3 * xInv + xInv3Inv * x;
         return xMixed;
-    }
-    else if (spacing == EASE_IN_OUT_QUART) {
+    } else if (spacing == EASE_IN_OUT_QUART) {
         const x4 = x * x * x * x;
         const xInv = 1 - x;
         const xInv4Inv = 1 - xInv * xInv * xInv * xInv;
         const xMixed = x4 * xInv + xInv4Inv * x;
         return xMixed;
-    }
-    else if (spacing == EASE_IN_OUT_QUINT) {
+    } else if (spacing == EASE_IN_OUT_QUINT) {
         const x5 = x * x * x * x * x;
         const xInv = 1 - x;
         const xInv5Inv = 1 - xInv * xInv * xInv * xInv * xInv;
@@ -2332,7 +2348,15 @@ function runTestScene() {
     const a_y = 0;
     const a_z = -5;
 
+    const k_x = -1;
+    const k_y = 0;
+    const k_z = -5;
+
     const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y);
+    const kingOfSpades = Sprites.create(SubImage.CARD_SK, k_x, k_y);
+
+    Sprites.setAnchorX(kingOfSpades >> VERSION_BITS, 1);
+    Sprites.setAnchorY(kingOfSpades >> VERSION_BITS, 0.1);
 
     const radius = Sprites.getWidthHalf(aceOfSpades >> VERSION_BITS);
 
