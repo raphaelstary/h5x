@@ -1,5 +1,6 @@
 import * as SubImage from '../code-gen/SubImage.js';
 import * as SFXSegment from '../code-gen/SFXSegment.js';
+import FontSubImage from '../code-gen/FontSubImage.js';
 
 let baseSubImages;
 let spriteDimensions;
@@ -10,7 +11,7 @@ Promise.all([
 
     new Promise(resolve => window.onload = resolve),
 
-    fetch('../asset-gen/sub-images_720.h5')
+    fetch('../asset-gen/font-sub-images.h5')
         .then(response => {
             if (response.ok)
                 return response.arrayBuffer();
@@ -18,7 +19,7 @@ Promise.all([
             throw new Error('could not fetch sub-image-data');
         }),
 
-    fetch('../asset-gen/atlas_720_0.png')
+    fetch('../asset-gen/font-atlas.png')
         .then(response => {
             if (response.ok)
                 return response.blob();
@@ -35,7 +36,7 @@ Promise.all([
             });
         }),
 
-    fetch('../asset-gen/sprite-dimensions.h5')
+    fetch('../asset-gen/font-sprite-dimensions.h5')
         .then(response => {
             if (response.ok)
                 return response.arrayBuffer();
@@ -459,7 +460,7 @@ const Sprites = {
         return INVALID_INDEX;
     }
     ,
-    create: function createSprite(imgId, x, y) {
+    create: function createSprite(imgId, x, y, z = -5) {
         let idx;
         let version;
 
@@ -499,7 +500,7 @@ const Sprites = {
 
         positions[idx * POS_ELEMENTS] = x;
         positions[idx * POS_ELEMENTS + 1] = y;
-        positions[idx * POS_ELEMENTS + 2] = -5.0;
+        positions[idx * POS_ELEMENTS + 2] = z;
 
         colors[idx * COLOR_ELEMENTS] = 1.0;
         colors[idx * COLOR_ELEMENTS + 1] = 1.0;
@@ -2344,27 +2345,43 @@ console.log(`gamepad slots available: ${navigator.getGamepads().length}`);
  * playground: test scene
  */
 function runTestScene() {
-    const a_x = -1;
+    const a_x = -0.1;
     const a_y = 0;
-    const a_z = -5;
+    const a_z = -0.5;
 
-    const k_x = -1;
+    const k_x = 0;
     const k_y = 0;
-    const k_z = -5;
+    const k_z = -0.5;
 
-    const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y);
-    const kingOfSpades = Sprites.create(SubImage.CARD_SK, k_x, k_y);
+    // const a = Sprites.create(FontSubImage.get('a'), a_x, a_y, a_z);
+    // const k = Sprites.create(FontSubImage.get('k'), k_x, k_y, k_z);
 
-    Sprites.setAnchorX(kingOfSpades >> VERSION_BITS, 1);
-    Sprites.setAnchorY(kingOfSpades >> VERSION_BITS, 0.1);
+    let x = -8.5;
+    FontSubImage.forEach((value, key) => {
 
-    const radius = Sprites.getWidthHalf(aceOfSpades >> VERSION_BITS);
+        const dimIdx = value * DIM_ELEMENTS;
+        const widthHalf = spriteDimensions[dimIdx];
+        x += widthHalf;
+        const char = Sprites.create(value, x, 0);
+        x += widthHalf;
+        x += 0.05;
 
-    const b_z = a_z + radius * 4 / 3;
-    const d_x = a_x + 2 * radius;
+    });
 
-    Rot1DAnimations.create(aceOfSpades, ANIM_ROT1D_Y_FLAG, 60, Math.PI, LINEAR);
-    PositionCurveAnimations.create(aceOfSpades, 60, a_x, a_y, b_z, d_x, a_y, b_z, d_x, a_y, a_z, LINEAR);
+    // const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y);
+    // const kingOfSpades = Sprites.create(SubImage.CARD_SK, k_x, k_y);
 
-    playSound(SFXSegment.SIMPLEST_GUNSHOT);
+    // Sprites.setAnchorX(kingOfSpades >> VERSION_BITS, -1);
+    // Sprites.setAnchorY(kingOfSpades >> VERSION_BITS, -0.1);
+    /*
+        const radius = Sprites.getWidthHalf(aceOfSpades >> VERSION_BITS);
+
+        const b_z = a_z + radius * 4 / 3;
+        const d_x = a_x + 2 * radius;
+
+        Rot1DAnimations.create(aceOfSpades, ANIM_ROT1D_Y_FLAG, 60, Math.PI, LINEAR);
+        PositionCurveAnimations.create(aceOfSpades, 60, a_x, a_y, b_z, d_x, a_y, b_z, d_x, a_y, a_z, LINEAR);
+
+        playSound(SFXSegment.SIMPLEST_GUNSHOT);
+    */
 }
