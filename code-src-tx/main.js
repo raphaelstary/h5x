@@ -11,7 +11,7 @@ Promise.all([
 
     new Promise(resolve => window.onload = resolve),
 
-    fetch('../asset-gen/font-sub-images.h5')
+    fetch('../asset-gen/sub-images_720.h5')
         .then(response => {
             if (response.ok)
                 return response.arrayBuffer();
@@ -19,7 +19,7 @@ Promise.all([
             throw new Error('could not fetch sub-image-data');
         }),
 
-    fetch('../asset-gen/font-atlas.png')
+    fetch('../asset-gen/atlas_720_0.png')
         .then(response => {
             if (response.ok)
                 return response.blob();
@@ -36,7 +36,7 @@ Promise.all([
             });
         }),
 
-    fetch('../asset-gen/font-sprite-dimensions.h5')
+    fetch('../asset-gen/sprite-dimensions.h5')
         .then(response => {
             if (response.ok)
                 return response.arrayBuffer();
