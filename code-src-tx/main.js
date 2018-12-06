@@ -11,7 +11,7 @@ Promise.all([
 
     new Promise(resolve => window.onload = resolve),
 
-    fetch('../asset-gen/sub-images_720.h5')
+    fetch('../asset-gen/sub-images.h5')
         .then(response => {
             if (response.ok)
                 return response.arrayBuffer();
@@ -19,7 +19,7 @@ Promise.all([
             throw new Error('could not fetch sub-image-data');
         }),
 
-    fetch('../asset-gen/atlas_720_0.png')
+    fetch('../asset-gen/atlas.png')
         .then(response => {
             if (response.ok)
                 return response.blob();
@@ -2356,20 +2356,20 @@ function runTestScene() {
     // const a = Sprites.create(FontSubImage.get('a'), a_x, a_y, a_z);
     // const k = Sprites.create(FontSubImage.get('k'), k_x, k_y, k_z);
 
-    let x = -8.5;
-    FontSubImage.forEach((value, key) => {
+    // let x = -8.5;
+    // FontSubImage.forEach((value, key) => {
+    //
+    //     const dimIdx = value * DIM_ELEMENTS;
+    //     const widthHalf = spriteDimensions[dimIdx];
+    //     x += widthHalf;
+    //     const char = Sprites.create(value, x, 0);
+    //     x += widthHalf;
+    //     x += 0.05;
+    //
+    // });
 
-        const dimIdx = value * DIM_ELEMENTS;
-        const widthHalf = spriteDimensions[dimIdx];
-        x += widthHalf;
-        const char = Sprites.create(value, x, 0);
-        x += widthHalf;
-        x += 0.05;
-
-    });
-
-    // const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y);
-    // const kingOfSpades = Sprites.create(SubImage.CARD_SK, k_x, k_y);
+    const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y, -1);
+    const kingOfSpades = Sprites.create(SubImage.CARD_SK, k_x, k_y, -1);
 
     // Sprites.setAnchorX(kingOfSpades >> VERSION_BITS, -1);
     // Sprites.setAnchorY(kingOfSpades >> VERSION_BITS, -0.1);
