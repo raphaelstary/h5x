@@ -59,10 +59,15 @@ Promise.all([
 
             throw new Error('could not fetch sfx audio-sprite');
         })
-        .then(buffer => {
-            console.log(`encoded audio buffer size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)} mb`);
-            return audioCtx.decodeAudioData(buffer);
-        })
+        .then(
+            /**
+             * @param {Response | ArrayBuffer} buffer audio array buffer
+             * @returns {Promise<AudioBuffer>} decoded audio data
+             */
+            buffer => {
+                console.log(`encoded audio buffer size: ${(buffer.byteLength / 1024 / 1024).toFixed(2)} mb`);
+                return audioCtx.decodeAudioData(buffer);
+            })
 ])
     .catch(error => console.log(error))
     .then(values => {
@@ -450,7 +455,7 @@ console.log(`sprite store size: ${(sprites.byteLength / 1024).toFixed(2)} kb`);
  * SPRITE API
  */
 const Sprites = {
-    getIndex: function getIndex(id) {
+    getIndex(id) {
         const idx = id >> VERSION_BITS;
         const version = id & VERSION_MASK;
         const currentVersion = sprites[idx * SPRITE_ELEMENTS + SPRITE_VERSION_N_STATE_OFFSET] >> 1;
@@ -460,7 +465,7 @@ const Sprites = {
         return INVALID_INDEX;
     }
     ,
-    create: function createSprite(imgId, x, y, z = -5) {
+    create(imgId, x, y, z = -5) {
         let idx;
         let version;
 
@@ -527,15 +532,15 @@ const Sprites = {
         return idx << VERSION_BITS | version;
     }
     ,
-    setFlag: function setAnimationFlag(idx, flag) {
+    setFlag(idx, flag) {
         sprites[idx * SPRITE_ELEMENTS + SPRITE_ANIMS_OFFSET] |= flag;
     }
     ,
-    clearFlag: function clearAnimationFlag(idx, flag) {
+    clearFlag(idx, flag) {
         sprites[idx * SPRITE_ELEMENTS + SPRITE_ANIMS_OFFSET] &= ~flag;
     }
     ,
-    remove: function deleteSprite(idx) {
+    remove(idx) {
         spriteCount--;
 
         let currentVersion = sprites[idx * SPRITE_ELEMENTS] >> 1;
@@ -580,37 +585,37 @@ const Sprites = {
         }
     }
     ,
-    setX: function setX(idx, x) {
+    setX(idx, x) {
         positions[idx * POS_ELEMENTS + POS_X_OFFSET] = x;
 
         changeFlags |= POS_CHANGED;
     }
     ,
-    getX: function getX(idx) {
+    getX(idx) {
         return positions[idx * POS_ELEMENTS + POS_X_OFFSET];
     }
     ,
-    setY: function setY(idx, y) {
+    setY(idx, y) {
         positions[idx * POS_ELEMENTS + POS_Y_OFFSET] = y;
 
         changeFlags |= POS_CHANGED;
     }
     ,
-    getY: function getY(idx) {
+    getY(idx) {
         return positions[idx * POS_ELEMENTS + POS_Y_OFFSET];
     }
     ,
-    setZ: function setZ(idx, z) {
+    setZ(idx, z) {
         positions[idx * POS_ELEMENTS + POS_Z_OFFSET] = z;
 
         changeFlags |= POS_CHANGED;
     }
     ,
-    getZ: function getZ(idx) {
+    getZ(idx) {
         return positions[idx * POS_ELEMENTS + POS_Z_OFFSET];
     }
     ,
-    setColor: function setColor(idx, r, g, b, a) {
+    setColor(idx, r, g, b, a) {
         colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET] = r;
         colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET] = g;
         colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET] = b;
@@ -619,87 +624,87 @@ const Sprites = {
         changeFlags |= COLORS_CHANGED;
     }
     ,
-    setRed: function setRed(idx, r) {
+    setRed(idx, r) {
         colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET] = r;
 
         changeFlags |= COLORS_CHANGED;
     }
     ,
-    getRed: function getRed(idx) {
+    getRed(idx) {
         return colors[idx * COLOR_ELEMENTS + COLOR_RED_OFFSET];
     }
     ,
-    setGreen: function setGreen(idx, g) {
+    setGreen(idx, g) {
         colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET] = g;
 
         changeFlags |= COLORS_CHANGED;
     }
     ,
-    getGreen: function getGreen(idx) {
+    getGreen(idx) {
         return colors[idx * COLOR_ELEMENTS + COLOR_GREEN_OFFSET];
     }
     ,
-    setBlue: function setBlue(idx, b) {
+    setBlue(idx, b) {
         colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET] = b;
 
         changeFlags |= COLORS_CHANGED;
     }
     ,
-    getBlue: function getBlue(idx) {
+    getBlue(idx) {
         return colors[idx * COLOR_ELEMENTS + COLOR_BLUE_OFFSET];
     }
     ,
-    setAlpha: function setAlpha(idx, a) {
+    setAlpha(idx, a) {
         colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET] = a;
 
         changeFlags |= COLORS_CHANGED;
     }
     ,
-    getAlpha: function getAlpha(idx) {
+    getAlpha(idx) {
         return colors[idx * COLOR_ELEMENTS + COLOR_ALPHA_OFFSET];
     }
     ,
-    setRotationX: function setRotationX(idx, rotation) {
+    setRotationX(idx, rotation) {
         xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_X_OFFSET] = rotation;
 
         changeFlags |= COLORS_CHANGED;
     }
     ,
-    getRotationX: function getRotationX(idx) {
+    getRotationX(idx) {
         return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_X_OFFSET];
     }
     ,
-    setRotationY: function setRotationY(idx, rotation) {
+    setRotationY(idx, rotation) {
         xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Y_OFFSET] = rotation;
 
         changeFlags |= XFORMS_CHANGED;
     }
     ,
-    getRotationY: function getRotationY(idx) {
+    getRotationY(idx) {
         return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Y_OFFSET];
     }
     ,
-    setRotationZ: function setRotationZ(idx, rotation) {
+    setRotationZ(idx, rotation) {
         xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Z_OFFSET] = rotation;
 
         changeFlags |= XFORMS_CHANGED;
     }
     ,
-    getRotationZ: function getRotationZ(idx) {
+    getRotationZ(idx) {
         return xforms[idx * XFORMS_ELEMENTS + XFORMS_ROTATION_Z_OFFSET];
     }
     ,
-    setScale: function setScale(idx, scale) {
+    setScale(idx, scale) {
         xforms[idx * XFORMS_ELEMENTS + XFORMS_SCALE_OFFSET] = scale;
 
         changeFlags |= XFORMS_CHANGED;
     }
     ,
-    getScale: function getScale(idx) {
+    getScale(idx) {
         return xforms[idx * XFORMS_ELEMENTS + XFORMS_SCALE_OFFSET];
     }
     ,
-    setSubImage: function setSubImage(idx, imgId) {
+    setSubImage(idx, imgId) {
         const dimIdx = imgId * DIM_ELEMENTS;
         dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
         dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
@@ -715,11 +720,11 @@ const Sprites = {
         changeFlags |= DIM_CHANGED | SUB_IMG_CHANGED;
     }
     ,
-    getWidthHalf: function getWidthHalf(idx) {
+    getWidthHalf(idx) {
         return dimensions[idx * DIM_ELEMENTS];
     }
     ,
-    getHeightHalf: function getHeightHalf(idx) {
+    getHeightHalf(idx) {
         return dimensions[idx * DIM_ELEMENTS + 1];
     }
 };
@@ -756,7 +761,7 @@ const ANIM_SCALE_LOOP_FLAG = 0b0000000000000010;
 const ANIM_SCALE_CB_KEY = 'anim-scale-';
 
 const ScaleAnimations = {
-    getIndex: function getScaleAnimIndex(id) {
+    getIndex(id) {
         const idx = id >> VERSION_BITS;
         const version = id & VERSION_MASK;
         const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT + ANIM_SCALE_VERSION_N_STATE_OFFSET;
@@ -767,7 +772,7 @@ const ScaleAnimations = {
         return INVALID_INDEX;
     }
     ,
-    create: function createScaleAnim(sprite, duration, toValue, timing) {
+    create(sprite, duration, toValue, timing) {
         let idx;
         let version;
         for (idx = 0; idx < ANIM_SCALE_MAX_ELEMENTS; idx++) {
@@ -810,14 +815,14 @@ const ScaleAnimations = {
         return idx << VERSION_BITS | version;
     }
     ,
-    setLoop: function setLoopScaleAnim(idx, loop) {
+    setLoop(idx, loop) {
         const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
         const info = scaleAnims.getUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET);
 
         scaleAnims.setUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET, loop ? info | ANIM_SCALE_LOOP_FLAG : info & ~ANIM_SCALE_LOOP_FLAG);
     }
     ,
-    setCallback: function setScaleAnimCallback(idx, callback) {
+    setCallback(idx, callback) {
         const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
         const info = scaleAnims.getUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET);
 
@@ -825,21 +830,21 @@ const ScaleAnimations = {
         callbacks.set(ANIM_SCALE_CB_KEY + idx, callback);
     }
     ,
-    restart: function restartScaleAnim(idx) {
+    restart(idx) {
         const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
         const duration = scaleAnims.getUint32(offset + ANIM_SCALE_END_OFFSET) - scaleAnims.getUint32(offset + ANIM_SCALE_START_OFFSET);
         scaleAnims.setUint32(offset + ANIM_SCALE_START_OFFSET, frame);
         scaleAnims.setUint32(offset + ANIM_SCALE_END_OFFSET, frame + duration);
     }
     ,
-    delay: function delayScaleAnim(idx, duration) {
+    delay(idx, duration) {
         const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT;
         const length = scaleAnims.getUint32(offset + ANIM_SCALE_END_OFFSET) - scaleAnims.getUint32(offset + ANIM_SCALE_START_OFFSET);
         scaleAnims.setUint32(offset + ANIM_SCALE_START_OFFSET, frame + duration);
         scaleAnims.setUint32(offset + ANIM_SCALE_END_OFFSET, frame + duration + length);
     }
     ,
-    remove: function deleteScaleAnim(idx) {
+    remove(idx) {
         animScaleCount--;
 
         const offset = idx * ANIM_SCALE_BYTES_PER_ELEMENT + ANIM_SCALE_VERSION_N_STATE_OFFSET;
@@ -880,7 +885,7 @@ const ScaleAnimations = {
         Sprites.clearFlag(sprite >> VERSION_BITS, SPRITE_SCALE_ANIM_FLAG);
     }
     ,
-    removeBy: function deleteScaleAnimBySprite(sprite) {
+    removeBy(sprite) {
         let idx;
         for (idx = 0; idx < ANIM_SCALE_MAX_ELEMENTS; idx++) {
 
@@ -924,7 +929,7 @@ const ANIM_ROT1D_Z_FLAG = 0b0000000000010000;
 const ANIM_ROT1D_CB_KEY = 'anim-rot1d-';
 
 const Rot1DAnimations = {
-    getIndex: function getRot1DAnimIndex(id) {
+    getIndex(id) {
         const idx = id >> VERSION_BITS;
         const version = id & VERSION_MASK;
         const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT + ANIM_ROT1D_VERSION_N_STATE_OFFSET;
@@ -935,7 +940,7 @@ const Rot1DAnimations = {
         return INVALID_INDEX;
     }
     ,
-    create: function createRot1DAnim(sprite, property, duration, toValue, timing) {
+    create(sprite, property, duration, toValue, timing) {
         let idx;
         let version;
         for (idx = 0; idx < ANIM_ROT1D_MAX_ELEMENTS; idx++) {
@@ -987,14 +992,14 @@ const Rot1DAnimations = {
         return idx << VERSION_BITS | version;
     }
     ,
-    setLoop: function setLoopRot1DAnim(idx, loop) {
+    setLoop(idx, loop) {
         const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
         const info = rot1DAnims.getUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET);
 
         rot1DAnims.setUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET, loop ? info | ANIM_ROT1D_LOOP_FLAG : info & ~ANIM_ROT1D_LOOP_FLAG);
     }
     ,
-    setCallback: function setRot1DAnimCallback(idx, callback) {
+    setCallback(idx, callback) {
         const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
         const info = rot1DAnims.getUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET);
 
@@ -1002,21 +1007,21 @@ const Rot1DAnimations = {
         callbacks.set(ANIM_ROT1D_CB_KEY + idx, callback);
     }
     ,
-    restart: function restartRot1DAnim(idx) {
+    restart(idx) {
         const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
         const duration = rot1DAnims.getUint32(offset + ANIM_ROT1D_END_OFFSET) - rot1DAnims.getUint32(offset + ANIM_ROT1D_START_OFFSET);
         rot1DAnims.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame);
         rot1DAnims.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + duration);
     }
     ,
-    delay: function delayRot1DAnim(idx, duration) {
+    delay(idx, duration) {
         const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
         const length = rot1DAnims.getUint32(offset + ANIM_ROT1D_END_OFFSET) - rot1DAnims.getUint32(offset + ANIM_ROT1D_START_OFFSET);
         rot1DAnims.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame + duration);
         rot1DAnims.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + duration + length);
     }
     ,
-    remove: function deleteRot1DAnim(idx) {
+    remove(idx) {
         animRot1DCount--;
 
         const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT + ANIM_ROT1D_VERSION_N_STATE_OFFSET;
@@ -1064,7 +1069,7 @@ const Rot1DAnimations = {
             Sprites.clearFlag(spriteIdx, SPRITE_ROT1D_Z_ANIM_FLAG);
     }
     ,
-    removeBy: function deleteRot1DAnimBySprite(sprite, deleteCount) {
+    removeBy(sprite, deleteCount) {
         let idx;
         let count = 0;
         for (idx = 0; idx < ANIM_ROT1D_MAX_ELEMENTS; idx++) {
@@ -1108,7 +1113,7 @@ const ANIM_COLOR1C_LOOP_FLAG = 0b0000000000000010;
 const ANIM_COLOR1C_CB_KEY = 'anim-color1c-';
 
 const Color1CAnimations = {
-    getIndex: function getColor1CAnimIndex(id) {
+    getIndex(id) {
         const idx = id >> VERSION_BITS;
         const version = id & VERSION_MASK;
         const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT + ANIM_COLOR1C_VERSION_N_STATE_OFFSET;
@@ -1119,7 +1124,7 @@ const Color1CAnimations = {
         return INVALID_INDEX;
     }
     ,
-    create: function createColor1CAnim(sprite, duration, toValue, timing) {
+    create(sprite, duration, toValue, timing) {
         let idx;
         let version;
         for (idx = 0; idx < ANIM_COLOR1C_MAX_ELEMENTS; idx++) {
@@ -1163,14 +1168,14 @@ const Color1CAnimations = {
         return idx << VERSION_BITS | version;
     }
     ,
-    setLoop: function setLoopColor1CAnim(idx, loop) {
+    setLoop(idx, loop) {
         const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
         const info = color1CAnims.getUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET);
 
         color1CAnims.setUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET, loop ? info | ANIM_COLOR1C_LOOP_FLAG : info & ~ANIM_COLOR1C_LOOP_FLAG);
     }
     ,
-    setCallback: function setColor1CAnimCallback(idx, callback) {
+    setCallback(idx, callback) {
         const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
         const info = color1CAnims.getUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET);
 
@@ -1178,21 +1183,21 @@ const Color1CAnimations = {
         callbacks.set(ANIM_COLOR1C_CB_KEY + idx, callback);
     }
     ,
-    restart: function restartColor1CAnim(idx) {
+    restart(idx) {
         const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
         const duration = color1CAnims.getUint32(offset + ANIM_COLOR1C_END_OFFSET) - color1CAnims.getUint32(offset + ANIM_COLOR1C_START_OFFSET);
         color1CAnims.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame);
         color1CAnims.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + duration);
     }
     ,
-    delay: function delayColor1CAnim(idx, duration) {
+    delay(idx, duration) {
         const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
         const length = color1CAnims.getUint32(offset + ANIM_COLOR1C_END_OFFSET) - color1CAnims.getUint32(offset + ANIM_COLOR1C_START_OFFSET);
         color1CAnims.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame + duration);
         color1CAnims.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + duration + length);
     }
     ,
-    remove: function deleteColor1CAnim(idx) {
+    remove(idx) {
         animColor1CCount--;
 
         const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT + ANIM_COLOR1C_VERSION_N_STATE_OFFSET;
@@ -1233,7 +1238,7 @@ const Color1CAnimations = {
         Sprites.clearFlag(sprite >> VERSION_BITS, SPRITE_COLOR1C_ANIM_FLAG);
     }
     ,
-    removeBy: function deleteColor1CAnimBySprite(sprite) {
+    removeBy(sprite) {
         let idx;
         for (idx = 0; idx < ANIM_COLOR1C_MAX_ELEMENTS; idx++) {
 
@@ -1279,7 +1284,7 @@ const ANIM_POS_LOOP_FLAG = 0b0000000000000010;
 const ANIM_POS_CB_KEY = 'anim-pos-';
 
 const PositionAnimations = {
-    getIndex: function getPosAnimIndex(id) {
+    getIndex(id) {
         const idx = id >> VERSION_BITS;
         const version = id & VERSION_MASK;
         const offset = idx * ANIM_POS_BYTES_PER_ELEMENT + ANIM_POS_VERSION_N_STATE_OFFSET;
@@ -1290,7 +1295,7 @@ const PositionAnimations = {
         return INVALID_INDEX;
     }
     ,
-    create: function createPosAnim(sprite, duration, toX, toY, toZ, timing) {
+    create(sprite, duration, toX, toY, toZ, timing) {
         let idx;
         let version;
         for (idx = 0; idx < ANIM_POS_MAX_ELEMENTS; idx++) {
@@ -1340,14 +1345,14 @@ const PositionAnimations = {
         return idx << VERSION_BITS | version;
     }
     ,
-    setLoop: function setLoopPosAnim(idx, loop) {
+    setLoop(idx, loop) {
         const offset = idx * ANIM_POS_BYTES_PER_ELEMENT;
         const info = posAnims.getUint16(offset + ANIM_POS_TIMING_N_INFO_OFFSET);
 
         posAnims.setUint16(offset + ANIM_POS_TIMING_N_INFO_OFFSET, loop ? info | ANIM_POS_LOOP_FLAG : info & ~ANIM_POS_LOOP_FLAG);
     }
     ,
-    setCallback: function setPosAnimCallback(idx, callback) {
+    setCallback(idx, callback) {
         const offset = idx * ANIM_POS_BYTES_PER_ELEMENT;
         const info = posAnims.getUint16(offset + ANIM_POS_TIMING_N_INFO_OFFSET);
 
@@ -1355,21 +1360,21 @@ const PositionAnimations = {
         callbacks.set(ANIM_POS_CB_KEY + idx, callback);
     }
     ,
-    restart: function restartPosAnim(idx) {
+    restart(idx) {
         const offset = idx * ANIM_POS_BYTES_PER_ELEMENT;
         const duration = posAnims.getUint32(offset + ANIM_POS_END_OFFSET) - posAnims.getUint32(offset + ANIM_POS_START_OFFSET);
         posAnims.setUint32(offset + ANIM_POS_START_OFFSET, frame);
         posAnims.setUint32(offset + ANIM_POS_END_OFFSET, frame + duration);
     }
     ,
-    delay: function delayPosAnim(idx, duration) {
+    delay(idx, duration) {
         const offset = idx * ANIM_POS_BYTES_PER_ELEMENT;
         const length = posAnims.getUint32(offset + ANIM_POS_END_OFFSET) - posAnims.getUint32(offset + ANIM_POS_START_OFFSET);
         posAnims.setUint32(offset + ANIM_POS_START_OFFSET, frame + duration);
         posAnims.setUint32(offset + ANIM_POS_END_OFFSET, frame + duration + length);
     }
     ,
-    remove: function deletePosAnim(idx) {
+    remove(idx) {
         animPosCount--;
 
         const offset = idx * ANIM_POS_BYTES_PER_ELEMENT + ANIM_POS_VERSION_N_STATE_OFFSET;
@@ -1410,7 +1415,7 @@ const PositionAnimations = {
         Sprites.clearFlag(sprite >> VERSION_BITS, SPRITE_POS_LIN_ANIM_FLAG);
     }
     ,
-    removeBy: function deletePosAnimBySprite(sprite) {
+    removeBy(sprite) {
         let idx;
         for (idx = 0; idx < ANIM_POS_MAX_ELEMENTS; idx++) {
 
@@ -1469,7 +1474,7 @@ const ANIM_POSC_LOOP_FLAG = 0b0000000000000010;
 const ANIM_POSC_CB_KEY = 'anim-posc-';
 
 const PositionCurveAnimations = {
-    getIndex: function getPosCAnimIndex(id) {
+    getIndex(id) {
         const idx = id >> VERSION_BITS;
         const version = id & VERSION_MASK;
         const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT + ANIM_POSC_VERSION_N_STATE_OFFSET;
@@ -1480,7 +1485,7 @@ const PositionCurveAnimations = {
         return INVALID_INDEX;
     }
     ,
-    create: function createPosCAnim(sprite, duration, bX, bY, bZ, cX, cY, cZ, dX, dY, dZ, timing) {
+    create(sprite, duration, bX, bY, bZ, cX, cY, cZ, dX, dY, dZ, timing) {
         let idx;
         let version;
         for (idx = 0; idx < ANIM_POSC_MAX_ELEMENTS; idx++) {
@@ -1537,14 +1542,14 @@ const PositionCurveAnimations = {
         return idx << VERSION_BITS | version;
     }
     ,
-    setLoop: function setLoopPosCAnim(idx, loop) {
+    setLoop(idx, loop) {
         const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
         const info = posCAnims.getUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET);
 
         posCAnims.setUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET, loop ? info | ANIM_POSC_LOOP_FLAG : info & ~ANIM_POSC_LOOP_FLAG);
     }
     ,
-    setCallback: function setPosCAnimCallback(idx, callback) {
+    setCallback(idx, callback) {
         const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
         const info = posCAnims.getUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET);
 
@@ -1552,21 +1557,21 @@ const PositionCurveAnimations = {
         callbacks.set(ANIM_POSC_CB_KEY + idx, callback);
     }
     ,
-    restart: function restartPosCAnim(idx) {
+    restart(idx) {
         const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
         const duration = posCAnims.getUint32(offset + ANIM_POSC_END_OFFSET) - posCAnims.getUint32(offset + ANIM_POSC_START_OFFSET);
         posCAnims.setUint32(offset + ANIM_POSC_START_OFFSET, frame);
         posCAnims.setUint32(offset + ANIM_POSC_END_OFFSET, frame + duration);
     }
     ,
-    delay: function delayPosCAnim(idx, duration) {
+    delay(idx, duration) {
         const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT;
         const length = posCAnims.getUint32(offset + ANIM_POSC_END_OFFSET) - posCAnims.getUint32(offset + ANIM_POSC_START_OFFSET);
         posCAnims.setUint32(offset + ANIM_POSC_START_OFFSET, frame + duration);
         posCAnims.setUint32(offset + ANIM_POSC_END_OFFSET, frame + duration + length);
     }
     ,
-    remove: function deletePosCAnim(idx) {
+    remove(idx) {
         animPosCCount--;
 
         const offset = idx * ANIM_POSC_BYTES_PER_ELEMENT + ANIM_POSC_VERSION_N_STATE_OFFSET;
@@ -1607,7 +1612,7 @@ const PositionCurveAnimations = {
         Sprites.clearFlag(sprite >> VERSION_BITS, SPRITE_POS_CUR_ANIM_FLAG);
     }
     ,
-    removeBy: function deletePosCAnimBySprite(sprite) {
+    removeBy(sprite) {
         let idx;
         for (idx = 0; idx < ANIM_POSC_MAX_ELEMENTS; idx++) {
 
