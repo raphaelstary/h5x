@@ -1,5 +1,6 @@
 import * as SubImage from '../code-gen/SubImage.js';
 import * as SFXSegment from '../code-gen/SFXSegment.js';
+import FontSubImage from '../code-gen/FontSubImage.js';
 
 const GamepadButtons = Windows.Gaming.Input.GamepadButtons;
 
@@ -12,7 +13,7 @@ Promise.all([
 
     new Promise(resolve => window.onload = resolve),
 
-    fetch('../asset-gen/sub-images_1080.h5')
+    fetch('../asset-gen/sub-images.h5')
         .then(response => {
             if (response.ok)
                 return response.arrayBuffer();
@@ -20,7 +21,7 @@ Promise.all([
             throw new Error('could not fetch sub-image-data');
         }),
 
-    fetch('../asset-gen/atlas_1080_0.png')
+    fetch('../asset-gen/atlas.png')
         .then(response => {
             if (response.ok)
                 return response.blob();
@@ -96,7 +97,7 @@ Promise.all([
 
 
 const canvas = document.getElementById('screen');
-const gl = canvas.getContext('webgl', { alpha: false });
+const gl = canvas.getContext('webgl', {alpha: false});
 const ext = gl.getExtension('ANGLE_instanced_arrays');
 
 console.log('max texture size: ' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
@@ -112,7 +113,7 @@ const vertexShaderSrc = `
 
 attribute vec3 position;
 attribute vec4 xforms;
-attribute vec2 dimensions;
+attribute vec4 dimensions;
 attribute vec4 color;
 attribute vec4 subImage;
 attribute vec4 quad;
@@ -176,8 +177,8 @@ void main() {
 
     tmpPosition = rotateX * rotateY * rotateZ * translate * tmpPosition;
 
-    translate[3][0] = position.x;
-    translate[3][1] = position.y;
+    translate[3][0] = position.x + dimensions.x * dimensions.z;
+    translate[3][1] = position.y + dimensions.y * dimensions.w;
     translate[3][2] = position.z;
 
     gl_Position = projection * view * translate * scale * tmpPosition;
@@ -336,7 +337,7 @@ gl.vertexAttribPointer(xformsLocation, XFORMS_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(xformsLocation);
 ext.vertexAttribDivisorANGLE(xformsLocation, 1);
 
-const DIM_ELEMENTS = 2;
+const DIM_ELEMENTS = 4;
 const DIM_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * DIM_ELEMENTS * MAX_ELEMENTS;
 
 const dimensionsData = new ArrayBuffer(DIM_BUFFER_SIZE);
@@ -466,7 +467,7 @@ const Sprites = {
         return INVALID_INDEX;
     }
     ,
-    create: function createSprite(imgId, x, y) {
+    create: function createSprite(imgId, x, y, z = -5) {
         let idx;
         let version;
 
@@ -506,7 +507,7 @@ const Sprites = {
 
         positions[idx * POS_ELEMENTS] = x;
         positions[idx * POS_ELEMENTS + 1] = y;
-        positions[idx * POS_ELEMENTS + 2] = -5.0;
+        positions[idx * POS_ELEMENTS + 2] = z;
 
         colors[idx * COLOR_ELEMENTS] = 1.0;
         colors[idx * COLOR_ELEMENTS + 1] = 1.0;
@@ -521,6 +522,8 @@ const Sprites = {
         const dimIdx = imgId * DIM_ELEMENTS;
         dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
         dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
+        dimensions[idx * DIM_ELEMENTS + 2] = spriteDimensions[dimIdx + 2];
+        dimensions[idx * DIM_ELEMENTS + 3] = spriteDimensions[dimIdx + 3];
 
         const subImgIdx = imgId * SUB_IMG_ELEMENTS;
         subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
@@ -707,6 +710,8 @@ const Sprites = {
         const dimIdx = imgId * DIM_ELEMENTS;
         dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
         dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
+        dimensions[idx * DIM_ELEMENTS + 2] = spriteDimensions[dimIdx + 2];
+        dimensions[idx * DIM_ELEMENTS + 3] = spriteDimensions[dimIdx + 3];
 
         const subImgIdx = imgId * SUB_IMG_ELEMENTS;
         subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
@@ -1665,42 +1670,34 @@ function nonLinearTransform(x, spacing) {
     else if (spacing == EASE_OUT_QUAD) {
         const xInv = 1 - x;
         return 1 - xInv * xInv;
-    }
-    else if (spacing == EASE_OUT_CUBIC) {
+    } else if (spacing == EASE_OUT_CUBIC) {
         const xInv = 1 - x;
         return 1 - xInv * xInv * xInv;
-    }
-    else if (spacing == EASE_OUT_QUART) {
+    } else if (spacing == EASE_OUT_QUART) {
         const xInv = 1 - x;
         return 1 - xInv * xInv * xInv * xInv;
-    }
-    else if (spacing == EASE_OUT_QUINT) {
+    } else if (spacing == EASE_OUT_QUINT) {
         const xInv = 1 - x;
         return 1 - xInv * xInv * xInv * xInv * xInv;
-    }
-
-    else if (spacing == EASE_IN_OUT_QUAD) {
+    } else if (spacing == EASE_IN_OUT_QUAD) {
         const x2 = x * x;
         const xInv = 1 - x;
         const xInv2Inv = 1 - xInv * xInv;
         const xMixed = x2 * xInv + xInv2Inv * x;
         return xMixed;
-    }
-    else if (spacing == EASE_IN_OUT_CUBIC) {
+    } else if (spacing == EASE_IN_OUT_CUBIC) {
         const x3 = x * x * x;
         const xInv = 1 - x;
         const xInv3Inv = 1 - xInv * xInv * xInv;
         const xMixed = x3 * xInv + xInv3Inv * x;
         return xMixed;
-    }
-    else if (spacing == EASE_IN_OUT_QUART) {
+    } else if (spacing == EASE_IN_OUT_QUART) {
         const x4 = x * x * x * x;
         const xInv = 1 - x;
         const xInv4Inv = 1 - xInv * xInv * xInv * xInv;
         const xMixed = x4 * xInv + xInv4Inv * x;
         return xMixed;
-    }
-    else if (spacing == EASE_IN_OUT_QUINT) {
+    } else if (spacing == EASE_IN_OUT_QUINT) {
         const x5 = x * x * x * x * x;
         const xInv = 1 - x;
         const xInv5Inv = 1 - xInv * xInv * xInv * xInv * xInv;

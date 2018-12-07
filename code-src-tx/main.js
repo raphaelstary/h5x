@@ -722,26 +722,6 @@ const Sprites = {
     getHeightHalf: function getHeightHalf(idx) {
         return dimensions[idx * DIM_ELEMENTS + 1];
     }
-    ,
-    getAnchorX: function getAnchorX(idx) {
-        return dimensions[idx * DIM_ELEMENTS + 2];
-    }
-    ,
-    getAnchorY: function getAnchorY(idx) {
-        return dimensions[idx * DIM_ELEMENTS + 3];
-    }
-    ,
-    setAnchorX: function setAnchorX(idx, offsetX) {
-        dimensions[idx * DIM_ELEMENTS + 2] = offsetX;
-
-        changeFlags |= DIM_CHANGED;
-    }
-    ,
-    setAnchorY: function setAnchorY(idx, offsetY) {
-        dimensions[idx * DIM_ELEMENTS + 3] = offsetY;
-
-        changeFlags |= DIM_CHANGED;
-    }
 };
 
 /*
@@ -1721,7 +1701,7 @@ function nonLinearTransform(x, spacing) {
 
 
 /*
- * AUDIO
+ * AUDIO + AUDIO API
  */
 const audioCtx = new AudioContext();
 const volume = audioCtx.createGain();
@@ -1765,7 +1745,11 @@ function playSound(audioId, loop, delay, callback) {
     return source;
 }
 
-
+/**
+ * global current time frame based on {@see requestAnimationFrame} frames elapsed since app started
+ *
+ * @type {number}
+ */
 let frame = 0;
 
 /*
@@ -1791,6 +1775,7 @@ function eventLoop() {
 
             copyReading(container.newReading, container.oldReading);
         }
+
     }
 
     // animate frame
