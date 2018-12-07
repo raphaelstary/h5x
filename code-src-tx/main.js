@@ -2368,8 +2368,10 @@ function runTestScene() {
 
     });
 
-    const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y);
     const kingOfSpades = Sprites.create(SubImage.CARD_SK, k_x, k_y);
+    const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y);
+
+    const bulletHole = Sprites.create(SubImage.BULLET_HOLE_GREEN, 0, 0, -2);
 
     // Sprites.setAnchorX(kingOfSpades >> VERSION_BITS, -1);
     // Sprites.setAnchorY(kingOfSpades >> VERSION_BITS, -0.1);
