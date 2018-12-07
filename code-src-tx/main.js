@@ -2355,21 +2355,21 @@ function runTestScene() {
 
     // const a = Sprites.create(FontSubImage.get('a'), a_x, a_y, a_z);
     // const k = Sprites.create(FontSubImage.get('k'), k_x, k_y, k_z);
-
-    // let x = -8.5;
-    // FontSubImage.forEach((value, key) => {
     //
-    //     const dimIdx = value * DIM_ELEMENTS;
-    //     const widthHalf = spriteDimensions[dimIdx];
-    //     x += widthHalf;
-    //     const char = Sprites.create(value, x, 0);
-    //     x += widthHalf;
-    //     x += 0.05;
-    //
-    // });
+    let x = -8.5;
+    FontSubImage.forEach((value, key) => {
 
-    const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y, -1);
-    const kingOfSpades = Sprites.create(SubImage.CARD_SK, k_x, k_y, -1);
+        const dimIdx = value * DIM_ELEMENTS;
+        const widthHalf = spriteDimensions[dimIdx];
+        x += widthHalf;
+        const char = Sprites.create(value, x, 0, -1);
+        x += widthHalf;
+        x += 0.05;
+
+    });
+
+    const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y);
+    const kingOfSpades = Sprites.create(SubImage.CARD_SK, k_x, k_y);
 
     // Sprites.setAnchorX(kingOfSpades >> VERSION_BITS, -1);
     // Sprites.setAnchorY(kingOfSpades >> VERSION_BITS, -0.1);
