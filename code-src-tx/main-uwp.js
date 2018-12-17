@@ -1771,15 +1771,15 @@ function eventLoop() {
             const info = gamepadInfo.get(gamepad);
             const newReading = gamepad.getCurrentReading();
 
-            if (buttonPressed(newReading, info.oldReading, GamepadButtons.a)) {
+            if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.a)) {
                 console.log(`a gamepad pressed A button`);
-                vibrate(gamepad, info, heartBeatFrames);
+                Gamepads.vibrate(gamepad, info, heartBeatFrames);
 
-            } else if (buttonReleased(newReading, info.oldReading, GamepadButtons.a)) {
+            } else if (Gamepads.buttonReleased(newReading, info.oldReading, GamepadButtons.a)) {
                 console.log(`a gamepad released A button`);
             }
 
-            if (buttonPressed(newReading, info.oldReading, GamepadButtons.y)) {
+            if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.y)) {
                 signIn(gamepad);
             }
 
@@ -2149,27 +2149,44 @@ const gamepads = new Set();
  */
 const gamepadInfo = new WeakMap();
 
-/**
- * @param {Windows.Gaming.Input.GamepadReading} currentReading current reading
- * @param {Windows.Gaming.Input.GamepadReading} previousReading last reading
- * @param {Windows.Gaming.Input.GamepadButtons} flag single button
- * @returns {boolean} {TRUE} if button was pressed
- */
-function buttonPressed(currentReading, previousReading, flag) {
-    return (currentReading.buttons & flag) == flag &&
-        (previousReading.buttons & flag) == GamepadButtons.none;
-}
+const Gamepads = {
+    /**
+     * @param {Windows.Gaming.Input.GamepadReading} currentReading current reading
+     * @param {Windows.Gaming.Input.GamepadReading} previousReading last reading
+     * @param {Windows.Gaming.Input.GamepadButtons} flag single button
+     * @returns {boolean} {TRUE} if button was pressed
+     */
+    buttonPressed(currentReading, previousReading, flag) {
+        return (currentReading.buttons & flag) == flag &&
+            (previousReading.buttons & flag) == GamepadButtons.none;
+    },
 
-/**
- * @param {Windows.Gaming.Input.GamepadReading} currentReading current reading
- * @param {Windows.Gaming.Input.GamepadReading} previousReading last reading
- * @param {Windows.Gaming.Input.GamepadButtons} flag single button
- * @returns {boolean} {TRUE} if button was released
- */
-function buttonReleased(currentReading, previousReading, flag) {
-    return (currentReading.buttons & flag) == GamepadButtons.none &&
-        (previousReading.buttons & flag) == flag;
-}
+    /**
+     * @param {Windows.Gaming.Input.GamepadReading} currentReading current reading
+     * @param {Windows.Gaming.Input.GamepadReading} previousReading last reading
+     * @param {Windows.Gaming.Input.GamepadButtons} flag single button
+     * @returns {boolean} {TRUE} if button was released
+     */
+    buttonReleased(currentReading, previousReading, flag) {
+        return (currentReading.buttons & flag) == GamepadButtons.none &&
+            (previousReading.buttons & flag) == flag;
+    },
+
+    /**
+     *
+     * @param {Windows.Gaming.Input.Gamepad} gamepad gamepad to vibrate
+     * @param {GamepadInfo} info gamepad info wrapper
+     * @param {ReadonlyArray<VibrationFrame>} frames vibration animation frames
+     */
+    vibrate(gamepad, info, frames) {
+        info.vibration.frames = frames;
+        info.vibration.currentFrame = 0;
+        info.vibration.nextTimeFrame = frame + frames[0].duration;
+        info.isVibrating = true;
+
+        gamepad.vibration = frames[0].vibration;
+    }
+};
 
 class GamepadInfo {
     /**
@@ -2248,21 +2265,6 @@ class VibrationPattern {
 
         Object.seal(this);
     }
-}
-
-/**
- *
- * @param {Windows.Gaming.Input.Gamepad} gamepad gamepad to vibrate
- * @param {GamepadInfo} info gamepad info wrapper
- * @param {ReadonlyArray<VibrationFrame>} frames vibration animation frames
- */
-function vibrate(gamepad, info, frames) {
-    info.vibration.frames = frames;
-    info.vibration.currentFrame = 0;
-    info.vibration.nextTimeFrame = frame + frames[0].duration;
-    info.isVibrating = true;
-
-    gamepad.vibration = frames[0].vibration;
 }
 
 Windows.Gaming.Input.Gamepad.addEventListener('gamepadadded', event => {
