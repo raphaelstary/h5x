@@ -1,3 +1,5 @@
+import {renderStore as $} from '../render/setupWebGL.js';
+
 const Gamepads = {
     /** @type {Set<Windows.Gaming.Input.Gamepad>} */
     gamepads: new Set(),
@@ -35,7 +37,7 @@ const Gamepads = {
     vibrate(gamepad, info, frames) {
         info.vibration.frames = frames;
         info.vibration.currentFrame = 0;
-        info.vibration.nextTimeFrame = frame + frames[0].duration;
+        info.vibration.nextTimeFrame = $.frame + frames[0].duration;
         info.isVibrating = true;
 
         gamepad.vibration = frames[0].vibration;

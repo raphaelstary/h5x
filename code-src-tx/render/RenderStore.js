@@ -1,13 +1,11 @@
-import {
-    COLOR_ELEMENTS,
-    DIM_ELEMENTS,
-    POS_ELEMENTS,
-    SUB_IMG_ELEMENTS,
-    XFORMS_ELEMENTS
-} from './setupWebGL.js';
+import {POS_ELEMENTS} from './constants/PosBuffer.js';
+import {COLOR_ELEMENTS} from './constants/ColorBuffer.js';
+import {XFORMS_ELEMENTS} from './constants/XFormsBuffer.js';
+import {DIM_ELEMENTS} from './constants/DimBuffer.js';
+import {SUB_IMG_ELEMENTS} from './constants/SubImgBuffer.js';
 
 export default class RenderStore {
-    constructor(gl, ext, changeFlags, maxElements,
+    constructor(gl, ext, changeFlags, maxElements, frame,
                 positionBuffer, colorBuffer, xformsBuffer, dimensionsBuffer, subImageBuffer,
                 positionData, colorData, xformsData, dimensionsData, subImageData,
                 positions, colors, xforms, dimensions, subImages) {
@@ -16,6 +14,12 @@ export default class RenderStore {
 
         this.changeFlags = changeFlags;
         this.maxElements = maxElements;
+        /**
+         * global current time frame based on {@see requestAnimationFrame} frames elapsed since app started
+         *
+         * @type {number}
+         */
+        this.frame = frame;
 
         this.positionBuffer = positionBuffer;
         this.colorBuffer = colorBuffer;
@@ -34,6 +38,8 @@ export default class RenderStore {
         this.xforms = xforms;
         this.dimensions = dimensions;
         this.subImages = subImages;
+
+        Object.seal(this);
     }
 
     resizeTypedViews() {

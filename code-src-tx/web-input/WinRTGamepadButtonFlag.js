@@ -1,0 +1,16 @@
+export const
+    a = 4,
+    b = 8,
+    dPadDown = 128,
+    dPadLeft = 256,
+    dPadRight = 512,
+    dPadUp = 64,
+    leftShoulder = 1024,
+    leftThumbstick = 4096,
+    menu = 1,
+    none = 0,
+    rightShoulder = 2048,
+    rightThumbstick = 8192,
+    view = 2,
+    x = 16,
+    y = 32;

@@ -1,5 +1,7 @@
 import Gamepads from '../uwp-input/Gamepads.js';
 import {heartBeatFrames} from './runMyScenes.js';
+import GamepadInfo from '../uwp-input/GamepadInfo.js';
+import VibrationPattern from '../uwp-input/VibrationPattern.js';
 
 const GamepadButtons = Windows.Gaming.Input.GamepadButtons;
 

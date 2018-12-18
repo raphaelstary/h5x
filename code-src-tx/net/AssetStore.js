@@ -4,5 +4,7 @@ export default class AssetStore {
         this.spriteDimensions = spriteDimensions;
         this.audioSegments = audioSegments;
         this.audioBuffer = audioBuffer;
+
+        Object.seal(this);
     }
 }

@@ -3,33 +3,46 @@ import {
     DIM_CHANGED,
     POS_CHANGED,
     SUB_IMG_CHANGED,
-    XFORMS_CHANGED,
+    XFORMS_CHANGED
+} from './constants/ChangeFlag.js';
+import {
     COLOR_ALPHA_OFFSET,
     COLOR_BLUE_OFFSET,
     COLOR_ELEMENTS,
     COLOR_GREEN_OFFSET,
-    COLOR_RED_OFFSET,
-    DIM_ELEMENTS,
-    ELEMENTS_CHUNK,
-    MAX_ELEMENTS,
+    COLOR_RED_OFFSET
+} from './constants/ColorBuffer.js';
+import {
     POS_ELEMENTS,
     POS_X_OFFSET,
     POS_Y_OFFSET,
-    POS_Z_OFFSET,
-    renderStore as $,
-    SUB_IMG_ELEMENTS,
+    POS_Z_OFFSET
+} from './constants/PosBuffer.js';
+import {
     XFORMS_ELEMENTS,
     XFORMS_ROTATION_X_OFFSET,
     XFORMS_ROTATION_Y_OFFSET,
     XFORMS_ROTATION_Z_OFFSET,
     XFORMS_SCALE_OFFSET
+} from './constants/XFormsBuffer.js';
+import {DIM_ELEMENTS} from './constants/DimBuffer.js';
+import {SUB_IMG_ELEMENTS} from './constants/SubImgBuffer.js';
+import {
+    ELEMENTS_CHUNK,
+    MAX_ELEMENTS
+} from './constants/BaseBuffer.js';
+import {
+    renderStore as $,
+    assetStore as a$
 } from './setupWebGL.js';
-
-export const ACTIVE_FLAG = 0b1;
-export const VERSION_BITS = 15;
-export const VERSION_MASK = 0b111111111111111;
-export const MAX_VERSION = (1 << VERSION_BITS) - 1;
-export const INVALID_INDEX = -1;
+import ScaleAnimations from './animations/ScaleAnimations.js';
+import {
+    VERSION_BITS,
+    VERSION_MASK,
+    MAX_VERSION,
+    ACTIVE_FLAG,
+    INVALID_INDEX
+} from './constants/BaseECS.js';
 
 export const SPRITE_ELEMENTS = 2;
 export const SPRITE_VERSION_N_STATE_OFFSET = 0;
@@ -46,8 +59,7 @@ export const SPRITE_POS_CUR_ANIM_FLAG = 0b0000000001000000;
 
 
 const SPRITES_LENGTH = MAX_ELEMENTS * SPRITE_ELEMENTS;
-console.log(`sprite store size: ${(SPRITES_LENGTH * 2 / 1024).toFixed(2)} kb`);
-
+export const SPRITES_BUFFER_SIZE = SPRITES_LENGTH * Uint16Array.BYTES_PER_ELEMENT;
 
 /*
  * SPRITE API
@@ -122,16 +134,16 @@ const Sprites = {
         $.xforms[idx * XFORMS_ELEMENTS + 3] = 1.0;
 
         const dimIdx = imgId * DIM_ELEMENTS;
-        $.dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
-        $.dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
-        $.dimensions[idx * DIM_ELEMENTS + 2] = spriteDimensions[dimIdx + 2];
-        $.dimensions[idx * DIM_ELEMENTS + 3] = spriteDimensions[dimIdx + 3];
+        $.dimensions[idx * DIM_ELEMENTS] = a$.spriteDimensions[dimIdx];
+        $.dimensions[idx * DIM_ELEMENTS + 1] = a$.spriteDimensions[dimIdx + 1];
+        $.dimensions[idx * DIM_ELEMENTS + 2] = a$.spriteDimensions[dimIdx + 2];
+        $.dimensions[idx * DIM_ELEMENTS + 3] = a$.spriteDimensions[dimIdx + 3];
 
         const subImgIdx = imgId * SUB_IMG_ELEMENTS;
-        $.subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
-        $.subImages[idx * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
-        $.subImages[idx * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
-        $.subImages[idx * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
+        $.subImages[idx * SUB_IMG_ELEMENTS] = a$.baseSubImages[subImgIdx];
+        $.subImages[idx * SUB_IMG_ELEMENTS + 1] = a$.baseSubImages[subImgIdx + 1];
+        $.subImages[idx * SUB_IMG_ELEMENTS + 2] = a$.baseSubImages[subImgIdx + 2];
+        $.subImages[idx * SUB_IMG_ELEMENTS + 3] = a$.baseSubImages[subImgIdx + 3];
 
         return idx << VERSION_BITS | version;
     }
@@ -310,16 +322,16 @@ const Sprites = {
     ,
     setSubImage(idx, imgId) {
         const dimIdx = imgId * DIM_ELEMENTS;
-        $.dimensions[idx * DIM_ELEMENTS] = spriteDimensions[dimIdx];
-        $.dimensions[idx * DIM_ELEMENTS + 1] = spriteDimensions[dimIdx + 1];
-        $.dimensions[idx * DIM_ELEMENTS + 2] = spriteDimensions[dimIdx + 2];
-        $.dimensions[idx * DIM_ELEMENTS + 3] = spriteDimensions[dimIdx + 3];
+        $.dimensions[idx * DIM_ELEMENTS] = a$.spriteDimensions[dimIdx];
+        $.dimensions[idx * DIM_ELEMENTS + 1] = a$.spriteDimensions[dimIdx + 1];
+        $.dimensions[idx * DIM_ELEMENTS + 2] = a$.spriteDimensions[dimIdx + 2];
+        $.dimensions[idx * DIM_ELEMENTS + 3] = a$.spriteDimensions[dimIdx + 3];
 
         const subImgIdx = imgId * SUB_IMG_ELEMENTS;
-        $.subImages[idx * SUB_IMG_ELEMENTS] = baseSubImages[subImgIdx];
-        $.subImages[idx * SUB_IMG_ELEMENTS + 1] = baseSubImages[subImgIdx + 1];
-        $.subImages[idx * SUB_IMG_ELEMENTS + 2] = baseSubImages[subImgIdx + 2];
-        $.subImages[idx * SUB_IMG_ELEMENTS + 3] = baseSubImages[subImgIdx + 3];
+        $.subImages[idx * SUB_IMG_ELEMENTS] = a$.baseSubImages[subImgIdx];
+        $.subImages[idx * SUB_IMG_ELEMENTS + 1] = a$.baseSubImages[subImgIdx + 1];
+        $.subImages[idx * SUB_IMG_ELEMENTS + 2] = a$.baseSubImages[subImgIdx + 2];
+        $.subImages[idx * SUB_IMG_ELEMENTS + 3] = a$.baseSubImages[subImgIdx + 3];
 
         $.changeFlags |= DIM_CHANGED | SUB_IMG_CHANGED;
     }

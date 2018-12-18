@@ -1,12 +1,35 @@
 import AssetStore from '../net/AssetStore.js';
+import RenderStore from './RenderStore.js';
 import {ANIM_COLOR1C_BUFFER_SIZE} from './animations/Color1CAnimations.js';
 import {ANIM_POS_BUFFER_SIZE} from './animations/PositionAnimations.js';
 import {ANIM_POSC_BUFFER_SIZE} from './animations/PositionCurveAnimations.js';
 import {ANIM_ROT1D_BUFFER_SIZE} from './animations/Rot1DAnimations.js';
 import {ANIM_SCALE_BUFFER_SIZE} from './animations/ScaleAnimations.js';
-import RenderStore from './RenderStore.js';
+import {SPRITES_BUFFER_SIZE} from './Sprites.js';
+import {NO_CHANGES} from './constants/ChangeFlag.js';
 import fragmentShaderSrc from './shader/SpriteFragmentShader.js';
 import vertexShaderSrc from './shader/SpriteVertexShader.js';
+import {
+    POS_BUFFER_SIZE,
+    POS_ELEMENTS
+} from './constants/PosBuffer.js';
+import {
+    COLOR_BUFFER_SIZE,
+    COLOR_ELEMENTS
+} from './constants/ColorBuffer.js';
+import {
+    XFORMS_BUFFER_SIZE,
+    XFORMS_ELEMENTS
+} from './constants/XFormsBuffer.js';
+import {
+    DIM_BUFFER_SIZE,
+    DIM_ELEMENTS
+} from './constants/DimBuffer.js';
+import {
+    SUB_IMG_BUFFER_SIZE,
+    SUB_IMG_ELEMENTS
+} from './constants/SubImgBuffer.js';
+import {ELEMENTS_CHUNK} from './constants/BaseBuffer.js';
 
 export const assetStore = new AssetStore();
 
@@ -19,9 +42,9 @@ export function processAssets([, baseSubImageBuffer, img, spriteDimensionsBuffer
     const audioBufferSize = audioBuffer.length * audioBuffer.numberOfChannels * Float32Array.BYTES_PER_ELEMENT;
     console.log(`audio buffer size: ${(audioBufferSize / 1024 / 1024).toFixed(2)} mb`);
 
-    const BASE_DIM_BUFFER_SIZE = spriteDimensions.byteLength;
-    const BASE_AUDIO_SEG_BUFFER_SIZE = audioSegments.byteLength;
-    const BASE_SUB_IMG_BUFFER_SIZE = baseSubImages.byteLength;
+    const BASE_DIM_BUFFER_SIZE = assetStore.spriteDimensions.byteLength;
+    const BASE_AUDIO_SEG_BUFFER_SIZE = assetStore.audioSegments.byteLength;
+    const BASE_SUB_IMG_BUFFER_SIZE = assetStore.baseSubImages.byteLength;
     const TOTAL_BASE_BUFFER_SIZE = BASE_DIM_BUFFER_SIZE + BASE_SUB_IMG_BUFFER_SIZE + BASE_AUDIO_SEG_BUFFER_SIZE;
     console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
     console.log(`texture atlas back buffer size: ${(img.width * img.height * 4 / 1024 / 1024).toFixed(2)} mb`);
@@ -122,17 +145,6 @@ gl.enableVertexAttribArray(quadLocation);
 ext.vertexAttribDivisorANGLE(quadLocation, 0);
 
 
-/*
- * BUFFER CONSTANTS
- */
-export const MAX_ELEMENTS = 1 << 14;
-
-export const POS_ELEMENTS = 3;
-export const POS_X_OFFSET = 0;
-export const POS_Y_OFFSET = 1;
-export const POS_Z_OFFSET = 2;
-export const POS_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * POS_ELEMENTS * MAX_ELEMENTS;
-
 const positionData = new ArrayBuffer(POS_BUFFER_SIZE);
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
@@ -143,12 +155,6 @@ gl.vertexAttribPointer(positionLocation, POS_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(positionLocation);
 ext.vertexAttribDivisorANGLE(positionLocation, 1);
 
-export const COLOR_ELEMENTS = 4;
-export const COLOR_RED_OFFSET = 0;
-export const COLOR_GREEN_OFFSET = 1;
-export const COLOR_BLUE_OFFSET = 2;
-export const COLOR_ALPHA_OFFSET = 3;
-export const COLOR_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * COLOR_ELEMENTS * MAX_ELEMENTS;
 
 const colorData = new ArrayBuffer(COLOR_BUFFER_SIZE);
 const colorBuffer = gl.createBuffer();
@@ -160,12 +166,6 @@ gl.vertexAttribPointer(colorLocation, COLOR_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(colorLocation);
 ext.vertexAttribDivisorANGLE(colorLocation, 1);
 
-export const XFORMS_ELEMENTS = 4;
-export const XFORMS_ROTATION_X_OFFSET = 0;
-export const XFORMS_ROTATION_Y_OFFSET = 1;
-export const XFORMS_ROTATION_Z_OFFSET = 2;
-export const XFORMS_SCALE_OFFSET = 3;
-export const XFORMS_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * XFORMS_ELEMENTS * MAX_ELEMENTS;
 
 const xformsData = new ArrayBuffer(XFORMS_BUFFER_SIZE);
 const xformsBuffer = gl.createBuffer();
@@ -177,8 +177,6 @@ gl.vertexAttribPointer(xformsLocation, XFORMS_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(xformsLocation);
 ext.vertexAttribDivisorANGLE(xformsLocation, 1);
 
-export const DIM_ELEMENTS = 4;
-export const DIM_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * DIM_ELEMENTS * MAX_ELEMENTS;
 
 const dimensionsData = new ArrayBuffer(DIM_BUFFER_SIZE);
 const dimensionsBuffer = gl.createBuffer();
@@ -190,8 +188,6 @@ gl.vertexAttribPointer(dimensionsLocation, DIM_ELEMENTS, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(dimensionsLocation);
 ext.vertexAttribDivisorANGLE(dimensionsLocation, 1);
 
-export const SUB_IMG_ELEMENTS = 4;
-export const SUB_IMG_BUFFER_SIZE = Float32Array.BYTES_PER_ELEMENT * SUB_IMG_ELEMENTS * MAX_ELEMENTS;
 
 const subImageData = new ArrayBuffer(SUB_IMG_BUFFER_SIZE);
 const subImageBuffer = gl.createBuffer();
@@ -223,27 +219,15 @@ gl.uniform1i(texLocation, 0);
 /*
  * TYPED VIEWS CONSTANTS
  */
-export const ELEMENTS_CHUNK = 1 << 6;
 
-export const POS_CHANGED = 0b00001;
-export const COLORS_CHANGED = 0b00010;
-export const XFORMS_CHANGED = 0b00100;
-export const DIM_CHANGED = 0b01000;
-export const SUB_IMG_CHANGED = 0b10000;
-export const NO_CHANGES = 0b00000;
-
-export const renderStore = new RenderStore(gl, ext, NO_CHANGES, ELEMENTS_CHUNK,
+export const renderStore = new RenderStore(gl, ext, NO_CHANGES, ELEMENTS_CHUNK, 0,
     positionBuffer, colorBuffer, xformsBuffer, dimensionsBuffer, subImageBuffer,
     positionData, colorData, xformsData, dimensionsData, subImageData);
 
 renderStore.resizeTypedViews();
 
 
-/*
- * ANIMATION
- */
-// all animations
-
+console.log(`sprite store size: ${(SPRITES_BUFFER_SIZE / 1024).toFixed(2)} kb`);
 
 const totalSizeAnimBuffers = ANIM_SCALE_BUFFER_SIZE + ANIM_ROT1D_BUFFER_SIZE + ANIM_COLOR1C_BUFFER_SIZE + ANIM_POS_BUFFER_SIZE + ANIM_POSC_BUFFER_SIZE;
 console.log(`animation system buffer size (excl. callback function pointers): ${(totalSizeAnimBuffers / 1024 / 1024).toFixed(2)} mb`);

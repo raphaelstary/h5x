@@ -1,3 +1,5 @@
+import {assetStore} from '../render/setupWebGL.js';
+
 const ctx = new AudioContext();
 const volume = ctx.createGain();
 volume.connect(ctx.destination);
@@ -17,8 +19,8 @@ const Audio = {
      * @returns {AudioBufferSourceNode} created audio node
      */
     playSound: function playSound(audioId, loop, delay, callback) {
-        const offset = audioSegments[audioId * 2];
-        const duration = audioSegments[audioId * 2 + 1];
+        const offset = assetStore.audioSegments[audioId * 2];
+        const duration = assetStore.audioSegments[audioId * 2 + 1];
 
         const source = this.ctx.createBufferSource();
 
@@ -26,7 +28,7 @@ const Audio = {
             source.onended = callback;
         }
 
-        source.buffer = audioBuffer;
+        source.buffer = assetStore.audioBuffer;
         source.connect(volume);
 
         const when = delay == undefined ? 0 : delay;

@@ -89,37 +89,37 @@ import map, {
     LINEAR,
     nonLinearTransform
 } from '../render/animations/Transform.js';
-import Sprites, {
+import {
     ACTIVE_FLAG,
     VERSION_BITS
-} from '../render/Sprites.js';
+} from '../render/constants/BaseECS.js';
+import Sprites from '../render/Sprites.js';
 import {
     COLORS_CHANGED,
     DIM_CHANGED,
     NO_CHANGES,
     POS_CHANGED,
     SUB_IMG_CHANGED,
-    XFORMS_CHANGED,
+    XFORMS_CHANGED
+} from '../render/constants/ChangeFlag.js';
+import {
     COLOR_ALPHA_OFFSET,
-    COLOR_ELEMENTS,
+    COLOR_ELEMENTS
+} from '../render/constants/ColorBuffer.js';
+import {
     POS_ELEMENTS,
     POS_X_OFFSET,
     POS_Y_OFFSET,
-    POS_Z_OFFSET,
-    renderStore as $,
+    POS_Z_OFFSET
+} from '../render/constants/PosBuffer.js';
+import {
     XFORMS_ELEMENTS,
     XFORMS_ROTATION_X_OFFSET,
     XFORMS_ROTATION_Y_OFFSET,
     XFORMS_ROTATION_Z_OFFSET,
     XFORMS_SCALE_OFFSET
-} from '../render/setupWebGL.js';
-
-/**
- * global current time frame based on {@see requestAnimationFrame} frames elapsed since app started
- *
- * @type {number}
- */
-let frame = 0;
+} from '../render/constants/XFormsBuffer.js';
+import {renderStore as $} from '../render/setupWebGL.js';
 
 /*
  * EVENT LOOP
@@ -140,7 +140,7 @@ export default function eventLoop(handleInput) {
                 if (flags & ACTIVE_FLAG) {
 
                     const start = ScaleAnimations.data.getUint32(offset + ANIM_SCALE_START_OFFSET);
-                    if (start > frame)
+                    if (start > $.frame)
                         continue;
 
                     const info = ScaleAnimations.data.getUint16(offset + ANIM_SCALE_TIMING_N_INFO_OFFSET);
@@ -150,7 +150,7 @@ export default function eventLoop(handleInput) {
                     const to = ScaleAnimations.data.getFloat32(offset + ANIM_SCALE_TO_OFFSET);
 
                     const timing = info >> ANIM_SCALE_INFO_BITS;
-                    const nextScaleValue = map(frame, start, end, from, to, timing);
+                    const nextScaleValue = map($.frame, start, end, from, to, timing);
 
                     const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
                     {
@@ -158,10 +158,10 @@ export default function eventLoop(handleInput) {
                         $.changeFlags |= XFORMS_CHANGED;
                     }
 
-                    if (end == frame) {
+                    if (end == $.frame) {
                         if (info & ANIM_SCALE_LOOP_FLAG) {
-                            ScaleAnimations.data.setUint32(offset + ANIM_SCALE_START_OFFSET, frame);
-                            ScaleAnimations.data.setUint32(offset + ANIM_SCALE_END_OFFSET, frame + (end - start));
+                            ScaleAnimations.data.setUint32(offset + ANIM_SCALE_START_OFFSET, $.frame);
+                            ScaleAnimations.data.setUint32(offset + ANIM_SCALE_END_OFFSET, $.frame + (end - start));
 
                             if (info & ANIM_SCALE_CALLBACK_FLAG) {
                                 ScaleAnimations.callbacks.get(ANIM_SCALE_CB_KEY + idx)();
@@ -187,7 +187,7 @@ export default function eventLoop(handleInput) {
                 if (flags & ACTIVE_FLAG) {
 
                     const start = Rot1DAnimations.data.getUint32(offset + ANIM_ROT1D_START_OFFSET);
-                    if (start > frame)
+                    if (start > $.frame)
                         continue;
 
                     const info = Rot1DAnimations.data.getUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET);
@@ -197,7 +197,7 @@ export default function eventLoop(handleInput) {
                     const to = Rot1DAnimations.data.getFloat32(offset + ANIM_ROT1D_TO_OFFSET);
 
                     const timing = info >> ANIM_ROT1D_INFO_BITS;
-                    const nextRot1DValue = map(frame, start, end, from, to, timing);
+                    const nextRot1DValue = map($.frame, start, end, from, to, timing);
 
                     const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
                     {
@@ -210,10 +210,10 @@ export default function eventLoop(handleInput) {
                         $.changeFlags |= XFORMS_CHANGED;
                     }
 
-                    if (end == frame) {
+                    if (end == $.frame) {
                         if (info & ANIM_ROT1D_LOOP_FLAG) {
-                            Rot1DAnimations.data.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame);
-                            Rot1DAnimations.data.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + (end - start));
+                            Rot1DAnimations.data.setUint32(offset + ANIM_ROT1D_START_OFFSET, $.frame);
+                            Rot1DAnimations.data.setUint32(offset + ANIM_ROT1D_END_OFFSET, $.frame + (end - start));
 
                             if (info & ANIM_ROT1D_CALLBACK_FLAG) {
                                 Rot1DAnimations.callbacks.get(ANIM_ROT1D_CB_KEY + idx)();
@@ -239,7 +239,7 @@ export default function eventLoop(handleInput) {
                 if (flags & ACTIVE_FLAG) {
 
                     const start = Color1CAnimations.data.getUint32(offset + ANIM_COLOR1C_START_OFFSET);
-                    if (start > frame)
+                    if (start > $.frame)
                         continue;
 
                     const info = Color1CAnimations.data.getUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET);
@@ -249,7 +249,7 @@ export default function eventLoop(handleInput) {
                     const to = Color1CAnimations.data.getFloat32(offset + ANIM_COLOR1C_TO_OFFSET);
 
                     const timing = info >> ANIM_COLOR1C_INFO_BITS;
-                    const nextColor1CValue = map(frame, start, end, from, to, timing);
+                    const nextColor1CValue = map($.frame, start, end, from, to, timing);
 
                     const spriteIdx = sprite >> VERSION_BITS; //getIndex(sprite);
                     {
@@ -257,10 +257,10 @@ export default function eventLoop(handleInput) {
                         $.changeFlags |= COLORS_CHANGED;
                     }
 
-                    if (end == frame) {
+                    if (end == $.frame) {
                         if (info & ANIM_COLOR1C_LOOP_FLAG) {
-                            Color1CAnimations.data.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame);
-                            Color1CAnimations.data.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + (end - start));
+                            Color1CAnimations.data.setUint32(offset + ANIM_COLOR1C_START_OFFSET, $.frame);
+                            Color1CAnimations.data.setUint32(offset + ANIM_COLOR1C_END_OFFSET, $.frame + (end - start));
 
                             if (info & ANIM_COLOR1C_CALLBACK_FLAG) {
                                 Color1CAnimations.callbacks.get(ANIM_COLOR1C_CB_KEY + idx)();
@@ -286,7 +286,7 @@ export default function eventLoop(handleInput) {
                 if (flags & ACTIVE_FLAG) {
 
                     const start = PositionAnimations.data.getUint32(offset + ANIM_POS_START_OFFSET);
-                    if (start > frame)
+                    if (start > $.frame)
                         continue;
 
                     const info = PositionAnimations.data.getUint16(offset + ANIM_POS_TIMING_N_INFO_OFFSET);
@@ -304,7 +304,7 @@ export default function eventLoop(handleInput) {
 
                     const timing = info >> ANIM_POS_INFO_BITS;
 
-                    const tNormalized = (frame - start) / (end - start);
+                    const tNormalized = ($.frame - start) / (end - start);
 
                     const t = timing == LINEAR ?
                         tNormalized : nonLinearTransform(tNormalized, timing);
@@ -322,10 +322,10 @@ export default function eventLoop(handleInput) {
                         $.changeFlags |= POS_CHANGED;
                     }
 
-                    if (end == frame) {
+                    if (end == $.frame) {
                         if (info & ANIM_POS_LOOP_FLAG) {
-                            PositionAnimations.data.setUint32(offset + ANIM_POS_START_OFFSET, frame);
-                            PositionAnimations.data.setUint32(offset + ANIM_POS_END_OFFSET, frame + (end - start));
+                            PositionAnimations.data.setUint32(offset + ANIM_POS_START_OFFSET, $.frame);
+                            PositionAnimations.data.setUint32(offset + ANIM_POS_END_OFFSET, $.frame + (end - start));
 
                             if (info & ANIM_POS_CALLBACK_FLAG) {
                                 PositionAnimations.callbacks.get(ANIM_POS_CB_KEY + idx)();
@@ -351,7 +351,7 @@ export default function eventLoop(handleInput) {
                 if (flags & ACTIVE_FLAG) {
 
                     const start = PositionCurveAnimations.data.getUint32(offset + ANIM_POSC_START_OFFSET);
-                    if (start > frame)
+                    if (start > $.frame)
                         continue;
 
                     const info = PositionCurveAnimations.data.getUint16(offset + ANIM_POSC_TIMING_N_INFO_OFFSET);
@@ -376,7 +376,7 @@ export default function eventLoop(handleInput) {
 
                     const timing = info >> ANIM_POSC_INFO_BITS;
 
-                    const tNormalized = (frame - start) / (end - start);
+                    const tNormalized = ($.frame - start) / (end - start);
 
                     const t = timing == LINEAR ?
                         tNormalized : nonLinearTransform(tNormalized, timing);
@@ -400,10 +400,10 @@ export default function eventLoop(handleInput) {
                         $.changeFlags |= POS_CHANGED;
                     }
 
-                    if (end == frame) {
+                    if (end == $.frame) {
                         if (info & ANIM_POSC_LOOP_FLAG) {
-                            PositionCurveAnimations.data.setUint32(offset + ANIM_POSC_START_OFFSET, frame);
-                            PositionCurveAnimations.data.setUint32(offset + ANIM_POSC_END_OFFSET, frame + (end - start));
+                            PositionCurveAnimations.data.setUint32(offset + ANIM_POSC_START_OFFSET, $.frame);
+                            PositionCurveAnimations.data.setUint32(offset + ANIM_POSC_END_OFFSET, $.frame + (end - start));
 
                             if (info & ANIM_POSC_CALLBACK_FLAG) {
                                 PositionCurveAnimations.callbacks.get(ANIM_POSC_CB_KEY + idx)();
@@ -421,7 +421,7 @@ export default function eventLoop(handleInput) {
             }
         }
 
-        frame++;
+        $.frame++;
     }
 
     // draw frame

@@ -1,3 +1,13 @@
+import {
+    ACTIVE_FLAG,
+    VERSION_BITS,
+    VERSION_MASK,
+    MAX_VERSION,
+    INVALID_INDEX
+} from '../constants/BaseECS.js';
+import Sprites, {SPRITE_COLOR1C_ANIM_FLAG} from '../Sprites.js';
+import {renderStore as $} from '../setupWebGL.js';
+
 const ANIM_COLOR1C_MAX_ELEMENTS = 1 << 13;
 const ANIM_COLOR1C_BYTES_PER_ELEMENT = 24;
 const ANIM_COLOR1C_BUFFER_SIZE = ANIM_COLOR1C_BYTES_PER_ELEMENT * ANIM_COLOR1C_MAX_ELEMENTS;
@@ -85,8 +95,8 @@ const Color1CAnimations = {
         this.data.setUint16(offset + ANIM_COLOR1C_TIMING_N_INFO_OFFSET, timing << ANIM_COLOR1C_INFO_BITS);
 
         this.data.setUint32(offset + ANIM_COLOR1C_SPRITE_OFFSET, sprite);
-        this.data.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame);
-        this.data.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + duration);
+        this.data.setUint32(offset + ANIM_COLOR1C_START_OFFSET, $.frame);
+        this.data.setUint32(offset + ANIM_COLOR1C_END_OFFSET, $.frame + duration);
         // currently only ALPHA CHANNEL !!!
         const spriteIdx = sprite >> VERSION_BITS;
         this.data.setFloat32(offset + ANIM_COLOR1C_FROM_OFFSET, Sprites.getAlpha(spriteIdx));
@@ -115,15 +125,15 @@ const Color1CAnimations = {
     restart(idx) {
         const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
         const duration = this.data.getUint32(offset + ANIM_COLOR1C_END_OFFSET) - this.data.getUint32(offset + ANIM_COLOR1C_START_OFFSET);
-        this.data.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame);
-        this.data.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + duration);
+        this.data.setUint32(offset + ANIM_COLOR1C_START_OFFSET, $.frame);
+        this.data.setUint32(offset + ANIM_COLOR1C_END_OFFSET, $.frame + duration);
     }
     ,
     delay(idx, duration) {
         const offset = idx * ANIM_COLOR1C_BYTES_PER_ELEMENT;
         const length = this.data.getUint32(offset + ANIM_COLOR1C_END_OFFSET) - this.data.getUint32(offset + ANIM_COLOR1C_START_OFFSET);
-        this.data.setUint32(offset + ANIM_COLOR1C_START_OFFSET, frame + duration);
-        this.data.setUint32(offset + ANIM_COLOR1C_END_OFFSET, frame + duration + length);
+        this.data.setUint32(offset + ANIM_COLOR1C_START_OFFSET, $.frame + duration);
+        this.data.setUint32(offset + ANIM_COLOR1C_END_OFFSET, $.frame + duration + length);
     }
     ,
     remove(idx) {

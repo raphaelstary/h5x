@@ -1,3 +1,17 @@
+import {
+    ACTIVE_FLAG,
+    VERSION_BITS,
+    VERSION_MASK,
+    MAX_VERSION,
+    INVALID_INDEX
+} from '../constants/BaseECS.js';
+import Sprites, {
+    SPRITE_ROT1D_X_ANIM_FLAG,
+    SPRITE_ROT1D_Y_ANIM_FLAG,
+    SPRITE_ROT1D_Z_ANIM_FLAG
+} from '../Sprites.js';
+import {renderStore as $} from '../setupWebGL.js';
+
 export const ANIM_ROT1D_MAX_ELEMENTS = 1 << 13;
 export const ANIM_ROT1D_BYTES_PER_ELEMENT = 24;
 export const ANIM_ROT1D_BUFFER_SIZE = ANIM_ROT1D_BYTES_PER_ELEMENT * ANIM_ROT1D_MAX_ELEMENTS;
@@ -71,8 +85,8 @@ const Rot1DAnimations = {
         this.data.setUint16(offset + ANIM_ROT1D_TIMING_N_INFO_OFFSET, timing << ANIM_ROT1D_INFO_BITS | property);
 
         this.data.setUint32(offset + ANIM_ROT1D_SPRITE_OFFSET, sprite);
-        this.data.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame);
-        this.data.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + duration);
+        this.data.setUint32(offset + ANIM_ROT1D_START_OFFSET, $.frame);
+        this.data.setUint32(offset + ANIM_ROT1D_END_OFFSET, $.frame + duration);
 
         const spriteIdx = sprite >> VERSION_BITS;
         if (property & ANIM_ROT1D_X_FLAG) {
@@ -109,15 +123,15 @@ const Rot1DAnimations = {
     restart(idx) {
         const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
         const duration = this.data.getUint32(offset + ANIM_ROT1D_END_OFFSET) - this.data.getUint32(offset + ANIM_ROT1D_START_OFFSET);
-        this.data.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame);
-        this.data.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + duration);
+        this.data.setUint32(offset + ANIM_ROT1D_START_OFFSET, $.frame);
+        this.data.setUint32(offset + ANIM_ROT1D_END_OFFSET, $.frame + duration);
     }
     ,
     delay(idx, duration) {
         const offset = idx * ANIM_ROT1D_BYTES_PER_ELEMENT;
         const length = this.data.getUint32(offset + ANIM_ROT1D_END_OFFSET) - this.data.getUint32(offset + ANIM_ROT1D_START_OFFSET);
-        this.data.setUint32(offset + ANIM_ROT1D_START_OFFSET, frame + duration);
-        this.data.setUint32(offset + ANIM_ROT1D_END_OFFSET, frame + duration + length);
+        this.data.setUint32(offset + ANIM_ROT1D_START_OFFSET, $.frame + duration);
+        this.data.setUint32(offset + ANIM_ROT1D_END_OFFSET, $.frame + duration + length);
     }
     ,
     remove(idx) {

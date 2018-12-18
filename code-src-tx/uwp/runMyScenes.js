@@ -9,7 +9,8 @@ import VibrationFrame from '../uwp-input/VibrationFrame.js';
 import PositionCurveAnimations from '../render/animations/PositionCurveAnimations.js';
 import Rot1DAnimations, {ANIM_ROT1D_Y_FLAG} from '../render/animations/Rot1DAnimations.js';
 import {LINEAR} from '../render/animations/Transform.js';
-import Sprites, {VERSION_BITS} from '../render/Sprites.js';
+import Sprites from '../render/Sprites.js';
+import {VERSION_BITS} from '../render/constants/BaseECS.js';
 
 export let heartBeatFrames;
 

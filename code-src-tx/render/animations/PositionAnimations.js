@@ -1,3 +1,13 @@
+import {
+    ACTIVE_FLAG,
+    VERSION_BITS,
+    VERSION_MASK,
+    MAX_VERSION,
+    INVALID_INDEX
+} from '../constants/BaseECS.js';
+import Sprites, {SPRITE_POS_LIN_ANIM_FLAG} from '../Sprites.js';
+import {renderStore as $} from '../setupWebGL.js';
+
 const ANIM_POS_MAX_ELEMENTS = 1 << 13;
 const ANIM_POS_BYTES_PER_ELEMENT = 40;
 const ANIM_POS_BUFFER_SIZE = ANIM_POS_BYTES_PER_ELEMENT * ANIM_POS_MAX_ELEMENTS;
@@ -93,8 +103,8 @@ const PositionAnimations = {
         this.data.setUint16(offset + ANIM_POS_TIMING_N_INFO_OFFSET, timing << ANIM_POS_INFO_BITS);
 
         this.data.setUint32(offset + ANIM_POS_SPRITE_OFFSET, sprite);
-        this.data.setUint32(offset + ANIM_POS_START_OFFSET, frame);
-        this.data.setUint32(offset + ANIM_POS_END_OFFSET, frame + duration);
+        this.data.setUint32(offset + ANIM_POS_START_OFFSET, $.frame);
+        this.data.setUint32(offset + ANIM_POS_END_OFFSET, $.frame + duration);
 
         const spriteIdx = sprite >> VERSION_BITS;
         this.data.setFloat32(offset + ANIM_POS_FROM_X_OFFSET, Sprites.getX(spriteIdx));
@@ -129,15 +139,15 @@ const PositionAnimations = {
     restart(idx) {
         const offset = idx * ANIM_POS_BYTES_PER_ELEMENT;
         const duration = this.data.getUint32(offset + ANIM_POS_END_OFFSET) - this.data.getUint32(offset + ANIM_POS_START_OFFSET);
-        this.data.setUint32(offset + ANIM_POS_START_OFFSET, frame);
-        this.data.setUint32(offset + ANIM_POS_END_OFFSET, frame + duration);
+        this.data.setUint32(offset + ANIM_POS_START_OFFSET, $.frame);
+        this.data.setUint32(offset + ANIM_POS_END_OFFSET, $.frame + duration);
     }
     ,
     delay(idx, duration) {
         const offset = idx * ANIM_POS_BYTES_PER_ELEMENT;
         const length = this.data.getUint32(offset + ANIM_POS_END_OFFSET) - this.data.getUint32(offset + ANIM_POS_START_OFFSET);
-        this.data.setUint32(offset + ANIM_POS_START_OFFSET, frame + duration);
-        this.data.setUint32(offset + ANIM_POS_END_OFFSET, frame + duration + length);
+        this.data.setUint32(offset + ANIM_POS_START_OFFSET, $.frame + duration);
+        this.data.setUint32(offset + ANIM_POS_END_OFFSET, $.frame + duration + length);
     }
     ,
     remove(idx) {
