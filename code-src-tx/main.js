@@ -1,6 +1,6 @@
-import * as SubImage from '../code-gen/SubImage.js';
-import * as SFXSegment from '../code-gen/SFXSegment.js';
 import FontSubImage from '../code-gen/FontSubImage.js';
+import * as SFXSegment from '../code-gen/SFXSegment.js';
+import * as SubImage from '../code-gen/SubImage.js';
 
 let baseSubImages;
 let spriteDimensions;

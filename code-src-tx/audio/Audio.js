@@ -1,0 +1,49 @@
+const ctx = new AudioContext();
+const volume = ctx.createGain();
+volume.connect(ctx.destination);
+volume.gain.setValueAtTime(1, ctx.currentTime);
+
+
+const Audio = {
+    ctx,
+    volume,
+
+    /**
+     *
+     * @param {number} audioId segment to play {@see SFXSegment}
+     * @param {boolean} [loop=false] if {TRUE} segment loops
+     * @param {number} [delay=0] delay in seconds
+     * @param {function} [callback] function gets called after finished
+     * @returns {AudioBufferSourceNode} created audio node
+     */
+    playSound: function playSound(audioId, loop, delay, callback) {
+        const offset = audioSegments[audioId * 2];
+        const duration = audioSegments[audioId * 2 + 1];
+
+        const source = this.ctx.createBufferSource();
+
+        if (callback) {
+            source.onended = callback;
+        }
+
+        source.buffer = audioBuffer;
+        source.connect(volume);
+
+        const when = delay == undefined ? 0 : delay;
+
+        if (loop) {
+            source.loop = true;
+            source.loopStart = offset;
+            source.loopEnd = offset + duration;
+
+            source.start(when, offset);
+
+        } else {
+            source.start(when, offset, duration);
+        }
+
+        return source;
+    }
+};
+
+export default Audio;
