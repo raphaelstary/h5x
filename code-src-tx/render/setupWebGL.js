@@ -49,9 +49,48 @@ export function processAssets([, baseSubImageBuffer, img, spriteDimensionsBuffer
     console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
     console.log(`texture atlas back buffer size: ${(img.width * img.height * 4 / 1024 / 1024).toFixed(2)} mb`);
 
+    gl.activeTexture(gl.TEXTURE0);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+}
 
-    return Promise.resolve();
+/**
+ * @param {HTMLCanvasElement} atlas
+ * @param {{width: number, height: number, frames: {name: string, x: number, y: number, width: number, height: number}[]}} info
+ */
+export function addAvatarAtlas(atlas, info) {
+    gl.activeTexture(gl.TEXTURE1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas);
+
+    console.log(`dynamic texture atlas back buffer size: ${(atlas.width * atlas.height * 4 / 1024 / 1024).toFixed(2)} mb`);
+
+    const HEIGHT_8K = 4320;
+    const WORLD_SPACE_FACTOR = 9;
+    const AVATAR_SLOTS = 8;
+
+    const DIMENSION_ELEMENTS = 4;
+    const SUB_IMAGE_ELEMENTS = 5;
+
+    const BUFFER_OFFSET = assetStore.spriteDimensions.length / DIMENSION_ELEMENTS - AVATAR_SLOTS;
+    for (let i = 0; i < info.frames.length; i++) {
+        const frame = info.frames[i];
+        const q = i + BUFFER_OFFSET;
+
+        const k = q * DIMENSION_ELEMENTS;
+        assetStore.spriteDimensions[k] = frame.width / 2 / HEIGHT_8K * WORLD_SPACE_FACTOR;
+        assetStore.spriteDimensions[k + 1] = frame.height / 2 / HEIGHT_8K * WORLD_SPACE_FACTOR;
+        assetStore.spriteDimensions[k + 2] = 0;
+        assetStore.spriteDimensions[k + 3] = 0;
+
+        const j = q * SUB_IMAGE_ELEMENTS;
+        assetStore.baseSubImages[j] = frame.x / info.width;
+        assetStore.baseSubImages[j + 1] = frame.y / info.height;
+        assetStore.baseSubImages[j + 2] = frame.width / info.width;
+        assetStore.baseSubImages[j + 3] = frame.height / info.height;
+
+        assetStore.baseSubImages[j + 4] = 1;
+
+        assetStore.avatarSubImages.set(frame.name, q);
+    }
 }
 
 const canvas = document.getElementById('screen');
@@ -212,8 +251,17 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-const texLocation = gl.getUniformLocation(program, 'tex');
-gl.uniform1i(texLocation, 0);
+const avatarTexture = gl.createTexture();
+gl.activeTexture(gl.TEXTURE1);
+gl.bindTexture(gl.TEXTURE_2D, avatarTexture);
+
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+const texLocation = gl.getUniformLocation(program, 'textures[0]');
+gl.uniform1iv(texLocation, [0, 1]);
 
 
 /*

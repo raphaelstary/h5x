@@ -63,3 +63,26 @@ export default Promise.all([
             })
 ])
     .catch(error => console.log(error));
+
+/**
+ * @param {{name: string, url: string}[]} urls
+ * @returns {Promise<{name: string, img: Image}[]>}
+ */
+export function loadAvatars(urls) {
+    return Promise.all(urls
+        .map(({name, url}) =>
+            fetch(url)
+                .then(response => {
+                    if (response.ok)
+                        return response.blob();
+                    throw new Error('could not fetch avatar from ' + url);
+                })
+                .then(blob => {
+                    return new Promise(resolve => {
+                        const img = new Image();
+                        img.onload = () => resolve({name, img});
+                        img.src = URL.createObjectURL(blob);
+                    });
+                }))
+    );
+}

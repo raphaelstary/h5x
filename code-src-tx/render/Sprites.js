@@ -139,11 +139,13 @@ const Sprites = {
         $.dimensions[idx * DIM_ELEMENTS + 2] = a$.spriteDimensions[dimIdx + 2];
         $.dimensions[idx * DIM_ELEMENTS + 3] = a$.spriteDimensions[dimIdx + 3];
 
-        const subImgIdx = imgId * SUB_IMG_ELEMENTS;
+        const subImgIdx = imgId * (SUB_IMG_ELEMENTS + 1);
         $.subImages[idx * SUB_IMG_ELEMENTS] = a$.baseSubImages[subImgIdx];
         $.subImages[idx * SUB_IMG_ELEMENTS + 1] = a$.baseSubImages[subImgIdx + 1];
         $.subImages[idx * SUB_IMG_ELEMENTS + 2] = a$.baseSubImages[subImgIdx + 2];
         $.subImages[idx * SUB_IMG_ELEMENTS + 3] = a$.baseSubImages[subImgIdx + 3];
+
+        $.positions[idx * POS_ELEMENTS + 3] = a$.baseSubImages[subImgIdx + 4];
 
         return idx << VERSION_BITS | version;
     }
@@ -327,13 +329,15 @@ const Sprites = {
         $.dimensions[idx * DIM_ELEMENTS + 2] = a$.spriteDimensions[dimIdx + 2];
         $.dimensions[idx * DIM_ELEMENTS + 3] = a$.spriteDimensions[dimIdx + 3];
 
-        const subImgIdx = imgId * SUB_IMG_ELEMENTS;
+        const subImgIdx = imgId * (SUB_IMG_ELEMENTS + 1);
         $.subImages[idx * SUB_IMG_ELEMENTS] = a$.baseSubImages[subImgIdx];
         $.subImages[idx * SUB_IMG_ELEMENTS + 1] = a$.baseSubImages[subImgIdx + 1];
         $.subImages[idx * SUB_IMG_ELEMENTS + 2] = a$.baseSubImages[subImgIdx + 2];
         $.subImages[idx * SUB_IMG_ELEMENTS + 3] = a$.baseSubImages[subImgIdx + 3];
 
-        $.changeFlags |= DIM_CHANGED | SUB_IMG_CHANGED;
+        $.positions[idx * POS_ELEMENTS + 3] = a$.baseSubImages[subImgIdx + 4];
+
+        $.changeFlags |= DIM_CHANGED | SUB_IMG_CHANGED | POS_CHANGED;
     }
     ,
     getWidthHalf(idx) {

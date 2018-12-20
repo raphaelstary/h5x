@@ -1,6 +1,6 @@
 export default `
 
-attribute vec3 position;
+attribute vec4 position;
 attribute vec4 xforms;
 attribute vec4 dimensions;
 attribute vec4 color;
@@ -12,6 +12,7 @@ uniform mat4 projection;
 
 varying vec2 texCoord;
 varying vec4 texColor;
+varying float texIdx;
 
 void main() {
     float tx = dimensions.x * quad.x;
@@ -58,7 +59,7 @@ void main() {
         0, 0, 0, 1.0
     );
 
-    vec4 tmpPosition = translate * vec4(position, 1.0);
+    vec4 tmpPosition = translate * vec4(position.xyz, 1.0);
 
     translate[3][0] = -position.x;
     translate[3][1] = -position.y;
@@ -74,5 +75,6 @@ void main() {
 
     texCoord = vec2(subImage.x + subImage.z * quad.z, subImage.y + subImage.w * quad.w);
     texColor = color;
+    texIdx = position.w;
 }
 `;

@@ -5,6 +5,8 @@ export default class AssetStore {
         this.audioSegments = audioSegments;
         this.audioBuffer = audioBuffer;
 
+        this.avatarSubImages = new Map();
+
         Object.seal(this);
     }
 }
