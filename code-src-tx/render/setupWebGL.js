@@ -5,7 +5,7 @@ import {ANIM_POS_BUFFER_SIZE} from './animations/PositionAnimations.js';
 import {ANIM_POSC_BUFFER_SIZE} from './animations/PositionCurveAnimations.js';
 import {ANIM_ROT1D_BUFFER_SIZE} from './animations/Rot1DAnimations.js';
 import {ANIM_SCALE_BUFFER_SIZE} from './animations/ScaleAnimations.js';
-import {SPRITES_BUFFER_SIZE} from './Sprites.js';
+import Sprites, {SPRITES_BUFFER_SIZE} from './Sprites.js';
 import {NO_CHANGES} from './constants/ChangeFlag.js';
 import fragmentShaderSrc from './shader/SpriteFragmentShader.js';
 import vertexShaderSrc from './shader/SpriteVertexShader.js';
@@ -54,6 +54,9 @@ export function processAssets([, baseSubImageBuffer, img_0, img_1, spriteDimensi
 
     gl.activeTexture(gl.TEXTURE1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img_1);
+
+    const fpsTxt = Sprites.createDebugText('00 fps', 7.5, -4.2, -4.5);
+    const msTxt = Sprites.createDebugText('00  ms', 7.5, -4.4, -4.5);
 }
 
 /**

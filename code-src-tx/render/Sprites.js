@@ -43,6 +43,7 @@ import {
     ACTIVE_FLAG,
     INVALID_INDEX
 } from './constants/BaseECS.js';
+import FontSubImage from '../../code-gen/FontSubImage.js';
 
 export const SPRITE_ELEMENTS = 2;
 export const SPRITE_VERSION_N_STATE_OFFSET = 0;
@@ -346,6 +347,34 @@ const Sprites = {
     ,
     getHeightHalf(idx) {
         return $.dimensions[idx * DIM_ELEMENTS + 1];
+    }
+    ,
+    createDebugText(text, x, y, z) {
+        const letters = [];
+        let offsetX = x;
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+
+            if (char == ' ') {
+                offsetX += 0.025;
+                continue;
+            }
+
+            const intValue = parseInt(char);
+            const idx = Number.isNaN(intValue) ? FontSubImage.get(char) : FontSubImage.get(intValue);
+
+            const dimIdx = idx * DIM_ELEMENTS;
+            const widthHalf = a$.spriteDimensions[dimIdx];
+            offsetX += widthHalf;
+
+            const letter = this.create(idx, offsetX, y, z);
+            letters.push(letter);
+
+            offsetX += widthHalf;
+            offsetX += 0.015;
+        }
+
+        return letters;
     }
 };
 

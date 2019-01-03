@@ -84,7 +84,7 @@ export function handleInput() {
         }
 
         if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.y)) {
-            signIn(gamepad);
+            //signIn(gamepad);
         }
 
         if (info.isVibrating) {

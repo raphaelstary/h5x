@@ -120,12 +120,24 @@ import {
     XFORMS_SCALE_OFFSET
 } from '../render/constants/XFormsBuffer.js';
 import {renderStore as $} from '../render/setupWebGL.js';
+import FontSubImage from '../../code-gen/FontSubImage.js';
+
+let startTime = Date.now();
+let prevTime = startTime;
+let ms = 0;
+let fps = 0;
+let fpsFrameCounter = 0;
 
 /*
  * EVENT LOOP
  */
 export default function eventLoop(handleInput) {
     requestAnimationFrame(eventLoop.bind(undefined, handleInput));
+
+    // fps meter start frame
+    {
+        startTime = Date.now();
+    }
 
     // capture gamepad input
     handleInput();
@@ -458,5 +470,42 @@ export default function eventLoop(handleInput) {
         $.gl.clear($.gl.COLOR_BUFFER_BIT | $.gl.DEPTH_BUFFER_BIT);
 
         $.ext.drawArraysInstancedANGLE($.gl.TRIANGLE_STRIP, 0, 4, Sprites.maxIdx + 1);
+    }
+
+    // fps meter end frame
+    {
+        const time = Date.now();
+
+        ms = time - startTime;
+        // msMin = Math.min(msMin, ms);
+        // msMax = Math.max(msMax, ms);
+
+        if (ms < 100) {
+            Sprites.setSubImage(5, FontSubImage.get(Math.floor(ms / 10)));
+            Sprites.setSubImage(6, FontSubImage.get(ms % 10));
+        } else {
+            Sprites.setSubImage(5, FontSubImage.get('X'));
+            Sprites.setSubImage(6, FontSubImage.get('X'));
+        }
+
+        fpsFrameCounter++;
+
+        if (time > prevTime + 1000) {
+
+            fps = Math.round(fpsFrameCounter * 1000 / (time - prevTime));
+            // fpsMin = Math.min(fpsMin, fps);
+            // fpsMax = Math.max(fpsMax, fps);
+
+            if (fps < 100) {
+                Sprites.setSubImage(0, FontSubImage.get(Math.floor(fps / 10)));
+                Sprites.setSubImage(1, FontSubImage.get(fps % 10));
+            } else {
+                Sprites.setSubImage(0, FontSubImage.get('X'));
+                Sprites.setSubImage(1, FontSubImage.get('X'));
+            }
+
+            prevTime = time;
+            fpsFrameCounter = 0;
+        }
     }
 }
