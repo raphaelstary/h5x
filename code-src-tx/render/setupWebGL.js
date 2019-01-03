@@ -33,7 +33,7 @@ import {ELEMENTS_CHUNK} from './constants/BaseBuffer.js';
 
 export const assetStore = new AssetStore();
 
-export function processAssets([, baseSubImageBuffer, img, spriteDimensionsBuffer, audioSegmentsBuffer, audioBuffer]) {
+export function processAssets([, baseSubImageBuffer, img_0, img_1, spriteDimensionsBuffer, audioSegmentsBuffer, audioBuffer]) {
     assetStore.baseSubImages = new Float32Array(baseSubImageBuffer);
     assetStore.spriteDimensions = new Float32Array(spriteDimensionsBuffer);
     assetStore.audioSegments = new Float32Array(audioSegmentsBuffer);
@@ -47,10 +47,13 @@ export function processAssets([, baseSubImageBuffer, img, spriteDimensionsBuffer
     const BASE_SUB_IMG_BUFFER_SIZE = assetStore.baseSubImages.byteLength;
     const TOTAL_BASE_BUFFER_SIZE = BASE_DIM_BUFFER_SIZE + BASE_SUB_IMG_BUFFER_SIZE + BASE_AUDIO_SEG_BUFFER_SIZE;
     console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
-    console.log(`texture atlas back buffer size: ${(img.width * img.height * 4 / 1024 / 1024).toFixed(2)} mb`);
+    console.log(`texture atlas back buffer size: ${((img_0.width * img_0.height * 4 + img_1.width * img_1.height * 4) / 1024 / 1024).toFixed(2)} mb`);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img_0);
+
+    gl.activeTexture(gl.TEXTURE1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img_1);
 }
 
 /**
@@ -58,7 +61,7 @@ export function processAssets([, baseSubImageBuffer, img, spriteDimensionsBuffer
  * @param {{width: number, height: number, frames: {name: string, x: number, y: number, width: number, height: number}[]}} info
  */
 export function addAvatarAtlas(atlas, info) {
-    gl.activeTexture(gl.TEXTURE1);
+    gl.activeTexture(gl.TEXTURE2);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas);
 
     console.log(`dynamic texture atlas back buffer size: ${(atlas.width * atlas.height * 4 / 1024 / 1024).toFixed(2)} mb`);
@@ -87,7 +90,7 @@ export function addAvatarAtlas(atlas, info) {
         assetStore.baseSubImages[j + 2] = frame.width / info.width;
         assetStore.baseSubImages[j + 3] = frame.height / info.height;
 
-        assetStore.baseSubImages[j + 4] = 1;
+        assetStore.baseSubImages[j + 4] = 2; // atlas idx
 
         assetStore.avatarSubImages.set(frame.name, q);
     }
@@ -242,9 +245,18 @@ const TOTAL_BUFFER_SIZE = POS_BUFFER_SIZE + COLOR_BUFFER_SIZE + XFORMS_BUFFER_SI
     SUB_IMG_BUFFER_SIZE;
 console.log(`total alloc gfx buffer size: ${(TOTAL_BUFFER_SIZE / 1024 / 1024).toFixed(2)} mb`);
 
-const texture = gl.createTexture();
+const texture0 = gl.createTexture();
 gl.activeTexture(gl.TEXTURE0);
-gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.bindTexture(gl.TEXTURE_2D, texture0);
+
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+const texture1 = gl.createTexture();
+gl.activeTexture(gl.TEXTURE1);
+gl.bindTexture(gl.TEXTURE_2D, texture1);
 
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -252,7 +264,7 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 const avatarTexture = gl.createTexture();
-gl.activeTexture(gl.TEXTURE1);
+gl.activeTexture(gl.TEXTURE2);
 gl.bindTexture(gl.TEXTURE_2D, avatarTexture);
 
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -261,7 +273,7 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
 const texLocation = gl.getUniformLocation(program, 'textures[0]');
-gl.uniform1iv(texLocation, [0, 1]);
+gl.uniform1iv(texLocation, [0, 1, 2]);
 
 
 /*

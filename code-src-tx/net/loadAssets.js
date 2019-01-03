@@ -12,7 +12,24 @@ export default Promise.all([
             throw new Error('could not fetch sub-image-data');
         }),
 
-    fetch('../asset-gen/atlas.png')
+    fetch('../asset-gen/atlas_0.png')
+        .then(response => {
+            if (response.ok)
+                return response.blob();
+
+            throw new Error('could not fetch texture-atlas');
+        })
+        .then(blob => {
+            console.log(`texture atlas file size: ${(blob.size / 1024 / 1024).toFixed(2)} mb`);
+
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = URL.createObjectURL(blob);
+            });
+        }),
+
+    fetch('../asset-gen/atlas_1.png')
         .then(response => {
             if (response.ok)
                 return response.blob();

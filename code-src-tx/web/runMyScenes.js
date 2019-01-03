@@ -67,6 +67,6 @@ export default function runTestScene() {
         .then(({atlas, info}) => {
             addAvatarAtlas(atlas, info);
 
-            Sprites.create(a$.avatarSubImages.get('raphael'), 0, 0, -1);
+            Sprites.create(a$.avatarSubImages.get('raphael'), -1, 0, -1);
         });
 }
