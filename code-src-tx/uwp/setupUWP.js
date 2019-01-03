@@ -2,6 +2,7 @@ import Gamepads from '../uwp-input/Gamepads.js';
 import {heartBeatFrames} from './runMyScenes.js';
 import GamepadInfo from '../uwp-input/GamepadInfo.js';
 import VibrationPattern from '../uwp-input/VibrationPattern.js';
+import {renderStore} from '../render/setupWebGL.js';
 
 const GamepadButtons = Windows.Gaming.Input.GamepadButtons;
 
@@ -88,12 +89,12 @@ export function handleInput() {
 
         if (info.isVibrating) {
             const vibration = info.vibration;
-            if (frame == vibration.nextTimeFrame) {
+            if (renderStore.frame == vibration.nextTimeFrame) {
                 vibration.currentFrame++;
 
                 if (vibration.currentFrame < vibration.frames.length) {
                     const keyframe = vibration.frames[vibration.currentFrame];
-                    vibration.nextTimeFrame = frame + keyframe.duration;
+                    vibration.nextTimeFrame = renderStore.frame + keyframe.duration;
                     gamepad.vibration = keyframe.vibration;
 
                 } else {
