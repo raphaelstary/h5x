@@ -28,16 +28,6 @@ export default function runTestScene() {
     // const k = Sprites.create(FontSubImage.get('k'), k_x, k_y, k_z);
     //
     let x = -8.5;
-    FontSubImage.forEach((value, key) => {
-
-        const dimIdx = value * DIM_ELEMENTS;
-        const widthHalf = a$.spriteDimensions[dimIdx];
-        x += widthHalf;
-        const char = Sprites.create(value, x, 0, -1);
-        x += widthHalf;
-        x += 0.05;
-
-    });
 
     const kingOfSpades = Sprites.create(SubImage.CARD_SK, k_x, k_y);
     const aceOfSpades = Sprites.create(SubImage.CARD_SA, a_x, a_y);
@@ -89,6 +79,17 @@ export default function runTestScene() {
             url: 'http://images-eds.xboxlive.com/image?url=KT_QTPJeC5ZpnbX.xahcbrZ9enA_IV9WfFEWIqHGUb5P30TpCdy9xIzUMuqZVCfbfGniUVNHsDXsIvQ.5Xw1G1WVPy9kwuprNNtEI5Q92M42EPKc4F30jduAsZ9QwYcFgajGS2zFBMnxgXEJjsw6R7NaZbEgkjuMJtMhNtXvTQQ-&format=png&w=208&h=208'
         }
     ];
+
+    FontSubImage.forEach((value, key) => {
+
+        const dimIdx = value * DIM_ELEMENTS;
+        const widthHalf = a$.spriteDimensions[dimIdx];
+        x += widthHalf;
+        const char = Sprites.create(value, x, 0, -1);
+        x += widthHalf;
+        x += 0.05;
+
+    });
 
     loadAvatars(avatarInfos)
         .then(createAtlas)
