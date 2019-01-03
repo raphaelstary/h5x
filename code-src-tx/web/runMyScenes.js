@@ -56,10 +56,38 @@ export default function runTestScene() {
     Audio.playSound(SFXSegment.SIMPLEST_GUNSHOT);
 
     const avatarInfos = [
-        {name: 'raphael', url: 'https://www.gravatar.com/avatar/d2e80a9d1c6e3a794bcfabe93b32a572'},
-        {name: 'thomas', url: 'https://www.gravatar.com/avatar/24aae591d78a51f98e461186173ef3e9'},
-        {name: 'kev', url: 'https://www.gravatar.com/avatar/b4466a237baa1c4accab612d746e3ba9'},
-        {name: 'flo', url: 'https://www.gravatar.com/avatar/081b29f0c6df111eb15a95c8a89f0049'}
+        {
+            name: 'DarthBaghira',
+            url: 'http://images-eds.xboxlive.com/image?url=z951ykn43p4FqWbbFvR2Ec.8vbDhj8G2Xe7JngaTToBrrCmIEEXHC9UNrdJ6P7KIoIeJ1sl4QgwrJRGcdRHOCqxWQ_UP1PHw2k5.dWyiRZbnEUeAIqFPUau1dor0LGez&format=png&w=208&h=208'
+        },
+        {
+            name: 'CmdrBaghira',
+            url: 'http://images-eds.xboxlive.com/image?url=KT_QTPJeC5ZpnbX.xahcbrZ9enA_IV9WfFEWIqHGUb5P30TpCdy9xIzUMuqZVCfbfGniUVNHsDXsIvQ.5Xw1G1WVPy9kwuprNNtEI5Q92M42EPKc4F30jduAsZ9QwYcFgajGS2zFBMnxgXEJjsw6R7NaZbEgkjuMJtMhNtXvTQQ-&format=png&w=208&h=208'
+        },
+        {
+            name: 'DarthBaghira1',
+            url: 'http://images-eds.xboxlive.com/image?url=z951ykn43p4FqWbbFvR2Ec.8vbDhj8G2Xe7JngaTToBrrCmIEEXHC9UNrdJ6P7KIoIeJ1sl4QgwrJRGcdRHOCqxWQ_UP1PHw2k5.dWyiRZbnEUeAIqFPUau1dor0LGez&format=png&w=208&h=208'
+        },
+        {
+            name: 'CmdrBaghira1',
+            url: 'http://images-eds.xboxlive.com/image?url=KT_QTPJeC5ZpnbX.xahcbrZ9enA_IV9WfFEWIqHGUb5P30TpCdy9xIzUMuqZVCfbfGniUVNHsDXsIvQ.5Xw1G1WVPy9kwuprNNtEI5Q92M42EPKc4F30jduAsZ9QwYcFgajGS2zFBMnxgXEJjsw6R7NaZbEgkjuMJtMhNtXvTQQ-&format=png&w=208&h=208'
+        },
+        {
+            name: 'DarthBaghira2',
+            url: 'http://images-eds.xboxlive.com/image?url=z951ykn43p4FqWbbFvR2Ec.8vbDhj8G2Xe7JngaTToBrrCmIEEXHC9UNrdJ6P7KIoIeJ1sl4QgwrJRGcdRHOCqxWQ_UP1PHw2k5.dWyiRZbnEUeAIqFPUau1dor0LGez&format=png&w=208&h=208'
+        },
+        {
+            name: 'CmdrBaghira2',
+            url: 'http://images-eds.xboxlive.com/image?url=KT_QTPJeC5ZpnbX.xahcbrZ9enA_IV9WfFEWIqHGUb5P30TpCdy9xIzUMuqZVCfbfGniUVNHsDXsIvQ.5Xw1G1WVPy9kwuprNNtEI5Q92M42EPKc4F30jduAsZ9QwYcFgajGS2zFBMnxgXEJjsw6R7NaZbEgkjuMJtMhNtXvTQQ-&format=png&w=208&h=208'
+        },
+        {
+            name: 'DarthBaghira3',
+            url: 'http://images-eds.xboxlive.com/image?url=z951ykn43p4FqWbbFvR2Ec.8vbDhj8G2Xe7JngaTToBrrCmIEEXHC9UNrdJ6P7KIoIeJ1sl4QgwrJRGcdRHOCqxWQ_UP1PHw2k5.dWyiRZbnEUeAIqFPUau1dor0LGez&format=png&w=208&h=208'
+        },
+        {
+            name: 'CmdrBaghira3',
+            url: 'http://images-eds.xboxlive.com/image?url=KT_QTPJeC5ZpnbX.xahcbrZ9enA_IV9WfFEWIqHGUb5P30TpCdy9xIzUMuqZVCfbfGniUVNHsDXsIvQ.5Xw1G1WVPy9kwuprNNtEI5Q92M42EPKc4F30jduAsZ9QwYcFgajGS2zFBMnxgXEJjsw6R7NaZbEgkjuMJtMhNtXvTQQ-&format=png&w=208&h=208'
+        }
     ];
 
     loadAvatars(avatarInfos)
@@ -67,6 +95,6 @@ export default function runTestScene() {
         .then(({atlas, info}) => {
             addAvatarAtlas(atlas, info);
 
-            Sprites.create(a$.avatarSubImages.get('raphael'), -1, 0, -1);
+            Sprites.create(a$.avatarSubImages.get('CmdrBaghira'), -1, 0, -1);
         });
 }
