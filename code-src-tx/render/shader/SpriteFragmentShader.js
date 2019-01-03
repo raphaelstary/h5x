@@ -18,7 +18,7 @@ void main() {
         pixel = texture2D(textures[2], texCoord);
     }
 
-    if (pixel.a < 1.0)
+    if (pixel.a < 0.005)
         discard;
     gl_FragColor = mix(pixel, texColor, texColor.a);
 }
