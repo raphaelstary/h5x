@@ -25,8 +25,8 @@ import {
     XFORMS_ROTATION_Z_OFFSET,
     XFORMS_SCALE_OFFSET
 } from './constants/XFormsBuffer.js';
-import {DIM_ELEMENTS} from './constants/DimBuffer.js';
-import {SUB_IMG_ELEMENTS} from './constants/SubImgBuffer.js';
+import { DIM_ELEMENTS } from './constants/DimBuffer.js';
+import { SUB_IMG_ELEMENTS } from './constants/SubImgBuffer.js';
 import {
     ELEMENTS_CHUNK,
     MAX_ELEMENTS
@@ -82,6 +82,14 @@ const Sprites = {
         return INVALID_INDEX;
     }
     ,
+    /**
+     * Creates a new sprite
+     * @param {number} imgId - idx for atlas subimage
+     * @param {number} x - x-coordinate
+     * @param {number} y - y-coordinate
+     * @param {number} [z=-5] - z-coordinate
+     * @returns {number} sprite ID
+     */
     create(imgId, x, y, z = -5) {
         let idx;
         let version;

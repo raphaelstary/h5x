@@ -1,5 +1,4 @@
 import Gamepads from '../uwp-input/Gamepads.js';
-import {heartBeatFrames} from './runMyScenes.js';
 import GamepadInfo from '../uwp-input/GamepadInfo.js';
 import VibrationPattern from '../uwp-input/VibrationPattern.js';
 import {renderStore} from '../render/setupWebGL.js';
@@ -77,7 +76,7 @@ export function handleInput() {
 
         if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.a)) {
             console.log(`a gamepad pressed A button`);
-            Gamepads.vibrate(gamepad, info, heartBeatFrames);
+            //Gamepads.vibrate(gamepad, info, heartBeatFrames);
 
         } else if (Gamepads.buttonReleased(newReading, info.oldReading, GamepadButtons.a)) {
             console.log(`a gamepad released A button`);
