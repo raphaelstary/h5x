@@ -27,10 +27,7 @@ import {
 } from './constants/XFormsBuffer.js';
 import { DIM_ELEMENTS } from './constants/DimBuffer.js';
 import { SUB_IMG_ELEMENTS } from './constants/SubImgBuffer.js';
-import {
-    ELEMENTS_CHUNK,
-    MAX_ELEMENTS
-} from './constants/BaseBuffer.js';
+import { ELEMENTS_CHUNK } from './constants/BaseBuffer.js';
 import {
     renderStore as $,
     assetStore as a$
@@ -44,23 +41,13 @@ import {
     INVALID_INDEX
 } from './constants/BaseECS.js';
 import FontSubImage from '../../code-gen/FontSubImage.js';
-
-export const SPRITE_ELEMENTS = 2;
-export const SPRITE_VERSION_N_STATE_OFFSET = 0;
-export const SPRITE_ANIMS_OFFSET = 1;
-
-// info flags
-export const SPRITE_SCALE_ANIM_FLAG = 0b0000000000000001;
-export const SPRITE_ROT1D_X_ANIM_FLAG = 0b0000000000000010;
-export const SPRITE_ROT1D_Y_ANIM_FLAG = 0b0000000000000100;
-export const SPRITE_ROT1D_Z_ANIM_FLAG = 0b0000000000001000;
-export const SPRITE_COLOR1C_ANIM_FLAG = 0b0000000000010000;
-export const SPRITE_POS_LIN_ANIM_FLAG = 0b0000000000100000;
-export const SPRITE_POS_CUR_ANIM_FLAG = 0b0000000001000000;
-
-
-const SPRITES_LENGTH = MAX_ELEMENTS * SPRITE_ELEMENTS;
-export const SPRITES_BUFFER_SIZE = SPRITES_LENGTH * Uint16Array.BYTES_PER_ELEMENT;
+import {
+    SPRITES_LENGTH,
+    SPRITE_ELEMENTS,
+    SPRITE_VERSION_N_STATE_OFFSET,
+    SPRITE_ANIMS_OFFSET,
+    SPRITE_SCALE_ANIM_FLAG
+} from './constants/SpriteBuffer.js';
 
 /*
  * SPRITE API

@@ -1,4 +1,4 @@
-import {renderStore as $} from '../render/setupWebGL.js';
+import { renderStore as $ } from '../render/setupWebGL.js';
 
 const Gamepads = {
     /** @type {Set<Windows.Gaming.Input.Gamepad>} */

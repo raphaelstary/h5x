@@ -1,4 +1,4 @@
-import Color1CAnimations, {
+import {
     ANIM_COLOR1C_BYTES_PER_ELEMENT,
     ANIM_COLOR1C_CALLBACK_FLAG,
     ANIM_COLOR1C_CB_KEY,
@@ -10,9 +10,7 @@ import Color1CAnimations, {
     ANIM_COLOR1C_START_OFFSET,
     ANIM_COLOR1C_TIMING_N_INFO_OFFSET,
     ANIM_COLOR1C_TO_OFFSET,
-    ANIM_COLOR1C_VERSION_N_STATE_OFFSET
-} from '../render/animations/Color1CAnimations.js';
-import PositionAnimations, {
+    ANIM_COLOR1C_VERSION_N_STATE_OFFSET,
     ANIM_POS_BYTES_PER_ELEMENT,
     ANIM_POS_CALLBACK_FLAG,
     ANIM_POS_CB_KEY,
@@ -28,9 +26,7 @@ import PositionAnimations, {
     ANIM_POS_TO_X_OFFSET,
     ANIM_POS_TO_Y_OFFSET,
     ANIM_POS_TO_Z_OFFSET,
-    ANIM_POS_VERSION_N_STATE_OFFSET
-} from '../render/animations/PositionAnimations.js';
-import PositionCurveAnimations, {
+    ANIM_POS_VERSION_N_STATE_OFFSET,
     ANIM_POSC_A_X_OFFSET,
     ANIM_POSC_A_Y_OFFSET,
     ANIM_POSC_A_Z_OFFSET,
@@ -52,9 +48,7 @@ import PositionCurveAnimations, {
     ANIM_POSC_SPRITE_OFFSET,
     ANIM_POSC_START_OFFSET,
     ANIM_POSC_TIMING_N_INFO_OFFSET,
-    ANIM_POSC_VERSION_N_STATE_OFFSET
-} from '../render/animations/PositionCurveAnimations.js';
-import Rot1DAnimations, {
+    ANIM_POSC_VERSION_N_STATE_OFFSET,
     ANIM_ROT1D_BYTES_PER_ELEMENT,
     ANIM_ROT1D_CALLBACK_FLAG,
     ANIM_ROT1D_CB_KEY,
@@ -69,9 +63,7 @@ import Rot1DAnimations, {
     ANIM_ROT1D_VERSION_N_STATE_OFFSET,
     ANIM_ROT1D_X_FLAG,
     ANIM_ROT1D_Y_FLAG,
-    ANIM_ROT1D_Z_FLAG
-} from '../render/animations/Rot1DAnimations.js';
-import ScaleAnimations, {
+    ANIM_ROT1D_Z_FLAG,
     ANIM_SCALE_BYTES_PER_ELEMENT,
     ANIM_SCALE_CALLBACK_FLAG,
     ANIM_SCALE_CB_KEY,
@@ -84,7 +76,12 @@ import ScaleAnimations, {
     ANIM_SCALE_TIMING_N_INFO_OFFSET,
     ANIM_SCALE_TO_OFFSET,
     ANIM_SCALE_VERSION_N_STATE_OFFSET
-} from '../render/animations/ScaleAnimations.js';
+} from '../render/constants/AnimationBuffer.js';
+import Color1CAnimations from '../render/animations/Color1CAnimations.js';
+import PositionAnimations from '../render/animations/PositionAnimations.js';
+import PositionCurveAnimations from '../render/animations/PositionCurveAnimations.js';
+import Rot1DAnimations from '../render/animations/Rot1DAnimations.js';
+import ScaleAnimations from '../render/animations/ScaleAnimations.js';
 import map, {
     LINEAR,
     nonLinearTransform
@@ -119,7 +116,7 @@ import {
     XFORMS_ROTATION_Z_OFFSET,
     XFORMS_SCALE_OFFSET
 } from '../render/constants/XFormsBuffer.js';
-import {renderStore as $} from '../render/setupWebGL.js';
+import { renderStore as $ } from '../render/setupWebGL.js';
 import FontSubImage from '../../code-gen/FontSubImage.js';
 
 let startTime = Date.now();

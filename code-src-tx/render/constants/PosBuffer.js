@@ -1,4 +1,4 @@
-import {MAX_ELEMENTS} from './BaseBuffer.js';
+import { MAX_ELEMENTS } from './BaseBuffer.js';
 
 export const POS_ELEMENTS = 4;
 export const POS_X_OFFSET = 0;

@@ -5,29 +5,10 @@ import {
     MAX_VERSION,
     INVALID_INDEX
 } from '../constants/BaseECS.js';
-import Sprites, {SPRITE_SCALE_ANIM_FLAG} from '../Sprites.js';
-import {renderStore as $} from '../setupWebGL.js';
-
-const ANIM_SCALE_MAX_ELEMENTS = 1 << 13;
-const ANIM_SCALE_BYTES_PER_ELEMENT = 24;
-const ANIM_SCALE_BUFFER_SIZE = ANIM_SCALE_BYTES_PER_ELEMENT * ANIM_SCALE_MAX_ELEMENTS;
-
-const ANIM_SCALE_VERSION_N_STATE_OFFSET = 0; // 2 byte
-const ANIM_SCALE_TIMING_N_INFO_OFFSET = 2; // 2 byte
-const ANIM_SCALE_SPRITE_OFFSET = 4; // 4 byte
-const ANIM_SCALE_START_OFFSET = 8; // 4 byte
-const ANIM_SCALE_END_OFFSET = 12; // 4 byte
-const ANIM_SCALE_FROM_OFFSET = 16; // 4 byte
-const ANIM_SCALE_TO_OFFSET = 20; // 4 byte
-
-const ANIM_SCALE_INFO_BITS = 2;
-// info flags
-const ANIM_SCALE_CALLBACK_FLAG = 0b0000000000000001;
-const ANIM_SCALE_LOOP_FLAG = 0b0000000000000010;
-
-const ANIM_SCALE_CB_KEY = 'anim-scale-';
-
-export {
+import Sprites from '../Sprites.js';
+import { renderStore as $ } from '../setupWebGL.js';
+import { SPRITE_SCALE_ANIM_FLAG } from '../constants/SpriteBuffer.js';
+import {
     ANIM_SCALE_MAX_ELEMENTS,
     ANIM_SCALE_BYTES_PER_ELEMENT,
     ANIM_SCALE_BUFFER_SIZE,
@@ -42,7 +23,7 @@ export {
     ANIM_SCALE_CALLBACK_FLAG,
     ANIM_SCALE_LOOP_FLAG,
     ANIM_SCALE_CB_KEY
-};
+} from '../constants/AnimationBuffer.js';
 
 const ScaleAnimations = {
     data: new DataView(new ArrayBuffer(ANIM_SCALE_BUFFER_SIZE)),

@@ -1,8 +1,8 @@
-import {POS_ELEMENTS} from './constants/PosBuffer.js';
-import {COLOR_ELEMENTS} from './constants/ColorBuffer.js';
-import {XFORMS_ELEMENTS} from './constants/XFormsBuffer.js';
-import {DIM_ELEMENTS} from './constants/DimBuffer.js';
-import {SUB_IMG_ELEMENTS} from './constants/SubImgBuffer.js';
+import { POS_ELEMENTS } from './constants/PosBuffer.js';
+import { COLOR_ELEMENTS } from './constants/ColorBuffer.js';
+import { XFORMS_ELEMENTS } from './constants/XFormsBuffer.js';
+import { DIM_ELEMENTS } from './constants/DimBuffer.js';
+import { SUB_IMG_ELEMENTS } from './constants/SubImgBuffer.js';
 
 export default class RenderStore {
     constructor(gl, ext, changeFlags, maxElements, frame,

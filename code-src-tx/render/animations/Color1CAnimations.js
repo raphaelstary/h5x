@@ -5,29 +5,10 @@ import {
     MAX_VERSION,
     INVALID_INDEX
 } from '../constants/BaseECS.js';
-import Sprites, {SPRITE_COLOR1C_ANIM_FLAG} from '../Sprites.js';
-import {renderStore as $} from '../setupWebGL.js';
-
-const ANIM_COLOR1C_MAX_ELEMENTS = 1 << 13;
-const ANIM_COLOR1C_BYTES_PER_ELEMENT = 24;
-const ANIM_COLOR1C_BUFFER_SIZE = ANIM_COLOR1C_BYTES_PER_ELEMENT * ANIM_COLOR1C_MAX_ELEMENTS;
-
-const ANIM_COLOR1C_VERSION_N_STATE_OFFSET = 0; // 2 byte
-const ANIM_COLOR1C_TIMING_N_INFO_OFFSET = 2; // 2 byte
-const ANIM_COLOR1C_SPRITE_OFFSET = 4; // 4 byte
-const ANIM_COLOR1C_START_OFFSET = 8; // 4 byte
-const ANIM_COLOR1C_END_OFFSET = 12; // 4 byte
-const ANIM_COLOR1C_FROM_OFFSET = 16; // 4 byte
-const ANIM_COLOR1C_TO_OFFSET = 20; // 4 byte
-
-const ANIM_COLOR1C_INFO_BITS = 2;
-// info flags
-const ANIM_COLOR1C_CALLBACK_FLAG = 0b0000000000000001;
-const ANIM_COLOR1C_LOOP_FLAG = 0b0000000000000010;
-
-const ANIM_COLOR1C_CB_KEY = 'anim-color1c-';
-
-export {
+import Sprites from '../Sprites.js';
+import { renderStore as $ } from '../setupWebGL.js';
+import { SPRITE_COLOR1C_ANIM_FLAG } from '../constants/SpriteBuffer.js';
+import {
     ANIM_COLOR1C_MAX_ELEMENTS,
     ANIM_COLOR1C_BYTES_PER_ELEMENT,
     ANIM_COLOR1C_BUFFER_SIZE,
@@ -42,7 +23,7 @@ export {
     ANIM_COLOR1C_CALLBACK_FLAG,
     ANIM_COLOR1C_LOOP_FLAG,
     ANIM_COLOR1C_CB_KEY
-};
+} from '../constants/AnimationBuffer.js';
 
 const Color1CAnimations = {
     data: new DataView(new ArrayBuffer(ANIM_COLOR1C_BUFFER_SIZE)),

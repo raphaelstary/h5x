@@ -1,4 +1,4 @@
-import {assetStore} from '../render/setupWebGL.js';
+import { assetStore } from '../render/setupWebGL.js';
 
 const ctx = new AudioContext();
 const volume = ctx.createGain();

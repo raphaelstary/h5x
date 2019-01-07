@@ -5,46 +5,10 @@ import {
     MAX_VERSION,
     INVALID_INDEX
 } from '../constants/BaseECS.js';
-import Sprites, {SPRITE_POS_CUR_ANIM_FLAG} from '../Sprites.js';
-import {renderStore as $} from '../setupWebGL.js';
-
-const ANIM_POSC_MAX_ELEMENTS = 1 << 13;
-const ANIM_POSC_BYTES_PER_ELEMENT = 64;
-const ANIM_POSC_BUFFER_SIZE = ANIM_POSC_BYTES_PER_ELEMENT * ANIM_POSC_MAX_ELEMENTS;
-
-const ANIM_POSC_VERSION_N_STATE_OFFSET = 0; // 2 byte
-const ANIM_POSC_TIMING_N_INFO_OFFSET = 2; // 2 byte
-
-const ANIM_POSC_SPRITE_OFFSET = 4; // 4 byte
-
-const ANIM_POSC_START_OFFSET = 8; // 4 byte
-const ANIM_POSC_END_OFFSET = 12; // 4 byte
-
-const ANIM_POSC_A_X_OFFSET = 16; // 4 bytes
-const ANIM_POSC_A_Y_OFFSET = 20; // 4 bytes
-const ANIM_POSC_A_Z_OFFSET = 24; // 4 bytes
-
-const ANIM_POSC_B_X_OFFSET = 28; // 4 bytes
-const ANIM_POSC_B_Y_OFFSET = 32; // 4 bytes
-const ANIM_POSC_B_Z_OFFSET = 36; // 4 bytes
-
-const ANIM_POSC_C_X_OFFSET = 40; // 4 bytes
-const ANIM_POSC_C_Y_OFFSET = 44; // 4 bytes
-const ANIM_POSC_C_Z_OFFSET = 48; // 4 bytes
-
-const ANIM_POSC_D_X_OFFSET = 52; // 4 bytes
-const ANIM_POSC_D_Y_OFFSET = 56; // 4 bytes
-const ANIM_POSC_D_Z_OFFSET = 60; // 4 bytes
-
-
-const ANIM_POSC_INFO_BITS = 2;
-// info flags
-const ANIM_POSC_CALLBACK_FLAG = 0b0000000000000001;
-const ANIM_POSC_LOOP_FLAG = 0b0000000000000010;
-
-const ANIM_POSC_CB_KEY = 'anim-posc-';
-
-export {
+import Sprites from '../Sprites.js';
+import { renderStore as $ } from '../setupWebGL.js';
+import { SPRITE_POS_CUR_ANIM_FLAG } from '../constants/SpriteBuffer.js';
+import {
     ANIM_POSC_MAX_ELEMENTS,
     ANIM_POSC_BYTES_PER_ELEMENT,
     ANIM_POSC_BUFFER_SIZE,
@@ -69,7 +33,7 @@ export {
     ANIM_POSC_CALLBACK_FLAG,
     ANIM_POSC_LOOP_FLAG,
     ANIM_POSC_CB_KEY
-};
+} from '../constants/AnimationBuffer.js';
 
 const PositionCurveAnimations = {
     data: new DataView(new ArrayBuffer(ANIM_POSC_BUFFER_SIZE)),

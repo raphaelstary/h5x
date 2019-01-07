@@ -1,4 +1,4 @@
-import {MAX_ELEMENTS} from './BaseBuffer.js';
+import { MAX_ELEMENTS } from './BaseBuffer.js';
 
 export const COLOR_ELEMENTS = 4;
 export const COLOR_RED_OFFSET = 0;

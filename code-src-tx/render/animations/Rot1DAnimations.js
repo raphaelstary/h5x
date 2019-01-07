@@ -5,34 +5,32 @@ import {
     MAX_VERSION,
     INVALID_INDEX
 } from '../constants/BaseECS.js';
-import Sprites, {
+import Sprites from '../Sprites.js';
+import { renderStore as $ } from '../setupWebGL.js';
+import {
     SPRITE_ROT1D_X_ANIM_FLAG,
     SPRITE_ROT1D_Y_ANIM_FLAG,
     SPRITE_ROT1D_Z_ANIM_FLAG
-} from '../Sprites.js';
-import {renderStore as $} from '../setupWebGL.js';
-
-export const ANIM_ROT1D_MAX_ELEMENTS = 1 << 13;
-export const ANIM_ROT1D_BYTES_PER_ELEMENT = 24;
-export const ANIM_ROT1D_BUFFER_SIZE = ANIM_ROT1D_BYTES_PER_ELEMENT * ANIM_ROT1D_MAX_ELEMENTS;
-
-export const ANIM_ROT1D_VERSION_N_STATE_OFFSET = 0; // 2 byte
-export const ANIM_ROT1D_TIMING_N_INFO_OFFSET = 2; // 2 byte
-export const ANIM_ROT1D_SPRITE_OFFSET = 4; // 4 byte
-export const ANIM_ROT1D_START_OFFSET = 8; // 4 byte
-export const ANIM_ROT1D_END_OFFSET = 12; // 4 byte
-export const ANIM_ROT1D_FROM_OFFSET = 16; // 4 byte
-export const ANIM_ROT1D_TO_OFFSET = 20; // 4 byte
-
-export const ANIM_ROT1D_INFO_BITS = 5;
-// info flags
-export const ANIM_ROT1D_CALLBACK_FLAG = 0b0000000000000001;
-export const ANIM_ROT1D_LOOP_FLAG = 0b0000000000000010;
-export const ANIM_ROT1D_X_FLAG = 0b0000000000000100;
-export const ANIM_ROT1D_Y_FLAG = 0b0000000000001000;
-export const ANIM_ROT1D_Z_FLAG = 0b0000000000010000;
-
-export const ANIM_ROT1D_CB_KEY = 'anim-rot1d-';
+} from '../constants/SpriteBuffer.js';
+import {
+    ANIM_ROT1D_MAX_ELEMENTS,
+    ANIM_ROT1D_BYTES_PER_ELEMENT,
+    ANIM_ROT1D_BUFFER_SIZE,
+    ANIM_ROT1D_VERSION_N_STATE_OFFSET,
+    ANIM_ROT1D_TIMING_N_INFO_OFFSET,
+    ANIM_ROT1D_SPRITE_OFFSET,
+    ANIM_ROT1D_START_OFFSET,
+    ANIM_ROT1D_END_OFFSET,
+    ANIM_ROT1D_FROM_OFFSET,
+    ANIM_ROT1D_TO_OFFSET,
+    ANIM_ROT1D_INFO_BITS,
+    ANIM_ROT1D_CALLBACK_FLAG,
+    ANIM_ROT1D_LOOP_FLAG,
+    ANIM_ROT1D_X_FLAG,
+    ANIM_ROT1D_Y_FLAG,
+    ANIM_ROT1D_Z_FLAG,
+    ANIM_ROT1D_CB_KEY
+} from '../constants/AnimationBuffer.js';
 
 const Rot1DAnimations = {
     data: new DataView(new ArrayBuffer(ANIM_ROT1D_BUFFER_SIZE)),

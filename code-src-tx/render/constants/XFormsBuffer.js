@@ -1,4 +1,4 @@
-import {MAX_ELEMENTS} from './BaseBuffer.js';
+import { MAX_ELEMENTS } from './BaseBuffer.js';
 
 export const XFORMS_ELEMENTS = 4;
 export const XFORMS_ROTATION_X_OFFSET = 0;

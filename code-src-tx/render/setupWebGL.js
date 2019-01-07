@@ -1,12 +1,13 @@
 import AssetStore from '../net/AssetStore.js';
 import RenderStore from './RenderStore.js';
-import {ANIM_COLOR1C_BUFFER_SIZE} from './animations/Color1CAnimations.js';
-import {ANIM_POS_BUFFER_SIZE} from './animations/PositionAnimations.js';
-import {ANIM_POSC_BUFFER_SIZE} from './animations/PositionCurveAnimations.js';
-import {ANIM_ROT1D_BUFFER_SIZE} from './animations/Rot1DAnimations.js';
-import {ANIM_SCALE_BUFFER_SIZE} from './animations/ScaleAnimations.js';
-import Sprites, {SPRITES_BUFFER_SIZE} from './Sprites.js';
-import {NO_CHANGES} from './constants/ChangeFlag.js';
+import {
+    ANIM_COLOR1C_BUFFER_SIZE,
+    ANIM_POS_BUFFER_SIZE,
+    ANIM_POSC_BUFFER_SIZE,
+    ANIM_ROT1D_BUFFER_SIZE,
+    ANIM_SCALE_BUFFER_SIZE
+} from './constants/AnimationBuffer.js';
+import { NO_CHANGES } from './constants/ChangeFlag.js';
 import fragmentShaderSrc from './shader/SpriteFragmentShader.js';
 import vertexShaderSrc from './shader/SpriteVertexShader.js';
 import {
@@ -29,7 +30,8 @@ import {
     SUB_IMG_BUFFER_SIZE,
     SUB_IMG_ELEMENTS
 } from './constants/SubImgBuffer.js';
-import {ELEMENTS_CHUNK} from './constants/BaseBuffer.js';
+import { ELEMENTS_CHUNK } from './constants/BaseBuffer.js';
+import { SPRITES_LENGTH } from './constants/SpriteBuffer.js';
 
 export const assetStore = new AssetStore();
 
@@ -54,9 +56,6 @@ export function processAssets([, baseSubImageBuffer, img_0, img_1, spriteDimensi
 
     gl.activeTexture(gl.TEXTURE1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img_1);
-
-    const fpsTxt = Sprites.createDebugText('00 fps', 7.5, -4.2, -4.5);
-    const msTxt = Sprites.createDebugText('00  ms', 7.5, -4.4, -4.5);
 }
 
 /**
@@ -290,7 +289,7 @@ export const renderStore = new RenderStore(gl, ext, NO_CHANGES, ELEMENTS_CHUNK, 
 renderStore.resizeTypedViews();
 
 
-console.log(`sprite store size: ${(SPRITES_BUFFER_SIZE / 1024).toFixed(2)} kb`);
+console.log(`sprite store size: ${(SPRITES_LENGTH * Uint16Array.BYTES_PER_ELEMENT / 1024).toFixed(2)} kb`);
 
 const totalSizeAnimBuffers = ANIM_SCALE_BUFFER_SIZE + ANIM_ROT1D_BUFFER_SIZE + ANIM_COLOR1C_BUFFER_SIZE + ANIM_POS_BUFFER_SIZE + ANIM_POSC_BUFFER_SIZE;
 console.log(`animation system buffer size (excl. callback function pointers): ${(totalSizeAnimBuffers / 1024 / 1024).toFixed(2)} mb`);
