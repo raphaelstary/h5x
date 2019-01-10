@@ -35,6 +35,31 @@ const player = {
 
 export default function runMyScenes() {
 
+    Sprites.create(SubImages.CURSOR_CYAN, -16, 9, -9);
+    Sprites.create(SubImages.CURSOR_CYAN, 8, 4.5, -4.5);
+    Sprites.create(SubImages.CURSOR_CYAN, 4, -2.25, -2.25);
+    Sprites.create(SubImages.CURSOR_CYAN, -1.7778, -1, -1);
+
+    Sprites.create(SubImages.CURSOR_GREEN, 4, 2.25, -4.5);
+    Sprites.create(SubImages.CURSOR_GREEN, 2, 1.125, -2.25);
+
+    const aim = {
+        x: - 1.5,
+        y: 0.8,
+        z: -2
+    };
+
+    let z = -9;
+    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x / aim.z * z, aim.y / aim.z * z, z);
+    z = -6.25;
+    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x / aim.z * z, aim.y / aim.z * z, z);
+    z = -5;
+    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x / aim.z * z, aim.y / aim.z * z, z);
+    z = -3.75;
+    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x / aim.z * z, aim.y / aim.z * z, z);
+
+    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x, aim.y, aim.z);
+
     const cursor = Sprites.create(SubImages.CURSOR_MAGENTA, player.x, player.y, -2);
     cursorIdx = cursor >> VERSION_BITS;
 

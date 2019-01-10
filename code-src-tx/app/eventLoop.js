@@ -121,9 +121,9 @@ import FontSubImage from '../../code-gen/FontSubImage.js';
 
 let startTime = Date.now();
 let prevTime = startTime;
-let ms = 0;
-let fps = 0;
-let fpsFrameCounter = 0;
+let msMax = 0;
+let fpsMin = 99;
+let meterFrameCounter = 0;
 
 /*
  * EVENT LOOP
@@ -473,25 +473,31 @@ export default function eventLoop(handleInput) {
     {
         const time = Date.now();
 
-        ms = time - startTime;
-        // msMin = Math.min(msMin, ms);
-        // msMax = Math.max(msMax, ms);
+        const ms = time - startTime;
+        msMax = Math.max(msMax, ms);
 
-        if (ms < 100) {
-            Sprites.setSubImage(5, FontSubImage.get(Math.floor(ms / 10)));
-            Sprites.setSubImage(6, FontSubImage.get(ms % 10));
-        } else {
-            Sprites.setSubImage(5, FontSubImage.get('X'));
-            Sprites.setSubImage(6, FontSubImage.get('X'));
-        }
-
-        fpsFrameCounter++;
+        meterFrameCounter++;
 
         if (time > prevTime + 1000) {
 
-            fps = Math.round(fpsFrameCounter * 1000 / (time - prevTime));
-            // fpsMin = Math.min(fpsMin, fps);
-            // fpsMax = Math.max(fpsMax, fps);
+            if (ms < 100) {
+                Sprites.setSubImage(5, FontSubImage.get(Math.floor(ms / 10)));
+                Sprites.setSubImage(6, FontSubImage.get(ms % 10));
+            } else {
+                Sprites.setSubImage(5, FontSubImage.get('X'));
+                Sprites.setSubImage(6, FontSubImage.get('X'));
+            }
+
+            if (msMax < 100) {
+                Sprites.setSubImage(34, FontSubImage.get(Math.floor(msMax / 10)));
+                Sprites.setSubImage(35, FontSubImage.get(msMax % 10));
+            } else {
+                Sprites.setSubImage(34, FontSubImage.get('X'));
+                Sprites.setSubImage(35, FontSubImage.get('X'));
+            }
+
+            const fps = Math.round(meterFrameCounter * 1000 / (time - prevTime));
+            fpsMin = Math.min(fpsMin, fps);
 
             if (fps < 100) {
                 Sprites.setSubImage(0, FontSubImage.get(Math.floor(fps / 10)));
@@ -501,8 +507,20 @@ export default function eventLoop(handleInput) {
                 Sprites.setSubImage(1, FontSubImage.get('X'));
             }
 
+            if (fpsMin < 100) {
+                Sprites.setSubImage(29, FontSubImage.get(Math.floor(fpsMin / 10)));
+                Sprites.setSubImage(30, FontSubImage.get(fpsMin % 10));
+            } else {
+                Sprites.setSubImage(29, FontSubImage.get('X'));
+                Sprites.setSubImage(30, FontSubImage.get('X'));
+            }
+
             prevTime = time;
-            fpsFrameCounter = 0;
+            meterFrameCounter = 0;
+            if ($.frame % 10 * 60 == 0) {
+                fpsMin = fps;
+                msMax = ms;
+            }
         }
     }
 }
