@@ -14,76 +14,63 @@ const CursorBorder = {
     RIGHT: 3.55
 };
 
-const ScreenPosition = {
-    CENTER: { x: 0, y: 0 },
-    TOP_LEFT: { x: -3.55, y: 2 },
-    TOP_RIGHT: { x: 3.55, y: 2 },
-    BOTTOM_LEFT: { x: -3.55, y: -2 },
-    BOTTOM_RIGHT: { x: 3.55, y: -2 }
-};
-
-let cursorIdx;
-
 const player = {
-    x: ScreenPosition.CENTER.x,
-    y: ScreenPosition.CENTER.y,
+    x: 0,
+    y: 0,
     forceX: 0,
     forceY: 0,
     magnitudeSq: 0,
-    changed: false
+    forceChanged: false,
+    spriteId: 0,
+    spriteIdx: 0,
+    shoot: false
 };
+
+class Card {
+    constructor(x, y, z, spriteId, name) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.left = x / z * -2 - Sprites.getWidthHalf(spriteId >> VERSION_BITS) / z * -2;
+        this.top = y / z * -2 - Sprites.getHeightHalf(spriteId >> VERSION_BITS) / z * -2;
+        this.right = x / z * -2 + Sprites.getWidthHalf(spriteId >> VERSION_BITS) / z * -2;
+        this.bottom = y / z * -2 + Sprites.getHeightHalf(spriteId >> VERSION_BITS) / z * -2;
+        this.spriteId = spriteId;
+        this.spriteIdx = spriteId >> VERSION_BITS;
+    }
+}
+
+/** @type {Array<Card>} */
+const cards = [];
 
 export default function runMyScenes() {
 
-    Sprites.create(SubImages.CURSOR_CYAN, -16, 9, -9);
-    Sprites.create(SubImages.CURSOR_CYAN, 8, 4.5, -4.5);
-    Sprites.create(SubImages.CURSOR_CYAN, 4, -2.25, -2.25);
-    Sprites.create(SubImages.CURSOR_CYAN, -1.7778, -1, -1);
+    player.spriteId = Sprites.create(SubImages.CURSOR_MAGENTA, player.x, player.y, -2);
+    player.spriteIdx = player.spriteId >> VERSION_BITS;
 
-    Sprites.create(SubImages.CURSOR_GREEN, 4, 2.25, -4.5);
-    Sprites.create(SubImages.CURSOR_GREEN, 2, 1.125, -2.25);
+    cards.push(
+        //new Card(0, -1, -2.5, Sprites.create(SubImages.CARD_C6, 0, -1, -2.5), 'c6'),
 
-    const aim = {
-        x: - 1.5,
-        y: 0.8,
-        z: -2
-    };
+        //new Card(-1, -1, -2.5, Sprites.create(SubImages.CARD_C10, -1, -1, -2.5), 'c10'),
+        //new Card(1, -1, -2.5, Sprites.create(SubImages.CARD_DJ, 1, -1, -2.5), 'dj'),
 
-    let z = -9;
-    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x / aim.z * z, aim.y / aim.z * z, z);
-    z = -6.25;
-    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x / aim.z * z, aim.y / aim.z * z, z);
-    z = -5;
-    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x / aim.z * z, aim.y / aim.z * z, z);
-    z = -3.75;
-    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x / aim.z * z, aim.y / aim.z * z, z);
+        //new Card(-2, -1, -2.5, Sprites.create(SubImages.CARD_HQ, -2, -1, -2.5), 'hq'),
+        //new Card(0, -1, -2.5, Sprites.create(SubImages.CARD_D7, 0, -1, -2.5), 'd7'),
+        //new Card(2, -1, -2.5, Sprites.create(SubImages.CARD_SK, 2, -1, -2.5), 'sk'),
 
-    Sprites.create(SubImages.CURSOR_MAGENTA, aim.x, aim.y, aim.z);
-
-    const cursor = Sprites.create(SubImages.CURSOR_MAGENTA, player.x, player.y, -2);
-    cursorIdx = cursor >> VERSION_BITS;
-
-    Sprites.create(SubImages.CARD_C6, 0, -1, -2.5);
-
-    Sprites.create(SubImages.CARD_C6, -1, -1, -2.5);
-    Sprites.create(SubImages.CARD_C6, 1, -1, -2.5);
-
-    Sprites.create(SubImages.CARD_C6, -2, -1, -2.5);
-    Sprites.create(SubImages.CARD_C6, 0, -1, -2.5);
-    Sprites.create(SubImages.CARD_C6, 2, -1, -2.5);
-
-    Sprites.create(SubImages.CARD_C6, -1, -1, -2.5);
-    Sprites.create(SubImages.CARD_C6, 1, -1, -2.5);
-    Sprites.create(SubImages.CARD_C6, 3.2, -0.9, -3);
-    Sprites.create(SubImages.CARD_C6, -4, 1.5, -3);
-    Sprites.create(SubImages.CARD_C6, 3, 1, -4);
+        new Card(-1, -1, -2.5, Sprites.create(SubImages.CARD_SA, -1, -1, -2.5), 'sa'),
+        new Card(1, -1, -2.5, Sprites.create(SubImages.CARD_CQ, 1, -1, -2.5), 'cq'),
+        new Card(3.2, -0.9, -3, Sprites.create(SubImages.CARD_C7, 3.2, -0.9, -3), 'c7'),
+        new Card(-4, 1.5, -3, Sprites.create(SubImages.CARD_H5, -4, 1.5, -3), 'h5'),
+        new Card(3, 1, -4, Sprites.create(SubImages.CARD_D2, 3, 1, -4), 'd2')
+    );
 }
 
 //////////////////
 // handle input //
 //////////////////
 
-const DEAD_ZONE = 0.2;
 const DEAD_ZONE_SQ = 0.04;
 const MAGIC_NUMBER = 0.6;
 
@@ -120,11 +107,11 @@ export function handleInput() {
         Sprites.setSubImage(18, FontSubImage.get(yAxis % 100 % 10));
 
         if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.a)) {
-            console.log(`a gamepad pressed A button`);
             //Gamepads.vibrate(gamepad, info, heartBeatFrames);
+            player.shoot = true;
 
         } else if (Gamepads.buttonReleased(newReading, info.oldReading, GamepadButtons.a)) {
-            console.log(`a gamepad released A button`);
+            //console.log(`a gamepad released A button`);
         }
 
         if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.y)) {
@@ -132,7 +119,11 @@ export function handleInput() {
         }
 
         {
-            {
+            if (newReading.leftThumbstickX != info.oldReading.leftThumbstickX ||
+                newReading.leftThumbstickY != info.oldReading.leftThumbstickY ||
+                newReading.rightThumbstickX != info.oldReading.rightThumbstickX ||
+                newReading.rightThumbstickY != info.oldReading.rightThumbstickY) {
+
                 const magnitudeSq = newReading.leftThumbstickX * newReading.leftThumbstickX + newReading.leftThumbstickY * newReading.leftThumbstickY;
                 if (magnitudeSq < DEAD_ZONE_SQ) {
                     //player.forceX = 0;
@@ -146,12 +137,12 @@ export function handleInput() {
                             player.forceX = 0;
                             player.forceY = 0;
                             player.magnitudeSq = 0;
-                            player.changed = true;
+                            player.forceChanged = true;
                         } else {
                             player.forceX = newReading.rightThumbstickX / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
                             player.forceY = newReading.rightThumbstickY / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
                             player.magnitudeSq = magnitudeSq;
-                            player.changed = true;
+                            player.forceChanged = true;
                         }
                     }
 
@@ -159,7 +150,7 @@ export function handleInput() {
                     player.forceX = newReading.leftThumbstickX / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
                     player.forceY = newReading.leftThumbstickY / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
                     player.magnitudeSq = magnitudeSq;
-                    player.changed = true;
+                    player.forceChanged = true;
                 }
 
                 if (player.forceX <= 0) {
@@ -200,8 +191,8 @@ export function handleInput() {
             }
         }
 
-        if (player.changed) {
-            player.changed = false;
+        if (player.forceChanged) {
+            player.forceChanged = false;
 
             if ((newReading.buttons & GamepadButtons.leftShoulder) == GamepadButtons.leftShoulder ||
                 (newReading.buttons & GamepadButtons.rightShoulder) == GamepadButtons.rightShoulder) {
@@ -231,8 +222,21 @@ export function handleInput() {
                 player.y = CursorBorder.TOP;
             }
 
-            Sprites.setX(cursorIdx, player.x);
-            Sprites.setY(cursorIdx, player.y);
+            if (player.spriteIdx != 0) {
+                Sprites.setX(player.spriteIdx, player.x);
+                Sprites.setY(player.spriteIdx, player.y);
+            }
+        }
+
+        if (player.shoot) {
+            player.shoot = false;
+            for (let i = 0; i < cards.length; i++) {
+                const card = cards[i];
+                if (player.x > card.left && player.x < card.right && player.y > card.top && player.y < card.bottom) {
+                    Sprites.setAlpha(card.spriteIdx, Sprites.getAlpha(card.spriteIdx) - 0.1);
+                    break;
+                }
+            }
         }
 
         info.oldReading = newReading;
