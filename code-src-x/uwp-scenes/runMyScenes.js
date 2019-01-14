@@ -1,8 +1,8 @@
 import * as SubImages from '../../code-gen/SubImage.js';
-import Sprites from '../render/Sprites.js';
-import { VERSION_BITS } from '../render/constants/BaseECS.js';
-import Gamepads from '../uwp-input/Gamepads.js';
-import { renderStore } from '../render/setupWebGL.js';
+import Sprites from '../../code-src-h5x/render/Sprites.js';
+import { VERSION_BITS } from '../../code-src-h5x/render/constants/BaseECS.js';
+import Gamepads from '../../code-src-h5x/uwp-input/Gamepads.js';
+import { renderStore } from '../../code-src-h5x/render/setupWebGL.js';
 import FontSubImage from '../../code-gen/FontSubImage.js';
 
 const GamepadButtons = Windows.Gaming.Input.GamepadButtons;
@@ -20,10 +20,8 @@ const player = {
     forceX: 0,
     forceY: 0,
     magnitudeSq: 0,
-    forceChanged: false,
     spriteId: 0,
     spriteIdx: 0,
-    shoot: false
 };
 
 class Card {
@@ -106,94 +104,56 @@ export function handleInput() {
         Sprites.setSubImage(17, FontSubImage.get(Math.floor(yAxis / 10) % 10));
         Sprites.setSubImage(18, FontSubImage.get(yAxis % 100 % 10));
 
-        if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.a)) {
-            //Gamepads.vibrate(gamepad, info, heartBeatFrames);
-            player.shoot = true;
+        {
+            const magnitudeSq = newReading.leftThumbstickX * newReading.leftThumbstickX + newReading.leftThumbstickY * newReading.leftThumbstickY;
+            if (magnitudeSq < DEAD_ZONE_SQ) {
+                //player.forceX = 0;
+                //player.forceY = 0;
+                //player.magnitudeSq = 0;
+                //player.changed = true;
 
-        } else if (Gamepads.buttonReleased(newReading, info.oldReading, GamepadButtons.a)) {
-            //console.log(`a gamepad released A button`);
+                {
+                    const magnitudeSq = newReading.rightThumbstickX * newReading.rightThumbstickX + newReading.rightThumbstickY * newReading.rightThumbstickY;
+                    if (magnitudeSq < DEAD_ZONE_SQ) {
+                        player.forceX = 0;
+                        player.forceY = 0;
+                        player.magnitudeSq = 0;
+                    } else {
+                        player.forceX = newReading.rightThumbstickX / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
+                        player.forceY = newReading.rightThumbstickY / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
+                        player.magnitudeSq = magnitudeSq;
+                    }
+                }
+
+            } else {
+                player.forceX = newReading.leftThumbstickX / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
+                player.forceY = newReading.leftThumbstickY / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
+                player.magnitudeSq = magnitudeSq;
+            }
+
+            if (player.forceX <= 0) {
+                Sprites.setZ(19, 1.0);
+            } else {
+                Sprites.setZ(19, -4.5);
+            }
+            const fX = Math.floor(Math.abs(player.forceX * 100));
+            Sprites.setSubImage(20, FontSubImage.get(Math.floor(fX / 100)));
+            Sprites.setSubImage(22, FontSubImage.get(Math.floor(fX / 10) % 10));
+            Sprites.setSubImage(23, FontSubImage.get(fX % 100 % 10));
+
+            if (player.forceY <= 0) {
+                Sprites.setZ(24, 1.0);
+            } else {
+                Sprites.setZ(24, -4.5);
+            }
+            const fY = Math.floor(Math.abs(player.forceY * 100));
+            Sprites.setSubImage(25, FontSubImage.get(Math.floor(fY / 100)));
+            Sprites.setSubImage(27, FontSubImage.get(Math.floor(fY / 10) % 10));
+            Sprites.setSubImage(28, FontSubImage.get(fY % 100 % 10));
         }
 
-        if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.y)) {
-            //signIn(gamepad);
-        }
 
         {
-            if (newReading.leftThumbstickX != info.oldReading.leftThumbstickX ||
-                newReading.leftThumbstickY != info.oldReading.leftThumbstickY ||
-                newReading.rightThumbstickX != info.oldReading.rightThumbstickX ||
-                newReading.rightThumbstickY != info.oldReading.rightThumbstickY) {
-
-                const magnitudeSq = newReading.leftThumbstickX * newReading.leftThumbstickX + newReading.leftThumbstickY * newReading.leftThumbstickY;
-                if (magnitudeSq < DEAD_ZONE_SQ) {
-                    //player.forceX = 0;
-                    //player.forceY = 0;
-                    //player.magnitudeSq = 0;
-                    //player.changed = true;
-
-                    {
-                        const magnitudeSq = newReading.rightThumbstickX * newReading.rightThumbstickX + newReading.rightThumbstickY * newReading.rightThumbstickY;
-                        if (magnitudeSq < DEAD_ZONE_SQ) {
-                            player.forceX = 0;
-                            player.forceY = 0;
-                            player.magnitudeSq = 0;
-                            player.forceChanged = true;
-                        } else {
-                            player.forceX = newReading.rightThumbstickX / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
-                            player.forceY = newReading.rightThumbstickY / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
-                            player.magnitudeSq = magnitudeSq;
-                            player.forceChanged = true;
-                        }
-                    }
-
-                } else {
-                    player.forceX = newReading.leftThumbstickX / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
-                    player.forceY = newReading.leftThumbstickY / magnitudeSq * ((magnitudeSq - DEAD_ZONE_SQ) / (1 - DEAD_ZONE_SQ));
-                    player.magnitudeSq = magnitudeSq;
-                    player.forceChanged = true;
-                }
-
-                if (player.forceX <= 0) {
-                    Sprites.setZ(19, 1.0);
-                } else {
-                    Sprites.setZ(19, -4.5);
-                }
-                const fX = Math.floor(Math.abs(player.forceX * 100));
-                Sprites.setSubImage(20, FontSubImage.get(Math.floor(fX / 100)));
-                Sprites.setSubImage(22, FontSubImage.get(Math.floor(fX / 10) % 10));
-                Sprites.setSubImage(23, FontSubImage.get(fX % 100 % 10));
-
-                if (player.forceY <= 0) {
-                    Sprites.setZ(24, 1.0);
-                } else {
-                    Sprites.setZ(24, -4.5);
-                }
-                const fY = Math.floor(Math.abs(player.forceY * 100));
-                Sprites.setSubImage(25, FontSubImage.get(Math.floor(fY / 100)));
-                Sprites.setSubImage(27, FontSubImage.get(Math.floor(fY / 10) % 10));
-                Sprites.setSubImage(28, FontSubImage.get(fY % 100 % 10));
-            }
-        }
-
-        if (info.isVibrating) {
-            const vibration = info.vibration;
-            if (renderStore.frame == vibration.nextTimeFrame) {
-                vibration.currentFrame++;
-
-                if (vibration.currentFrame < vibration.frames.length) {
-                    const keyframe = vibration.frames[vibration.currentFrame];
-                    vibration.nextTimeFrame = renderStore.frame + keyframe.duration;
-                    gamepad.vibration = keyframe.vibration;
-
-                } else {
-                    info.isVibrating = false;
-                }
-            }
-        }
-
-        if (player.forceChanged) {
-            player.forceChanged = false;
-
             if ((newReading.buttons & GamepadButtons.leftShoulder) == GamepadButtons.leftShoulder ||
                 (newReading.buttons & GamepadButtons.rightShoulder) == GamepadButtons.rightShoulder) {
                 player.x += player.forceX * FORCE_BIG;
@@ -228,13 +188,39 @@ export function handleInput() {
             }
         }
 
-        if (player.shoot) {
-            player.shoot = false;
-            for (let i = 0; i < cards.length; i++) {
-                const card = cards[i];
-                if (player.x > card.left && player.x < card.right && player.y > card.top && player.y < card.bottom) {
-                    Sprites.setAlpha(card.spriteIdx, Sprites.getAlpha(card.spriteIdx) - 0.1);
-                    break;
+
+        if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.a)) {
+            //Gamepads.vibrate(gamepad, info, heartBeatFrames);
+            {
+                for (let i = 0; i < cards.length; i++) {
+                    const card = cards[i];
+                    if (player.x > card.left && player.x < card.right && player.y > card.top && player.y < card.bottom) {
+                        Sprites.setAlpha(card.spriteIdx, Sprites.getAlpha(card.spriteIdx) - 0.1);
+                        break;
+                    }
+                }
+            }
+
+        } else if (Gamepads.buttonReleased(newReading, info.oldReading, GamepadButtons.a)) {
+            //console.log(`a gamepad released A button`);
+        }
+
+        if (Gamepads.buttonPressed(newReading, info.oldReading, GamepadButtons.y)) {
+            //signIn(gamepad);
+        }
+
+        if (info.isVibrating) {
+            const vibration = info.vibration;
+            if (renderStore.frame == vibration.nextTimeFrame) {
+                vibration.currentFrame++;
+
+                if (vibration.currentFrame < vibration.frames.length) {
+                    const keyframe = vibration.frames[vibration.currentFrame];
+                    vibration.nextTimeFrame = renderStore.frame + keyframe.duration;
+                    gamepad.vibration = keyframe.vibration;
+
+                } else {
+                    info.isVibrating = false;
                 }
             }
         }

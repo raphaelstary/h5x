@@ -1,20 +1,20 @@
 import FontSubImage from '../../code-gen/FontSubImage.js';
 import * as SubImage from '../../code-gen/SubImage.js';
 import * as SFXSegment from '../../code-gen/SFXSegment.js';
-import { DIM_ELEMENTS } from '../render/constants/DimBuffer.js';
+import { DIM_ELEMENTS } from '../../code-src-h5x/render/constants/DimBuffer.js';
 import {
     assetStore as a$,
     addAvatarAtlas
-} from '../render/setupWebGL.js';
-import Audio from '../audio/Audio.js';
-import { VERSION_BITS } from '../render/constants/BaseECS.js';
-import Sprites from '../render/Sprites.js';
-import Rot1DAnimations from '../render/animations/Rot1DAnimations.js';
-import { ANIM_ROT1D_Y_FLAG } from '../render/constants/AnimationBuffer.js';
-import PositionCurveAnimations from '../render/animations/PositionCurveAnimations.js';
-import { LINEAR } from '../render/animations/Transform.js';
-import { loadAvatars } from '../net/loadAssets.js';
-import createAtlas from '../platform/createAtlas.js';
+} from '../../code-src-h5x/render/setupWebGL.js';
+import Audio from '../../code-src-h5x/audio/Audio.js';
+import { VERSION_BITS } from '../../code-src-h5x/render/constants/BaseECS.js';
+import Sprites from '../../code-src-h5x/render/Sprites.js';
+import Rot1DAnimations from '../../code-src-h5x/render/animations/Rot1DAnimations.js';
+import { ANIM_ROT1D_Y_FLAG } from '../../code-src-h5x/render/constants/AnimationBuffer.js';
+import PositionCurveAnimations from '../../code-src-h5x/render/animations/PositionCurveAnimations.js';
+import { LINEAR } from '../../code-src-h5x/render/animations/Transform.js';
+import { loadAvatars } from '../../code-src-h5x/net/loadAssets.js';
+import createAtlas from '../../code-src-h5x/platform/createAtlas.js';
 
 export default function runTestScene() {
     const a_x = -0.1;

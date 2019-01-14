@@ -1,10 +1,10 @@
-import loadAssets from './net/loadAssets.js';
-import { processAssets } from './render/setupWebGL.js';
-import eventLoop from './app/eventLoop.js';
-import handleInput from './web/handleGamepads.js';
-import runMyScenes from './web/runMyScenes.js';
-import './web-input/setupGamepadHandling.js';
-import Sprites from './render/Sprites.js';
+import loadAssets from '../code-src-h5x/net/loadAssets.js';
+import { processAssets } from '../code-src-h5x/render/setupWebGL.js';
+import eventLoop from '../code-src-h5x/app/eventLoop.js';
+import handleInput from '../code-src-h5x/web/handleGamepads.js';
+import runMyScenes from './web-scenes/runMyScenes.js';
+import '../code-src-h5x/web-input/setupGamepadHandling.js';
+import Sprites from '../code-src-h5x/render/Sprites.js';
 
 
 loadAssets.then(processAssets).then(() => {

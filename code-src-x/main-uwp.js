@@ -1,9 +1,9 @@
-import eventLoop from './app/eventLoop.js';
-import loadAssets from './net/loadAssets.js';
-import runMyScenes, { handleInput } from './uwp/runMyScenes.js';
-import { processAssets } from './render/setupWebGL.js';
-import './uwp/setupUWP.js';
-import Sprites from './render/Sprites.js';
+import eventLoop from '../code-src-h5x/app/eventLoop.js';
+import loadAssets from '../code-src-h5x/net/loadAssets.js';
+import runMyScenes, { handleInput } from './uwp-scenes/runMyScenes.js';
+import { processAssets } from '../code-src-h5x/render/setupWebGL.js';
+import '../code-src-h5x/uwp/setupUWP.js';
+import Sprites from '../code-src-h5x/render/Sprites.js';
 
 loadAssets.then(processAssets).then(() => {
 
