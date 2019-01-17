@@ -462,7 +462,7 @@ export default function eventLoop(handleInput) {
 
         $.changeFlags = NO_CHANGES;
 
-        $.gl.clearColor(1.0, 0.0, 1.0, 1.0);
+        $.gl.clearColor(24/255, 110/255, 97/255, 0.0);
         $.gl.clearDepth(1.0);
         $.gl.clear($.gl.COLOR_BUFFER_BIT | $.gl.DEPTH_BUFFER_BIT);
 
