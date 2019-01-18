@@ -145,8 +145,8 @@ gl.useProgram(program);
 /*
  * VIEW CONSTANTS
  */
-const WIDTH = 16;
-const HEIGHT = 9;
+const WIDTH = window.screenWidth || 16;
+const HEIGHT = window.screenHeight || 9;
 const Z_NEAR = 0.1;
 const Z_FAR = 10.0;
 
