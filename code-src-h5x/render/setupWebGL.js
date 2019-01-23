@@ -56,6 +56,9 @@ export function processAssets([, baseSubImageBuffer, img_0, img_1, spriteDimensi
 
     gl.activeTexture(gl.TEXTURE1);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img_1);
+
+    gl.activeTexture(gl.TEXTURE2);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img_1);
 }
 
 /**
@@ -68,8 +71,8 @@ export function addAvatarAtlas(atlas, info) {
 
     console.log(`dynamic texture atlas back buffer size: ${(atlas.width * atlas.height * 4 / 1024 / 1024).toFixed(2)} mb`);
 
-    const HEIGHT_8K = 4320;
-    const WORLD_SPACE_FACTOR = 9;
+    const DEFAULT_REZ_HEIGHT = 1080;
+    const WORLD_SPACE_FACTOR = HEIGHT;
     const AVATAR_SLOTS = 8;
 
     const DIMENSION_ELEMENTS = 4;
@@ -81,8 +84,8 @@ export function addAvatarAtlas(atlas, info) {
         const q = i + BUFFER_OFFSET;
 
         const k = q * DIMENSION_ELEMENTS;
-        assetStore.spriteDimensions[k] = frame.width / 2 / HEIGHT_8K * WORLD_SPACE_FACTOR;
-        assetStore.spriteDimensions[k + 1] = frame.height / 2 / HEIGHT_8K * WORLD_SPACE_FACTOR;
+        assetStore.spriteDimensions[k] = frame.width / 2 / DEFAULT_REZ_HEIGHT * WORLD_SPACE_FACTOR;
+        assetStore.spriteDimensions[k + 1] = frame.height / 2 / DEFAULT_REZ_HEIGHT * WORLD_SPACE_FACTOR;
         assetStore.spriteDimensions[k + 2] = 0;
         assetStore.spriteDimensions[k + 3] = 0;
 
@@ -98,7 +101,47 @@ export function addAvatarAtlas(atlas, info) {
     }
 }
 
+const WIDTH = window.screenWidth || 16;
+const HEIGHT = window.screenHeight || 9;
+
+function mapToWideScreen(width, height) {
+    if (width * (HEIGHT / WIDTH) > height) {
+        return {width: Math.floor(height * (WIDTH / HEIGHT)), height};
+    }
+    return {width, height: Math.floor(width * (HEIGHT / WIDTH))};
+}
+
+function resizeScreen(width, height, init) {
+    if (window.devicePixelRatio > 1) {
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+        const canvasWidth = Math.floor(width * window.devicePixelRatio);
+        const canvasHeight = Math.floor(height * window.devicePixelRatio);
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+        if (!init) {
+            // could also use gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+            gl.viewport(0, 0, canvasWidth, canvasHeight);
+        }
+    } else {
+        canvas.width = width;
+        canvas.height = height;
+        if (!init) {
+            // could also use gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+            gl.viewport(0, 0, width, height);
+        }
+    }
+}
+
 const canvas = document.getElementById('screen');
+const {width, height} = mapToWideScreen(window.innerWidth, window.innerHeight);
+resizeScreen(width, height, true);
+
+window.addEventListener('resize', (event) => {
+    const {width, height} = mapToWideScreen(event.target.innerWidth, event.target.innerHeight);
+    resizeScreen(width, height);
+});
+
 const gl = canvas.getContext('webgl', {alpha: false});
 const ext = gl.getExtension('ANGLE_instanced_arrays');
 
@@ -145,8 +188,6 @@ gl.useProgram(program);
 /*
  * VIEW CONSTANTS
  */
-const WIDTH = window.screenWidth || 16;
-const HEIGHT = window.screenHeight || 9;
 const Z_NEAR = 0.1;
 const Z_FAR = 10.0;
 

@@ -40,7 +40,7 @@ import {
     ACTIVE_FLAG,
     INVALID_INDEX
 } from './constants/BaseECS.js';
-import FontSubImage from '../../code-gen/FontSubImage.js';
+/* global FontSubImage */
 import {
     SPRITES_LENGTH,
     SPRITE_ELEMENTS,
