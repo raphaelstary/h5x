@@ -128,16 +128,16 @@ let meterFrameCounter = 0;
 /*
  * EVENT LOOP
  */
-export default function eventLoop(handleInput) {
-    requestAnimationFrame(eventLoop.bind(undefined, handleInput));
+export default function eventLoop(updateFunctions) {
+    requestAnimationFrame(eventLoop.bind(undefined, updateFunctions));
 
     // fps meter start frame
     {
         startTime = Date.now();
     }
 
-    // capture gamepad input
-    handleInput();
+    // capture gamepad input et al.
+    updateFunctions.forEach(fn => fn());
 
     // animate frame
     {

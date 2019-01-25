@@ -32,6 +32,7 @@ import {
 } from './constants/SubImgBuffer.js';
 import { ELEMENTS_CHUNK } from './constants/BaseBuffer.js';
 import { SPRITES_LENGTH } from './constants/SpriteBuffer.js';
+import { AVATAR_SLOTS } from '../platform/constants/Platform.js';
 
 export const assetStore = new AssetStore();
 
@@ -73,7 +74,6 @@ export function addAvatarAtlas(atlas, info) {
 
     const DEFAULT_REZ_HEIGHT = 1080;
     const WORLD_SPACE_FACTOR = HEIGHT;
-    const AVATAR_SLOTS = 8;
 
     const DIMENSION_ELEMENTS = 4;
     const SUB_IMAGE_ELEMENTS = 5;

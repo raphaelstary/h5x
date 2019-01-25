@@ -1,0 +1,1 @@
+export const AVATAR_SLOTS = 8;
