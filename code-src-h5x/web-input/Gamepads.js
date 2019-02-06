@@ -2,7 +2,7 @@ import * as DOMGamepadButton from './DOMGamepadButton.js';
 import * as DOMGamepadAxis from './DOMGamepadAxis.js';
 import * as WinRTGamepadButtonFlag from './WinRTGamepadButtonFlag.js';
 
-const Gamepads = {
+const Gamepads = Object.freeze({
     /** @type {Map<number, DOMGamepadContainer>} */
     gamepads: new Map(),
 
@@ -104,6 +104,6 @@ const Gamepads = {
         return (currentReading.buttons & flag) == WinRTGamepadButtonFlag.none &&
             (previousReading.buttons & flag) == flag;
     }
-};
+});
 
 export default Gamepads;

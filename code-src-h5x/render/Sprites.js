@@ -52,7 +52,7 @@ import {
 /*
  * SPRITE API
  */
-const Sprites = {
+const Sprites = Object.seal({
     sprites: new Uint16Array(SPRITES_LENGTH),
 
     count: 0,
@@ -371,6 +371,6 @@ const Sprites = {
 
         return letters;
     }
-};
+});
 
 export default Sprites;

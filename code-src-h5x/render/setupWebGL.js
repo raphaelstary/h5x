@@ -106,9 +106,9 @@ const HEIGHT = window.screenHeight || 9;
 
 function mapToWideScreen(width, height) {
     if (width * (HEIGHT / WIDTH) > height) {
-        return {width: Math.floor(height * (WIDTH / HEIGHT)), height};
+        return Object.freeze({width: Math.floor(height * (WIDTH / HEIGHT)), height});
     }
-    return {width, height: Math.floor(width * (HEIGHT / WIDTH))};
+    return Object.freeze({width, height: Math.floor(width * (HEIGHT / WIDTH))});
 }
 
 function resizeScreen(width, height, init) {

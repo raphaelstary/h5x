@@ -35,7 +35,7 @@ import {
     ANIM_POSC_CB_KEY
 } from '../constants/AnimationBuffer.js';
 
-const PositionCurveAnimations = {
+const PositionCurveAnimations = Object.seal({
     data: new DataView(new ArrayBuffer(ANIM_POSC_BUFFER_SIZE)),
     callbacks: new Map(),
 
@@ -194,6 +194,6 @@ const PositionCurveAnimations = {
             }
         }
     }
-};
+});
 
 export default PositionCurveAnimations;

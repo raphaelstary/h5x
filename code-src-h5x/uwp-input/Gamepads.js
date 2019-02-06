@@ -1,6 +1,6 @@
 import { renderStore as $ } from '../render/setupWebGL.js';
 
-const Gamepads = {
+const Gamepads = Object.freeze({
     /** @type {Set<Windows.Gaming.Input.Gamepad>} */
     gamepads: new Set(),
     /** @type {WeakMap<Windows.Gaming.Input.Gamepad, GamepadInfo>} */
@@ -42,6 +42,6 @@ const Gamepads = {
 
         gamepad.vibration = frames[0].vibration;
     }
-};
+});
 
 export default Gamepads;

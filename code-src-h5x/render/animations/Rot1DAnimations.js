@@ -32,7 +32,7 @@ import {
     ANIM_ROT1D_CB_KEY
 } from '../constants/AnimationBuffer.js';
 
-const Rot1DAnimations = {
+const Rot1DAnimations = Object.seal({
     data: new DataView(new ArrayBuffer(ANIM_ROT1D_BUFFER_SIZE)),
     callbacks: new Map(),
 
@@ -195,6 +195,6 @@ const Rot1DAnimations = {
             }
         }
     }
-};
+});
 
 export default Rot1DAnimations;

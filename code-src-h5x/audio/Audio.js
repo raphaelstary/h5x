@@ -6,7 +6,7 @@ volume.connect(ctx.destination);
 volume.gain.setValueAtTime(1, ctx.currentTime);
 
 
-const Audio = {
+const Audio = Object.freeze({
     ctx,
     volume,
 
@@ -46,6 +46,6 @@ const Audio = {
 
         return source;
     }
-};
+});
 
 export default Audio;

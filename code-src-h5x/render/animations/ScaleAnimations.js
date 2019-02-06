@@ -25,7 +25,7 @@ import {
     ANIM_SCALE_CB_KEY
 } from '../constants/AnimationBuffer.js';
 
-const ScaleAnimations = {
+const ScaleAnimations = Object.seal({
     data: new DataView(new ArrayBuffer(ANIM_SCALE_BUFFER_SIZE)),
     callbacks: new Map(),
 
@@ -170,6 +170,6 @@ const ScaleAnimations = {
             }
         }
     }
-};
+});
 
 export default ScaleAnimations;

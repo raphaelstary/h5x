@@ -25,7 +25,7 @@ import {
     ANIM_COLOR1C_CB_KEY
 } from '../constants/AnimationBuffer.js';
 
-const Color1CAnimations = {
+const Color1CAnimations = Object.seal({
     data: new DataView(new ArrayBuffer(ANIM_COLOR1C_BUFFER_SIZE)),
     callbacks: new Map(),
 
@@ -171,6 +171,6 @@ const Color1CAnimations = {
             }
         }
     }
-};
+});
 
 export default Color1CAnimations;

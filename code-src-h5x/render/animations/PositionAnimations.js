@@ -29,7 +29,7 @@ import {
     ANIM_POS_CB_KEY
 } from '../constants/AnimationBuffer.js';
 
-const PositionAnimations = {
+const PositionAnimations = Object.seal({
     data: new DataView(new ArrayBuffer(ANIM_POS_BUFFER_SIZE)),
     callbacks: new Map(),
 
@@ -181,6 +181,6 @@ const PositionAnimations = {
             }
         }
     }
-};
+});
 
 export default PositionAnimations;
