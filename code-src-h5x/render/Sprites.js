@@ -74,10 +74,10 @@ const Sprites = Object.seal({
      * @param {number} imgId - idx for atlas subimage
      * @param {number} x - x-coordinate
      * @param {number} y - y-coordinate
-     * @param {number} [z=-5] - z-coordinate
+     * @param {number} [z=-4.5] - z-coordinate
      * @returns {number} sprite ID
      */
-    create(imgId, x, y, z = -5) {
+    create(imgId, x, y, z = -4.5) {
         let idx;
         let version;
 
