@@ -1,6 +1,9 @@
 import { assetStore } from '../render/setupWebGL.js';
 
-const ctx = new AudioContext();
+// thanks apple
+const WebAudioContext = window.AudioContext || window.webkitAudioContext;
+
+const ctx = new WebAudioContext();
 const volume = ctx.createGain();
 volume.connect(ctx.destination);
 volume.gain.setValueAtTime(1, ctx.currentTime);
