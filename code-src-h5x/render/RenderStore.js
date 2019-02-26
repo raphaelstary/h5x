@@ -14,6 +14,7 @@ export default class RenderStore {
 
         this.changeFlags = changeFlags;
         this.maxElements = maxElements;
+
         /**
          * global current time frame based on {@see requestAnimationFrame} frames elapsed since app started
          *
