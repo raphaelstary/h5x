@@ -20,6 +20,9 @@ void main() {
 
     if (pixel.a < 0.005)
         discard;
-    gl_FragColor = mix(pixel, texColor, texColor.a);
+
+    vec4 blendedPixel = mix(pixel, texColor, texColor.a);
+    blendedPixel.a = pixel.a;
+    gl_FragColor = blendedPixel;
 }
 `;
