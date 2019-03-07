@@ -350,8 +350,11 @@ const Sprites = Object.seal({
         for (let i = 0; i < text.length; i++) {
             const char = text[i];
 
-            if (char == ' ') {
+            const codePoint = char.codePointAt(0);
+            if (codePoint == 32 || codePoint == 160) {
                 offsetX += 0.025;
+                continue;
+            } else if (codePoint < 33 && codePoint > 126) {
                 continue;
             }
 
