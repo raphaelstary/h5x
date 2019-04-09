@@ -344,7 +344,7 @@ const Sprites = Object.seal({
         return $.dimensions[idx * DIM_ELEMENTS + 1];
     }
     ,
-    createDebugText(text, x, y, z) {
+    createDebugText(text, x, y, z = -4.5) {
         const letters = [];
         let offsetX = x;
         for (let i = 0; i < text.length; i++) {
