@@ -1,9 +1,16 @@
 import { renderStore as $ } from '../render/setupWebGL.js';
 
 const Gamepads = Object.freeze({
-    /** @type {Set<Windows.Gaming.Input.Gamepad>} */
+    /**
+     * @type {Set<Windows.Gaming.Input.Gamepad>}
+     * @deprecated
+     */
     gamepads: new Set(),
-    /** @type {WeakMap<Windows.Gaming.Input.Gamepad, GamepadInfo>} */
+
+    /**
+     * @type {WeakMap<Windows.Gaming.Input.Gamepad, GamepadInfo>}
+     * @deprecated
+     */
     info: new WeakMap(),
 
     /**
@@ -13,8 +20,7 @@ const Gamepads = Object.freeze({
      * @returns {boolean} {TRUE} if button was pressed
      */
     buttonPressed(currentReading, previousReading, flag) {
-        return (currentReading.buttons & flag) == flag &&
-            (previousReading.buttons & flag) == Windows.Gaming.Input.GamepadButtons.none;
+        return (currentReading.buttons & flag) == flag && (previousReading.buttons & flag) == Windows.Gaming.Input.GamepadButtons.none;
     },
 
     /**
@@ -24,8 +30,7 @@ const Gamepads = Object.freeze({
      * @returns {boolean} {TRUE} if button was released
      */
     buttonReleased(currentReading, previousReading, flag) {
-        return (currentReading.buttons & flag) == Windows.Gaming.Input.GamepadButtons.none &&
-            (previousReading.buttons & flag) == flag;
+        return (currentReading.buttons & flag) == Windows.Gaming.Input.GamepadButtons.none && (previousReading.buttons & flag) == flag;
     },
 
     /**

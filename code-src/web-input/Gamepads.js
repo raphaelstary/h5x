@@ -3,7 +3,10 @@ import * as DOMGamepadAxis from './DOMGamepadAxis.js';
 import * as WinRTGamepadButtonFlag from './WinRTGamepadButtonFlag.js';
 
 const Gamepads = Object.freeze({
-    /** @type {Map<number, DOMGamepadContainer>} */
+    /**
+     * @type {Map<number, DOMGamepadContainer>}
+     * @deprecated
+     */
     gamepads: new Map(),
 
     /**
