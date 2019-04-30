@@ -6,9 +6,10 @@ import { SUB_IMG_ELEMENTS } from './constants/SubImgBuffer.js';
 
 export default class RenderStore {
     constructor(gl, ext, changeFlags, maxElements, frame,
-                positionBuffer, colorBuffer, xformsBuffer, dimensionsBuffer, subImageBuffer,
-                positionData, colorData, xformsData, dimensionsData, subImageData,
-                positions, colors, xforms, dimensions, subImages) {
+        positionBuffer, colorBuffer, xformsBuffer, dimensionsBuffer, subImageBuffer,
+        positionData, colorData, xformsData, dimensionsData, subImageData, viewLocation, viewMatrix,
+        positions, colors, xforms, dimensions, subImages) {
+
         this.gl = gl;
         this.ext = ext;
 
@@ -33,6 +34,9 @@ export default class RenderStore {
         this.xformsData = xformsData;
         this.dimensionsData = dimensionsData;
         this.subImageData = subImageData;
+
+        this.viewLocation = viewLocation;
+        this.viewMatrix = viewMatrix;
 
         this.positions = positions;
         this.colors = colors;

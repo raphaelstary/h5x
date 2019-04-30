@@ -192,12 +192,13 @@ const Z_NEAR = 0.1;
 const Z_FAR = 10.0;
 
 const viewLocation = gl.getUniformLocation(program, 'view');
-gl.uniformMatrix4fv(viewLocation, false, new Float32Array([
+const viewMatrix = new Float32Array([
     1, 0, 0, 0,
     0, 1, 0, 0,
     0, 0, 1, 0,
     0, 0, 0, 1
-]));
+]);
+gl.uniformMatrix4fv(viewLocation, false, viewMatrix);
 
 const aspect = WIDTH / HEIGHT;
 const fov = Math.PI * 0.5;
@@ -322,10 +323,9 @@ gl.uniform1iv(texLocation, [0, 1, 2]);
 /*
  * TYPED VIEWS CONSTANTS
  */
-
 export const renderStore = new RenderStore(gl, ext, NO_CHANGES, ELEMENTS_CHUNK, 0,
     positionBuffer, colorBuffer, xformsBuffer, dimensionsBuffer, subImageBuffer,
-    positionData, colorData, xformsData, dimensionsData, subImageData);
+    positionData, colorData, xformsData, dimensionsData, subImageData, viewLocation, viewMatrix);
 
 renderStore.resizeTypedViews();
 

@@ -3,7 +3,8 @@ import {
     DIM_CHANGED,
     POS_CHANGED,
     SUB_IMG_CHANGED,
-    XFORMS_CHANGED
+    XFORMS_CHANGED,
+    CAMERA_CHANGED
 } from './constants/ChangeFlag.js';
 import {
     COLOR_ALPHA_OFFSET,
@@ -373,6 +374,26 @@ const Sprites = Object.seal({
         }
 
         return letters;
+    }
+    ,
+    setCameraPosition(x, y, z = 0) {
+        $.viewMatrix[12] = -x;
+        $.viewMatrix[13] = -y;
+        $.viewMatrix[14] = -z;
+
+        $.changeFlags |= CAMERA_CHANGED;
+    }
+    ,
+    getCameraPositionX() {
+        return -$.viewMatrix[12];
+    }
+    ,
+    getCameraPositionY() {
+        return -$.viewMatrix[13];
+    }
+    ,
+    getCameraPositionZ() {
+        return -$.viewMatrix[14];
     }
 });
 

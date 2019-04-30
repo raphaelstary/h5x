@@ -97,7 +97,8 @@ import {
     NO_CHANGES,
     POS_CHANGED,
     SUB_IMG_CHANGED,
-    XFORMS_CHANGED
+    XFORMS_CHANGED,
+    CAMERA_CHANGED
 } from '../render/constants/ChangeFlag.js';
 import {
     COLOR_ALPHA_OFFSET,
@@ -435,6 +436,10 @@ export default function eventLoop(updateFunctions) {
 
     // draw frame
     {
+        if ($.changeFlags & CAMERA_CHANGED) {
+            $.gl.uniformMatrix4fv($.viewLocation, false, $.viewMatrix);
+        }
+
         if ($.changeFlags & POS_CHANGED) {
             $.gl.bindBuffer($.gl.ARRAY_BUFFER, $.positionBuffer);
             $.gl.bufferSubData($.gl.ARRAY_BUFFER, 0, $.positions);

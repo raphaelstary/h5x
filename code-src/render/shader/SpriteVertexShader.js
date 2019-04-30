@@ -1,5 +1,4 @@
 export default `
-
 attribute vec4 position;
 attribute vec4 xforms;
 attribute vec4 dimensions;
