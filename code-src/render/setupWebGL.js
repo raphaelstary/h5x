@@ -146,6 +146,9 @@ const gl = canvas.getContext('webgl', {alpha: false});
 const ext = gl.getExtension('ANGLE_instanced_arrays');
 
 console.log('max texture size: ' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
+console.log('max tx img units: ' + gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS));
+console.log('max VS tx img units: ' + gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS));
+console.log('max comb tx img units: ' + gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
 console.log('max vertex attribs: ' + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
 
 gl.enable(gl.DEPTH_TEST);
