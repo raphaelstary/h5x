@@ -1,54 +1,15 @@
-import {
-    COLORS_CHANGED,
-    DIM_CHANGED,
-    POS_CHANGED,
-    SUB_IMG_CHANGED,
-    XFORMS_CHANGED,
-    CAMERA_CHANGED
-} from './constants/ChangeFlag.js';
-import {
-    COLOR_ALPHA_OFFSET,
-    COLOR_BLUE_OFFSET,
-    COLOR_ELEMENTS,
-    COLOR_GREEN_OFFSET,
-    COLOR_RED_OFFSET
-} from './constants/ColorBuffer.js';
-import {
-    POS_ELEMENTS,
-    POS_X_OFFSET,
-    POS_Y_OFFSET,
-    POS_Z_OFFSET
-} from './constants/PosBuffer.js';
-import {
-    XFORMS_ELEMENTS,
-    XFORMS_ROTATION_X_OFFSET,
-    XFORMS_ROTATION_Y_OFFSET,
-    XFORMS_ROTATION_Z_OFFSET,
-    XFORMS_SCALE_OFFSET
-} from './constants/XFormsBuffer.js';
+import { CAMERA_CHANGED, COLORS_CHANGED, DIM_CHANGED, POS_CHANGED, SUB_IMG_CHANGED, XFORMS_CHANGED } from './constants/ChangeFlag.js';
+import { COLOR_ALPHA_OFFSET, COLOR_BLUE_OFFSET, COLOR_ELEMENTS, COLOR_GREEN_OFFSET, COLOR_RED_OFFSET } from './constants/ColorBuffer.js';
+import { POS_ELEMENTS, POS_X_OFFSET, POS_Y_OFFSET, POS_Z_OFFSET } from './constants/PosBuffer.js';
+import { XFORMS_ELEMENTS, XFORMS_ROTATION_X_OFFSET, XFORMS_ROTATION_Y_OFFSET, XFORMS_ROTATION_Z_OFFSET, XFORMS_SCALE_OFFSET } from './constants/XFormsBuffer.js';
 import { DIM_ELEMENTS } from './constants/DimBuffer.js';
 import { SUB_IMG_ELEMENTS } from './constants/SubImgBuffer.js';
 import { ELEMENTS_CHUNK } from './constants/BaseBuffer.js';
-import {
-    renderStore as $,
-    assetStore as a$
-} from './setupWebGL.js';
+import { assetStore as a$, renderStore as $ } from './setupWebGL.js';
 import ScaleAnimations from './animations/ScaleAnimations.js';
-import {
-    VERSION_BITS,
-    VERSION_MASK,
-    MAX_VERSION,
-    ACTIVE_FLAG,
-    INVALID_INDEX
-} from './constants/BaseECS.js';
+import { ACTIVE_FLAG, INVALID_INDEX, MAX_VERSION, VERSION_BITS, VERSION_MASK } from './constants/BaseECS.js';
+import { SPRITE_ANIMS_OFFSET, SPRITE_ELEMENTS, SPRITE_SCALE_ANIM_FLAG, SPRITE_VERSION_N_STATE_OFFSET, SPRITES_LENGTH } from './constants/SpriteBuffer.js';
 /* global FontSubImage */
-import {
-    SPRITES_LENGTH,
-    SPRITE_ELEMENTS,
-    SPRITE_VERSION_N_STATE_OFFSET,
-    SPRITE_ANIMS_OFFSET,
-    SPRITE_SCALE_ANIM_FLAG
-} from './constants/SpriteBuffer.js';
 
 /*
  * SPRITE API
@@ -377,9 +338,38 @@ const Sprites = Object.seal({
     }
     ,
     setCameraPosition(x, y, z = 0) {
-        $.viewMatrix[12] = -x;
-        $.viewMatrix[13] = -y;
-        $.viewMatrix[14] = -z;
+        const rotation = $.cameraRotation;
+        if (rotation == 0) {
+            $.viewMatrix[12] = -x;
+            $.viewMatrix[13] = -y;
+            $.viewMatrix[14] = -z;
+        } else if (rotation == 90) {
+            $.viewMatrix[12] = y;
+            $.viewMatrix[13] = -x;
+            $.viewMatrix[14] = -z;
+        } else if (rotation == 180) {
+            $.viewMatrix[12] = x;
+            $.viewMatrix[13] = y;
+            $.viewMatrix[14] = -z;
+        } else if (rotation == 270) {
+            $.viewMatrix[12] = -y;
+            $.viewMatrix[13] = x;
+            $.viewMatrix[14] = -z;
+        } else {
+
+            const angle = $.cameraRotation * Math.PI / 180 * -1;
+            const cz = Math.cos(angle);
+            const sz = Math.sin(angle);
+
+            const det = 1.0 / (cz * cz - sz * -sz);
+
+            $.viewMatrix[0] = cz * det;
+            $.viewMatrix[1] = -sz * det;
+            $.viewMatrix[4] = sz * det;
+            $.viewMatrix[5] = cz * det;
+            $.viewMatrix[12] = (cz * -x + sz * -y) * det;
+            $.viewMatrix[13] = (cz * -y - sz * -x) * det;
+        }
 
         $.changeFlags |= CAMERA_CHANGED;
     }
@@ -394,6 +384,69 @@ const Sprites = Object.seal({
     ,
     getCameraPositionZ() {
         return -$.viewMatrix[14];
+    }
+    ,
+    getCameraRotation() {
+        return $.cameraRotation;
+    }
+    ,
+    setCameraRotation0() {
+        $.viewMatrix[0] = 1.0;
+        $.viewMatrix[1] = 0.0;
+        $.viewMatrix[4] = 0.0;
+        $.viewMatrix[5] = 1.0;
+
+        $.cameraRotation = 0;
+
+        $.changeFlags |= CAMERA_CHANGED;
+    }
+    ,
+    setCameraRotation90() {
+        $.viewMatrix[0] = 0.0;
+        $.viewMatrix[1] = 1.0;
+        $.viewMatrix[4] = -1.0;
+        $.viewMatrix[5] = 0.0;
+
+        $.cameraRotation = 90;
+
+        $.changeFlags |= CAMERA_CHANGED;
+    }
+    ,
+    setCameraRotation180() {
+        $.viewMatrix[0] = -1.0;
+        $.viewMatrix[1] = 0.0;
+        $.viewMatrix[4] = 0.0;
+        $.viewMatrix[5] = -1.0;
+
+        $.cameraRotation = 180;
+
+        $.changeFlags |= CAMERA_CHANGED;
+    }
+    ,
+    setCameraRotation270() {
+        $.viewMatrix[0] = 0.0;
+        $.viewMatrix[1] = -1.0;
+        $.viewMatrix[4] = 1.0;
+        $.viewMatrix[5] = 0.0;
+
+        $.cameraRotation = 270;
+
+        $.changeFlags |= CAMERA_CHANGED;
+    }
+    ,
+    setCameraRotation(degree) {
+        const angle = degree * Math.PI / 180;
+        const cz = Math.cos(angle);
+        const sz = Math.sin(angle);
+
+        $.viewMatrix[0] = cz;
+        $.viewMatrix[1] = sz;
+        $.viewMatrix[4] = -sz;
+        $.viewMatrix[5] = cz;
+
+        $.cameraRotation = degree;
+
+        $.changeFlags |= CAMERA_CHANGED;
     }
 });
 

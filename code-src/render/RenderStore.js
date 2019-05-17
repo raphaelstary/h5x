@@ -37,6 +37,7 @@ export default class RenderStore {
 
         this.viewLocation = viewLocation;
         this.viewMatrix = viewMatrix;
+        this.cameraRotation = 0;
 
         this.positions = positions;
         this.colors = colors;
