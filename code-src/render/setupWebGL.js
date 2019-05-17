@@ -32,77 +32,11 @@ import {
 } from './constants/SubImgBuffer.js';
 import { ELEMENTS_CHUNK } from './constants/BaseBuffer.js';
 import { SPRITES_LENGTH } from './constants/SpriteBuffer.js';
-import { AVATAR_SLOTS } from '../platform/constants/Platform.js';
 
 export const assetStore = new AssetStore();
 
-export function processAssets([, baseSubImageBuffer, img_0, img_1, spriteDimensionsBuffer, audioSegmentsBuffer, audioBuffer]) {
-    assetStore.baseSubImages = new Float32Array(baseSubImageBuffer);
-    assetStore.spriteDimensions = new Float32Array(spriteDimensionsBuffer);
-    assetStore.audioSegments = new Float32Array(audioSegmentsBuffer);
-    assetStore.audioBuffer = audioBuffer;
-
-    const audioBufferSize = audioBuffer.length * audioBuffer.numberOfChannels * Float32Array.BYTES_PER_ELEMENT;
-    console.log(`audio buffer size: ${(audioBufferSize / 1024 / 1024).toFixed(2)} mb`);
-
-    const BASE_DIM_BUFFER_SIZE = assetStore.spriteDimensions.byteLength;
-    const BASE_AUDIO_SEG_BUFFER_SIZE = assetStore.audioSegments.byteLength;
-    const BASE_SUB_IMG_BUFFER_SIZE = assetStore.baseSubImages.byteLength;
-    const TOTAL_BASE_BUFFER_SIZE = BASE_DIM_BUFFER_SIZE + BASE_SUB_IMG_BUFFER_SIZE + BASE_AUDIO_SEG_BUFFER_SIZE;
-    console.log(`total loaded buffer size: ${(TOTAL_BASE_BUFFER_SIZE / 1024).toFixed(2)} kb`);
-    console.log(`texture atlas back buffer size: ${((img_0.width * img_0.height * 4 + img_1.width * img_1.height * 4) / 1024 / 1024).toFixed(2)} mb`);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img_0);
-
-    gl.activeTexture(gl.TEXTURE1);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img_1);
-
-    gl.activeTexture(gl.TEXTURE2);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img_1);
-}
-
-/**
- * @param {HTMLCanvasElement} atlas
- * @param {{width: number, height: number, frames: {name: string, x: number, y: number, width: number, height: number}[]}} info
- */
-export function addAvatarAtlas(atlas, info) {
-    gl.activeTexture(gl.TEXTURE2);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, atlas);
-
-    console.log(`dynamic texture atlas back buffer size: ${(atlas.width * atlas.height * 4 / 1024 / 1024).toFixed(2)} mb`);
-
-    const DEFAULT_REZ_HEIGHT = 1080;
-    const WORLD_SPACE_FACTOR = HEIGHT;
-
-    const DIMENSION_ELEMENTS = 4;
-    const SUB_IMAGE_ELEMENTS = 5;
-
-    const BUFFER_OFFSET = assetStore.spriteDimensions.length / DIMENSION_ELEMENTS - AVATAR_SLOTS;
-    for (let i = 0; i < info.frames.length; i++) {
-        const frame = info.frames[i];
-        const q = i + BUFFER_OFFSET;
-
-        const k = q * DIMENSION_ELEMENTS;
-        assetStore.spriteDimensions[k] = frame.width / 2 / DEFAULT_REZ_HEIGHT * WORLD_SPACE_FACTOR;
-        assetStore.spriteDimensions[k + 1] = frame.height / 2 / DEFAULT_REZ_HEIGHT * WORLD_SPACE_FACTOR;
-        assetStore.spriteDimensions[k + 2] = 0;
-        assetStore.spriteDimensions[k + 3] = 0;
-
-        const j = q * SUB_IMAGE_ELEMENTS;
-        assetStore.baseSubImages[j] = frame.x / info.width;
-        assetStore.baseSubImages[j + 1] = frame.y / info.height;
-        assetStore.baseSubImages[j + 2] = frame.width / info.width;
-        assetStore.baseSubImages[j + 3] = frame.height / info.height;
-
-        assetStore.baseSubImages[j + 4] = 2; // atlas idx
-
-        assetStore.avatarSubImages.set(frame.name, q);
-    }
-}
-
-const WIDTH = 16; // window.screenWidth || 16;
-const HEIGHT = 9; // window.screenHeight || 9;
+export const WIDTH = 16; // window.screenWidth || 16;
+export const HEIGHT = 9; // window.screenHeight || 9;
 
 // function mapToWideScreen(width, height) {
 //     if (width * (HEIGHT / WIDTH) > height) {
@@ -142,7 +76,7 @@ const canvas = document.getElementById('screen');
 //     resizeScreen(width, height);
 // });
 
-const gl = canvas.getContext('webgl', {alpha: false});
+const gl = canvas.getContext('webgl', { alpha: false });
 const ext = gl.getExtension('ANGLE_instanced_arrays');
 
 console.log('max texture size: ' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
