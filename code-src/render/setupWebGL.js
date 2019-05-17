@@ -35,46 +35,10 @@ import { SPRITES_LENGTH } from './constants/SpriteBuffer.js';
 
 export const assetStore = new AssetStore();
 
-export const WIDTH = 16; // window.screenWidth || 16;
-export const HEIGHT = 9; // window.screenHeight || 9;
-
-// function mapToWideScreen(width, height) {
-//     if (width * (HEIGHT / WIDTH) > height) {
-//         return Object.freeze({width: Math.floor(height * (WIDTH / HEIGHT)), height});
-//     }
-//     return Object.freeze({width, height: Math.floor(width * (HEIGHT / WIDTH))});
-// }
-
-// function resizeScreen(width, height, init) {
-//     if (window.devicePixelRatio > 1) {
-//         canvas.style.width = width + 'px';
-//         canvas.style.height = height + 'px';
-//         const canvasWidth = Math.floor(width * window.devicePixelRatio);
-//         const canvasHeight = Math.floor(height * window.devicePixelRatio);
-//         canvas.width = canvasWidth;
-//         canvas.height = canvasHeight;
-//         if (!init) {
-//             // could also use gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-//             gl.viewport(0, 0, canvasWidth, canvasHeight);
-//         }
-//     } else {
-//         canvas.width = width;
-//         canvas.height = height;
-//         if (!init) {
-//             // could also use gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-//             gl.viewport(0, 0, width, height);
-//         }
-//     }
-// }
+export const WIDTH = 16;
+export const HEIGHT = 9;
 
 const canvas = document.getElementById('screen');
-// const {width, height} = mapToWideScreen(window.innerWidth, window.innerHeight);
-// resizeScreen(width, height, true);
-
-// window.addEventListener('resize', (event) => {
-//     const {width, height} = mapToWideScreen(event.target.innerWidth, event.target.innerHeight);
-//     resizeScreen(width, height);
-// });
 
 const gl = canvas.getContext('webgl', { alpha: false });
 const ext = gl.getExtension('ANGLE_instanced_arrays');
