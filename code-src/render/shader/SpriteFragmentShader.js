@@ -18,7 +18,7 @@ void main() {
         pixel = texture2D(textures[2], texCoord);
     }
 
-    if (pixel.a < 0.005)
+    if (pixel.a < 1.0)
         discard;
 
     vec4 blendedPixel = mix(pixel, texColor, texColor.a);
