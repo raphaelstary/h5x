@@ -1,35 +1,14 @@
 import AssetStore from '../net/AssetStore.js';
 import RenderStore from './RenderStore.js';
-import {
-    ANIM_COLOR1C_BUFFER_SIZE,
-    ANIM_POS_BUFFER_SIZE,
-    ANIM_POSC_BUFFER_SIZE,
-    ANIM_ROT1D_BUFFER_SIZE,
-    ANIM_SCALE_BUFFER_SIZE
-} from './constants/AnimationBuffer.js';
+import { ANIM_COLOR1C_BUFFER_SIZE, ANIM_POS_BUFFER_SIZE, ANIM_POSC_BUFFER_SIZE, ANIM_ROT1D_BUFFER_SIZE, ANIM_SCALE_BUFFER_SIZE } from './constants/AnimationBuffer.js';
 import { NO_CHANGES } from './constants/ChangeFlag.js';
 import fragmentShaderSrc from './shader/SpriteFragmentShader.js';
 import vertexShaderSrc from './shader/SpriteVertexShader.js';
-import {
-    POS_BUFFER_SIZE,
-    POS_ELEMENTS
-} from './constants/PosBuffer.js';
-import {
-    COLOR_BUFFER_SIZE,
-    COLOR_ELEMENTS
-} from './constants/ColorBuffer.js';
-import {
-    XFORMS_BUFFER_SIZE,
-    XFORMS_ELEMENTS
-} from './constants/XFormsBuffer.js';
-import {
-    DIM_BUFFER_SIZE,
-    DIM_ELEMENTS
-} from './constants/DimBuffer.js';
-import {
-    SUB_IMG_BUFFER_SIZE,
-    SUB_IMG_ELEMENTS
-} from './constants/SubImgBuffer.js';
+import { POS_BUFFER_SIZE, POS_ELEMENTS } from './constants/PosBuffer.js';
+import { COLOR_BUFFER_SIZE, COLOR_ELEMENTS } from './constants/ColorBuffer.js';
+import { XFORMS_BUFFER_SIZE, XFORMS_ELEMENTS } from './constants/XFormsBuffer.js';
+import { DIM_BUFFER_SIZE, DIM_ELEMENTS } from './constants/DimBuffer.js';
+import { SUB_IMG_BUFFER_SIZE, SUB_IMG_ELEMENTS } from './constants/SubImgBuffer.js';
 import { ELEMENTS_CHUNK } from './constants/BaseBuffer.js';
 import { SPRITES_LENGTH } from './constants/SpriteBuffer.js';
 
