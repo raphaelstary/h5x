@@ -82,42 +82,15 @@ import PositionAnimations from '../render/animations/PositionAnimations.js';
 import PositionCurveAnimations from '../render/animations/PositionCurveAnimations.js';
 import Rot1DAnimations from '../render/animations/Rot1DAnimations.js';
 import ScaleAnimations from '../render/animations/ScaleAnimations.js';
-import map, {
-    LINEAR,
-    nonLinearTransform
-} from '../render/animations/Transform.js';
-import {
-    ACTIVE_FLAG,
-    VERSION_BITS
-} from '../render/constants/BaseECS.js';
+import map, { LINEAR, nonLinearTransform } from '../render/animations/Transform.js';
+import { ACTIVE_FLAG, VERSION_BITS } from '../render/constants/BaseECS.js';
 import Sprites from '../render/Sprites.js';
-import {
-    COLORS_CHANGED,
-    DIM_CHANGED,
-    NO_CHANGES,
-    POS_CHANGED,
-    SUB_IMG_CHANGED,
-    XFORMS_CHANGED,
-    CAMERA_CHANGED
-} from '../render/constants/ChangeFlag.js';
-import {
-    COLOR_ALPHA_OFFSET,
-    COLOR_ELEMENTS
-} from '../render/constants/ColorBuffer.js';
-import {
-    POS_ELEMENTS,
-    POS_X_OFFSET,
-    POS_Y_OFFSET,
-    POS_Z_OFFSET
-} from '../render/constants/PosBuffer.js';
-import {
-    XFORMS_ELEMENTS,
-    XFORMS_ROTATION_X_OFFSET,
-    XFORMS_ROTATION_Y_OFFSET,
-    XFORMS_ROTATION_Z_OFFSET,
-    XFORMS_SCALE_OFFSET
-} from '../render/constants/XFormsBuffer.js';
+import { COLORS_CHANGED, POS_CHANGED, XFORMS_CHANGED } from '../render/constants/ChangeFlag.js';
+import { COLOR_ALPHA_OFFSET, COLOR_ELEMENTS } from '../render/constants/ColorBuffer.js';
+import { POS_ELEMENTS, POS_X_OFFSET, POS_Y_OFFSET, POS_Z_OFFSET } from '../render/constants/PosBuffer.js';
+import { XFORMS_ELEMENTS, XFORMS_ROTATION_X_OFFSET, XFORMS_ROTATION_Y_OFFSET, XFORMS_ROTATION_Z_OFFSET, XFORMS_SCALE_OFFSET } from '../render/constants/XFormsBuffer.js';
 import { renderStore as $ } from '../render/setupWebGL.js';
+import drawFrame from '../render/drawFrame.js';
 /* global FontSubImage */
 
 let startTime = Date.now();
@@ -129,8 +102,8 @@ let meterFrameCounter = 0;
 /*
  * EVENT LOOP
  */
-export default function eventLoop(updateFunctions) {
-    requestAnimationFrame(eventLoop.bind(undefined, updateFunctions));
+export default function eventLoop(updateFunctions, drawFunction = drawFrame) {
+    requestAnimationFrame(eventLoop.bind(undefined, updateFunctions, drawFunction));
 
     // fps meter start frame
     {
@@ -435,44 +408,7 @@ export default function eventLoop(updateFunctions) {
     }
 
     // draw frame
-    {
-        if ($.changeFlags & CAMERA_CHANGED) {
-            $.gl.uniformMatrix4fv($.viewLocation, false, $.viewMatrix);
-        }
-
-        if ($.changeFlags & POS_CHANGED) {
-            $.gl.bindBuffer($.gl.ARRAY_BUFFER, $.positionBuffer);
-            $.gl.bufferSubData($.gl.ARRAY_BUFFER, 0, $.positions);
-        }
-
-        if ($.changeFlags & COLORS_CHANGED) {
-            $.gl.bindBuffer($.gl.ARRAY_BUFFER, $.colorBuffer);
-            $.gl.bufferSubData($.gl.ARRAY_BUFFER, 0, $.colors);
-        }
-
-        if ($.changeFlags & XFORMS_CHANGED) {
-            $.gl.bindBuffer($.gl.ARRAY_BUFFER, $.xformsBuffer);
-            $.gl.bufferSubData($.gl.ARRAY_BUFFER, 0, $.xforms);
-        }
-
-        if ($.changeFlags & DIM_CHANGED) {
-            $.gl.bindBuffer($.gl.ARRAY_BUFFER, $.dimensionsBuffer);
-            $.gl.bufferSubData($.gl.ARRAY_BUFFER, 0, $.dimensions);
-        }
-
-        if ($.changeFlags & SUB_IMG_CHANGED) {
-            $.gl.bindBuffer($.gl.ARRAY_BUFFER, $.subImageBuffer);
-            $.gl.bufferSubData($.gl.ARRAY_BUFFER, 0, $.subImages);
-        }
-
-        $.changeFlags = NO_CHANGES;
-
-        $.gl.clearColor(5 / 255, 109 / 255, 207 / 255, 0.0);
-        $.gl.clearDepth(1.0);
-        $.gl.clear($.gl.COLOR_BUFFER_BIT | $.gl.DEPTH_BUFFER_BIT);
-
-        $.ext.drawArraysInstancedANGLE($.gl.TRIANGLE_STRIP, 0, 4, Sprites.maxIdx + 1);
-    }
+    drawFunction();
 
     // fps meter end frame
     {
