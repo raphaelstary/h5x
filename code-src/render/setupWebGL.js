@@ -62,7 +62,34 @@ if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
     gl.deleteProgram(program);
 }
 
-gl.useProgram(program);
+
+const hudVS = gl.createShader(gl.VERTEX_SHADER);
+gl.shaderSource(hudVS, vertexShaderSrc);
+gl.compileShader(hudVS);
+
+if (!gl.getShaderParameter(hudVS, gl.COMPILE_STATUS)) {
+    console.log(gl.getShaderInfoLog(hudVS));
+    gl.deleteShader(hudVS);
+}
+
+const hudFS = gl.createShader(gl.FRAGMENT_SHADER);
+gl.shaderSource(hudFS, fragmentShaderSrc);
+gl.compileShader(hudFS);
+
+if (!gl.getShaderParameter(hudFS, gl.COMPILE_STATUS)) {
+    console.log(gl.getShaderInfoLog(hudFS));
+    gl.deleteShader(hudFS);
+}
+
+const hudProg = gl.createProgram();
+gl.attachShader(hudProg, hudVS);
+gl.attachShader(hudProg, hudFS);
+gl.linkProgram(hudProg);
+
+if (!gl.getProgramParameter(hudProg, gl.LINK_STATUS)) {
+    console.log(gl.getProgramInfoLog(hudProg));
+    gl.deleteProgram(hudProg);
+}
 
 
 /*
@@ -78,7 +105,18 @@ const viewMatrix = new Float32Array([
     0, 0, 1, 0,
     0, 0, 0, 1
 ]);
+gl.useProgram(program);
 gl.uniformMatrix4fv(viewLocation, false, viewMatrix);
+
+const hudViewLoc = gl.getUniformLocation(hudProg, 'view');
+const hudViewMat = new Float32Array([
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    WIDTH / 2, HEIGHT / 2, 0, 1
+]);
+gl.useProgram(hudProg);
+gl.uniformMatrix4fv(hudViewLoc, false, hudViewMat);
 
 const aspect = WIDTH / HEIGHT;
 const fov = Math.PI * 0.5;
@@ -89,11 +127,27 @@ const c = (Z_NEAR + Z_FAR) / (Z_NEAR - Z_FAR);
 const tz = 2 * Z_FAR * Z_NEAR / (Z_NEAR - Z_FAR);
 
 const projectionLocation = gl.getUniformLocation(program, 'projection');
+gl.useProgram(program);
 gl.uniformMatrix4fv(projectionLocation, false, new Float32Array([
     a, 0, 0, 0,
     0, f, 0, 0,
     0, 0, c, -1,
     0, 0, tz, 0
+]));
+
+
+const x = 2 / WIDTH;
+const y = 2 / HEIGHT;
+const z = -2 / (Z_FAR - Z_NEAR);
+const t = -(Z_FAR + Z_NEAR) / (Z_FAR - Z_NEAR);
+
+const hudProjLoc = gl.getUniformLocation(hudProg, 'projection');
+gl.useProgram(hudProg);
+gl.uniformMatrix4fv(hudProjLoc, false, new Float32Array([
+    x, 0, 0, 0,
+    0, y, 0, 0,
+    0, 0, z, 0,
+    -1, -1, t, 1
 ]));
 
 const quadBuffer = gl.createBuffer();
@@ -110,16 +164,21 @@ gl.vertexAttribPointer(quadLocation, 4, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(quadLocation);
 ext.vertexAttribDivisorANGLE(quadLocation, 0);
 
+// const hudQuadLoc = gl.getAttribLocation(hudProg, 'quad');
+// gl.vertexAttribPointer(hudQuadLoc, 4, gl.FLOAT, false, 0, 0);
+// gl.enableVertexAttribArray(hudQuadLoc);
+// ext.vertexAttribDivisorANGLE(hudQuadLoc, 0);
+
 
 const positionData = new ArrayBuffer(POS_BUFFER_SIZE);
 const positionBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, POS_BUFFER_SIZE, gl.DYNAMIC_DRAW);
 
-const positionLocation = gl.getAttribLocation(program, 'position');
-gl.vertexAttribPointer(positionLocation, POS_ELEMENTS, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(positionLocation);
-ext.vertexAttribDivisorANGLE(positionLocation, 1);
+const hudPosData = new ArrayBuffer(POS_BUFFER_SIZE);
+const hudPosBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, hudPosBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, POS_BUFFER_SIZE, gl.DYNAMIC_DRAW);
 
 
 const colorData = new ArrayBuffer(COLOR_BUFFER_SIZE);
@@ -127,10 +186,10 @@ const colorBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, COLOR_BUFFER_SIZE, gl.DYNAMIC_DRAW);
 
-const colorLocation = gl.getAttribLocation(program, 'color');
-gl.vertexAttribPointer(colorLocation, COLOR_ELEMENTS, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(colorLocation);
-ext.vertexAttribDivisorANGLE(colorLocation, 1);
+const hudColorData = new ArrayBuffer(COLOR_BUFFER_SIZE);
+const hudColorBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, hudColorBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, COLOR_BUFFER_SIZE, gl.DYNAMIC_DRAW);
 
 
 const xformsData = new ArrayBuffer(XFORMS_BUFFER_SIZE);
@@ -138,10 +197,10 @@ const xformsBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, xformsBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, XFORMS_BUFFER_SIZE, gl.DYNAMIC_DRAW);
 
-const xformsLocation = gl.getAttribLocation(program, 'xforms');
-gl.vertexAttribPointer(xformsLocation, XFORMS_ELEMENTS, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(xformsLocation);
-ext.vertexAttribDivisorANGLE(xformsLocation, 1);
+const hudXformsData = new ArrayBuffer(XFORMS_BUFFER_SIZE);
+const hudXformsBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, hudXformsBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, XFORMS_BUFFER_SIZE, gl.DYNAMIC_DRAW);
 
 
 const dimensionsData = new ArrayBuffer(DIM_BUFFER_SIZE);
@@ -149,10 +208,10 @@ const dimensionsBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, dimensionsBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, DIM_BUFFER_SIZE, gl.STATIC_DRAW);
 
-const dimensionsLocation = gl.getAttribLocation(program, 'dimensions');
-gl.vertexAttribPointer(dimensionsLocation, DIM_ELEMENTS, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(dimensionsLocation);
-ext.vertexAttribDivisorANGLE(dimensionsLocation, 1);
+const hudDimData = new ArrayBuffer(DIM_BUFFER_SIZE);
+const hudDimBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, hudDimBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, DIM_BUFFER_SIZE, gl.STATIC_DRAW);
 
 
 const subImageData = new ArrayBuffer(SUB_IMG_BUFFER_SIZE);
@@ -160,14 +219,28 @@ const subImageBuffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, subImageBuffer);
 gl.bufferData(gl.ARRAY_BUFFER, SUB_IMG_BUFFER_SIZE, gl.STATIC_DRAW);
 
-const subImageLocation = gl.getAttribLocation(program, 'subImage');
-gl.vertexAttribPointer(subImageLocation, SUB_IMG_ELEMENTS, gl.FLOAT, false, 0, 0);
-gl.enableVertexAttribArray(subImageLocation);
-ext.vertexAttribDivisorANGLE(subImageLocation, 1);
+const hudSubImgData = new ArrayBuffer(SUB_IMG_BUFFER_SIZE);
+const hudSubImgBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, hudSubImgBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, SUB_IMG_BUFFER_SIZE, gl.STATIC_DRAW);
 
-const TOTAL_BUFFER_SIZE = POS_BUFFER_SIZE + COLOR_BUFFER_SIZE + XFORMS_BUFFER_SIZE + DIM_BUFFER_SIZE +
+
+const TOTAL_3D_BUFFER_SIZE = POS_BUFFER_SIZE + COLOR_BUFFER_SIZE + XFORMS_BUFFER_SIZE + DIM_BUFFER_SIZE +
     SUB_IMG_BUFFER_SIZE;
-console.log(`total alloc gfx buffer size: ${(TOTAL_BUFFER_SIZE / 1024 / 1024).toFixed(2)} mb`);
+console.log(`total alloc 3d gfx buffer size: ${(TOTAL_3D_BUFFER_SIZE / 1024 / 1024).toFixed(2)} mb`);
+
+const TOTAL_HUD_BUFFER_SIZE = POS_BUFFER_SIZE + COLOR_BUFFER_SIZE + XFORMS_BUFFER_SIZE + DIM_BUFFER_SIZE +
+    SUB_IMG_BUFFER_SIZE;
+console.log(`total alloc 3d gfx buffer size: ${(TOTAL_HUD_BUFFER_SIZE / 1024 / 1024).toFixed(2)} mb`);
+
+gl.useProgram(program);
+const minAlphaLocation = gl.getUniformLocation(program, 'minAlpha');
+gl.uniform1f(minAlphaLocation, 1.0);
+
+gl.useProgram(hudProg);
+const hudMinALoc = gl.getUniformLocation(hudProg, 'minAlpha');
+gl.uniform1f(hudMinALoc, 0.004);
+
 
 const texture0 = gl.createTexture();
 gl.activeTexture(gl.TEXTURE0);
@@ -196,21 +269,48 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
+gl.useProgram(program);
 const texLocation = gl.getUniformLocation(program, 'textures[0]');
 gl.uniform1iv(texLocation, [0, 1, 2]);
 
+gl.useProgram(hudProg);
+const hudTexLoc = gl.getUniformLocation(hudProg, 'textures[0]');
+gl.uniform1iv(hudTexLoc, [0, 1, 2]);
+
+
+const defaultViewMatrix = new Float32Array([
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1
+]);
+const defHudViewMat = new Float32Array([
+    1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    WIDTH / 2, HEIGHT / 2, 0, 1
+]);
 
 /*
  * TYPED VIEWS CONSTANTS
  */
-export const renderStore = new RenderStore(gl, ext, NO_CHANGES, ELEMENTS_CHUNK, 0,
+export const renderStore = new RenderStore('3d', gl, ext, program, NO_CHANGES, ELEMENTS_CHUNK, 0,
     positionBuffer, colorBuffer, xformsBuffer, dimensionsBuffer, subImageBuffer,
-    positionData, colorData, xformsData, dimensionsData, subImageData, viewLocation, viewMatrix);
+    positionData, colorData, xformsData, dimensionsData, subImageData,
+    viewLocation, viewMatrix, defaultViewMatrix);
 
 renderStore.resizeTypedViews();
 
+export const hudRenderStore = new RenderStore('hud', gl, ext, hudProg, NO_CHANGES, ELEMENTS_CHUNK, 0,
+    hudPosBuffer, hudColorBuffer, hudXformsBuffer, hudDimBuffer, hudSubImgBuffer,
+    hudPosData, hudColorData, hudXformsData, hudDimData, hudSubImgData,
+    hudViewLoc, hudViewMat, defHudViewMat);
 
-console.log(`sprite store size: ${(SPRITES_LENGTH * Uint16Array.BYTES_PER_ELEMENT / 1024).toFixed(2)} kb`);
+hudRenderStore.resizeTypedViews();
+
+
+console.log(`3d sprite store size: ${(SPRITES_LENGTH * Uint16Array.BYTES_PER_ELEMENT / 1024).toFixed(2)} kb`);
+console.log(`hud sprite store size: ${(SPRITES_LENGTH * Uint16Array.BYTES_PER_ELEMENT / 1024).toFixed(2)} kb`);
 
 const totalSizeAnimBuffers = ANIM_SCALE_BUFFER_SIZE + ANIM_ROT1D_BUFFER_SIZE + ANIM_COLOR1C_BUFFER_SIZE + ANIM_POS_BUFFER_SIZE + ANIM_POSC_BUFFER_SIZE;
 console.log(`animation system buffer size (excl. callback function pointers): ${(totalSizeAnimBuffers / 1024 / 1024).toFixed(2)} mb`);

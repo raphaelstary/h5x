@@ -1,7 +1,7 @@
 export default `
-
 precision highp float;
 
+uniform float minAlpha;
 uniform sampler2D textures[3];
 varying vec2 texCoord;
 varying vec4 texColor;
@@ -18,7 +18,7 @@ void main() {
         pixel = texture2D(textures[2], texCoord);
     }
 
-    if (pixel.a < 1.0)
+    if (pixel.a < minAlpha)
         discard;
 
     vec4 blendedPixel = mix(pixel, texColor, texColor.a);

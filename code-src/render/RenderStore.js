@@ -5,13 +5,15 @@ import { DIM_ELEMENTS } from './constants/DimBuffer.js';
 import { SUB_IMG_ELEMENTS } from './constants/SubImgBuffer.js';
 
 export default class RenderStore {
-    constructor(gl, ext, changeFlags, maxElements, frame,
+    constructor(id, gl, ext, program, changeFlags, maxElements, frame,
         positionBuffer, colorBuffer, xformsBuffer, dimensionsBuffer, subImageBuffer,
-        positionData, colorData, xformsData, dimensionsData, subImageData, viewLocation, viewMatrix,
+        positionData, colorData, xformsData, dimensionsData, subImageData, viewLocation, viewMatrix, defaultViewMatrix,
         positions, colors, xforms, dimensions, subImages) {
 
+        this.id = id;
         this.gl = gl;
         this.ext = ext;
+        this.program = program;
 
         this.changeFlags = changeFlags;
         this.maxElements = maxElements;
@@ -37,6 +39,7 @@ export default class RenderStore {
 
         this.viewLocation = viewLocation;
         this.viewMatrix = viewMatrix;
+        this.defaultViewMatrix = defaultViewMatrix;
         this.cameraRotation = 0;
 
         this.positions = positions;
@@ -57,6 +60,6 @@ export default class RenderStore {
 
         const TOTAL_SUB_BUFFER_SIZE = this.positions.byteLength + this.colors.byteLength + this.xforms.byteLength +
             this.dimensions.byteLength + this.subImages.byteLength;
-        console.log(`current gpu sub buffer tick update size: ${(TOTAL_SUB_BUFFER_SIZE / 1024).toFixed(2)} kb`);
+        console.log(`current gpu ${this.id} sub buffer tick update size: ${(TOTAL_SUB_BUFFER_SIZE / 1024).toFixed(2)} kb`);
     }
 }

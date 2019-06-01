@@ -84,7 +84,7 @@ import Rot1DAnimations from '../render/animations/Rot1DAnimations.js';
 import ScaleAnimations from '../render/animations/ScaleAnimations.js';
 import map, { LINEAR, nonLinearTransform } from '../render/animations/Transform.js';
 import { ACTIVE_FLAG, VERSION_BITS } from '../render/constants/BaseECS.js';
-import Sprites from '../render/Sprites.js';
+import HUDSprites from '../render/HUDSprites.js';
 import { COLORS_CHANGED, POS_CHANGED, XFORMS_CHANGED } from '../render/constants/ChangeFlag.js';
 import { COLOR_ALPHA_OFFSET, COLOR_ELEMENTS } from '../render/constants/ColorBuffer.js';
 import { POS_ELEMENTS, POS_X_OFFSET, POS_Y_OFFSET, POS_Z_OFFSET } from '../render/constants/PosBuffer.js';
@@ -422,38 +422,38 @@ export default function eventLoop(updateFunctions, drawFunction = drawFrame) {
         if (time > prevTime + 1000) {
 
             if (ms < 100) {
-                Sprites.setSubImage(5, FontSubImage.get(Math.floor(ms / 10)));
-                Sprites.setSubImage(6, FontSubImage.get(ms % 10));
+                HUDSprites.setSubImage(5, FontSubImage.get(Math.floor(ms / 10)));
+                HUDSprites.setSubImage(6, FontSubImage.get(ms % 10));
             } else {
-                Sprites.setSubImage(5, FontSubImage.get('X'));
-                Sprites.setSubImage(6, FontSubImage.get('X'));
+                HUDSprites.setSubImage(5, FontSubImage.get('X'));
+                HUDSprites.setSubImage(6, FontSubImage.get('X'));
             }
 
             if (msMax < 100) {
-                Sprites.setSubImage(34, FontSubImage.get(Math.floor(msMax / 10)));
-                Sprites.setSubImage(35, FontSubImage.get(msMax % 10));
+                HUDSprites.setSubImage(14, FontSubImage.get(Math.floor(msMax / 10)));
+                HUDSprites.setSubImage(15, FontSubImage.get(msMax % 10));
             } else {
-                Sprites.setSubImage(34, FontSubImage.get('X'));
-                Sprites.setSubImage(35, FontSubImage.get('X'));
+                HUDSprites.setSubImage(14, FontSubImage.get('X'));
+                HUDSprites.setSubImage(15, FontSubImage.get('X'));
             }
 
             const fps = Math.round(meterFrameCounter * 1000 / (time - prevTime));
             fpsMin = Math.min(fpsMin, fps);
 
             if (fps < 100) {
-                Sprites.setSubImage(0, FontSubImage.get(Math.floor(fps / 10)));
-                Sprites.setSubImage(1, FontSubImage.get(fps % 10));
+                HUDSprites.setSubImage(0, FontSubImage.get(Math.floor(fps / 10)));
+                HUDSprites.setSubImage(1, FontSubImage.get(fps % 10));
             } else {
-                Sprites.setSubImage(0, FontSubImage.get('X'));
-                Sprites.setSubImage(1, FontSubImage.get('X'));
+                HUDSprites.setSubImage(0, FontSubImage.get('X'));
+                HUDSprites.setSubImage(1, FontSubImage.get('X'));
             }
 
             if (fpsMin < 100) {
-                Sprites.setSubImage(29, FontSubImage.get(Math.floor(fpsMin / 10)));
-                Sprites.setSubImage(30, FontSubImage.get(fpsMin % 10));
+                HUDSprites.setSubImage(9, FontSubImage.get(Math.floor(fpsMin / 10)));
+                HUDSprites.setSubImage(10, FontSubImage.get(fpsMin % 10));
             } else {
-                Sprites.setSubImage(29, FontSubImage.get('X'));
-                Sprites.setSubImage(30, FontSubImage.get('X'));
+                HUDSprites.setSubImage(9, FontSubImage.get('X'));
+                HUDSprites.setSubImage(10, FontSubImage.get('X'));
             }
 
             prevTime = time;
