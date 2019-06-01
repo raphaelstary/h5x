@@ -4,11 +4,11 @@ import { ANIM_COLOR1C_BUFFER_SIZE, ANIM_POS_BUFFER_SIZE, ANIM_POSC_BUFFER_SIZE, 
 import { NO_CHANGES } from './constants/ChangeFlag.js';
 import fragmentShaderSrc from './shader/SpriteFragmentShader.js';
 import vertexShaderSrc from './shader/SpriteVertexShader.js';
-import { POS_BUFFER_SIZE, POS_ELEMENTS } from './constants/PosBuffer.js';
-import { COLOR_BUFFER_SIZE, COLOR_ELEMENTS } from './constants/ColorBuffer.js';
-import { XFORMS_BUFFER_SIZE, XFORMS_ELEMENTS } from './constants/XFormsBuffer.js';
-import { DIM_BUFFER_SIZE, DIM_ELEMENTS } from './constants/DimBuffer.js';
-import { SUB_IMG_BUFFER_SIZE, SUB_IMG_ELEMENTS } from './constants/SubImgBuffer.js';
+import { POS_BUFFER_SIZE } from './constants/PosBuffer.js';
+import { COLOR_BUFFER_SIZE } from './constants/ColorBuffer.js';
+import { XFORMS_BUFFER_SIZE } from './constants/XFormsBuffer.js';
+import { DIM_BUFFER_SIZE } from './constants/DimBuffer.js';
+import { SUB_IMG_BUFFER_SIZE } from './constants/SubImgBuffer.js';
 import { ELEMENTS_CHUNK } from './constants/BaseBuffer.js';
 import { SPRITES_LENGTH } from './constants/SpriteBuffer.js';
 
@@ -163,11 +163,6 @@ const quadLocation = gl.getAttribLocation(program, 'quad');
 gl.vertexAttribPointer(quadLocation, 4, gl.FLOAT, false, 0, 0);
 gl.enableVertexAttribArray(quadLocation);
 ext.vertexAttribDivisorANGLE(quadLocation, 0);
-
-// const hudQuadLoc = gl.getAttribLocation(hudProg, 'quad');
-// gl.vertexAttribPointer(hudQuadLoc, 4, gl.FLOAT, false, 0, 0);
-// gl.enableVertexAttribArray(hudQuadLoc);
-// ext.vertexAttribDivisorANGLE(hudQuadLoc, 0);
 
 
 const positionData = new ArrayBuffer(POS_BUFFER_SIZE);

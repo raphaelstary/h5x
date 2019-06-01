@@ -65,13 +65,10 @@ export default function drawFrame() {
 
 
     $.changeFlags = NO_CHANGES;
-    $.gl.clearColor(5 / 255, 109 / 255, 207 / 255, 0.0);
-    $.gl.clearDepth(1.0);
+
     $.gl.clear($.gl.COLOR_BUFFER_BIT | $.gl.DEPTH_BUFFER_BIT);
     $.ext.drawArraysInstancedANGLE($.gl.TRIANGLE_STRIP, 0, 4, Sprites.maxIdx + 1);
 
-    // ###############################################################################################
-    // ###############################################################################################
     // ###############################################################################################
 
     hud.gl.useProgram(hud.program);
@@ -129,7 +126,7 @@ export default function drawFrame() {
 
 
     hud.changeFlags = NO_CHANGES;
-    hud.gl.clearDepth(1.0);
+
     hud.gl.clear(hud.gl.DEPTH_BUFFER_BIT);
     hud.ext.drawArraysInstancedANGLE(hud.gl.TRIANGLE_STRIP, 0, 4, HUDSprites.maxIdx + 1);
 }
