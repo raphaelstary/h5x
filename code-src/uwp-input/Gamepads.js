@@ -23,6 +23,10 @@ const Gamepads = Object.freeze({
         return (currentReading.buttons & flag) == flag && (previousReading.buttons & flag) == Windows.Gaming.Input.GamepadButtons.none;
     },
 
+    manyButtonsPressed(currentReading, previousReading, flags) {
+        return (currentReading.buttons & flags) == flags && (previousReading.buttons & flags) != flags;
+    },
+
     /**
      * @param {Windows.Gaming.Input.GamepadReading} currentReading current reading
      * @param {Windows.Gaming.Input.GamepadReading} previousReading last reading

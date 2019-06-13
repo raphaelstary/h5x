@@ -99,10 +99,24 @@ let msMax = 0;
 let fpsMin = 99;
 let meterFrameCounter = 0;
 
+let stop = false;
+
+export function stopLoop() {
+    stop = true;
+}
+
+export function resetLoop() {
+    stop = false;
+}
+
 /*
  * EVENT LOOP
  */
 export default function eventLoop(updateFunctions, drawFunction = drawFrame) {
+    if (stop) {
+        return;
+    }
+
     requestAnimationFrame(eventLoop.bind(undefined, updateFunctions, drawFunction));
 
     // fps meter start frame
